@@ -36,7 +36,8 @@ export function initHomeAsciiGlitch(): void {
     return;
   }
 
-  let timeoutId = 0;
+  let idleTimeoutId = 0;
+  let frameTimeoutId = 0;
   let burstActive = false;
   let followupBudget = 0;
   let lingeringZones: GlitchZone[] = [];
@@ -47,11 +48,12 @@ export function initHomeAsciiGlitch(): void {
       return;
     }
 
+    window.clearTimeout(idleTimeoutId);
     const nextDelay =
       followupBudget > 0 && maybe(0.58)
         ? randomBetween(config.minIntervalMs * 0.18, config.minIntervalMs * 0.55)
         : chooseWeightedDelays(config.minIntervalMs, config.maxIntervalMs);
-    timeoutId = window.setTimeout(trigger, nextDelay);
+    idleTimeoutId = window.setTimeout(trigger, nextDelay);
   };
 
   const runBurstFrame = (remainingFrames: number) => {
@@ -85,7 +87,7 @@ export function initHomeAsciiGlitch(): void {
     glitch.textContent = lastGlitchFrame;
     applyGlitchVisualState(hero);
     hero.classList.add("is-glitching");
-    timeoutId = window.setTimeout(
+    frameTimeoutId = window.setTimeout(
       () => runBurstFrame(remainingFrames - 1),
       randomBetween(config.frameMinMs, config.frameMaxMs)
     );
@@ -93,9 +95,12 @@ export function initHomeAsciiGlitch(): void {
 
   const trigger = () => {
     if (burstActive) {
+      schedule();
       return;
     }
 
+    window.clearTimeout(idleTimeoutId);
+    idleTimeoutId = 0;
     burstActive = true;
     if (followupBudget === 0 && maybe(0.34)) {
       followupBudget = randomInt(1, 3);
@@ -118,7 +123,7 @@ export function initHomeAsciiGlitch(): void {
     applyGlitchDecayVisualState(hero, remainingFrames);
     hero.classList.add("is-glitching");
 
-    timeoutId = window.setTimeout(
+    frameTimeoutId = window.setTimeout(
       () => runDecayFrame(remainingFrames - 1, ghostFrame),
       randomBetween(decayFrameMinMs, decayFrameMaxMs)
     );
@@ -126,6 +131,7 @@ export function initHomeAsciiGlitch(): void {
 
   const finishBurst = () => {
     burstActive = false;
+    frameTimeoutId = 0;
     lastGlitchFrame = "";
     hero.classList.remove("is-glitching");
     base.textContent = source;
@@ -138,8 +144,10 @@ export function initHomeAsciiGlitch(): void {
   };
 
   const reset = () => {
-    window.clearTimeout(timeoutId);
-    timeoutId = 0;
+    window.clearTimeout(idleTimeoutId);
+    window.clearTimeout(frameTimeoutId);
+    idleTimeoutId = 0;
+    frameTimeoutId = 0;
     burstActive = false;
     lastGlitchFrame = "";
     hero.classList.remove("is-glitching");
@@ -159,7 +167,8 @@ export function initHomeAsciiGlitch(): void {
     reset();
   });
   window.addEventListener("beforeunload", () => {
-    window.clearTimeout(timeoutId);
+    window.clearTimeout(idleTimeoutId);
+    window.clearTimeout(frameTimeoutId);
   });
 }
 
