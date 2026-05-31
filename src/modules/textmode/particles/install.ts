@@ -33,14 +33,14 @@ type PointerState = {
 };
 
 const frameMsByContext: Record<ParticleContext, { desktop: number; mobile: number }> = {
-  home: { desktop: 42, mobile: 72 },
-  volume: { desktop: 56, mobile: 96 },
-  article: { desktop: 90, mobile: 140 }
+  home: { desktop: 42, mobile: 50 },
+  volume: { desktop: 52, mobile: 66 },
+  article: { desktop: 78, mobile: 88 }
 };
 const tapInfluenceMs = 620;
-const tapFrameMs = 48;
-const tapForceScale = 1.3;
-const tapRadiusScale = 1.28;
+const tapFrameMs = 42;
+const tapForceScale = 1.62;
+const tapRadiusScale = 1.42;
 
 export function installAsciiParticles(): void {
   if (
@@ -72,7 +72,7 @@ export function installAsciiParticles(): void {
     durationMs: 0
   };
   let animationId = 0;
-  let timerId = 0;
+  let lastFrameTime = 0;
   let running = true;
   const frame = (time: number) => {
     animationId = 0;
@@ -87,18 +87,21 @@ export function installAsciiParticles(): void {
       return;
     }
 
-    animateParticles(particles, pointer, time);
-    timerId = window.setTimeout(
-      () => {
-        timerId = 0;
-        animationId = window.requestAnimationFrame(frame);
-      },
-      frameDelay(profile, pointer)
+    const elapsedMs = lastFrameTime === 0 ? profile.frameMs : Math.min(96, Math.max(1, time - lastFrameTime));
+    lastFrameTime = time;
+    animateParticles(
+      particles,
+      pointer,
+      time,
+      elapsedMs / profile.frameMs,
+      elapsedMs / pointerFrameMs(profile, pointer)
     );
+    animationId = window.requestAnimationFrame(frame);
   };
   const start = () => {
-    if (animationId === 0 && timerId === 0) {
+    if (animationId === 0) {
       running = true;
+      lastFrameTime = 0;
       animationId = window.requestAnimationFrame(frame);
     }
   };
@@ -108,10 +111,7 @@ export function installAsciiParticles(): void {
       window.cancelAnimationFrame(animationId);
       animationId = 0;
     }
-    if (timerId !== 0) {
-      window.clearTimeout(timerId);
-      timerId = 0;
-    }
+    lastFrameTime = 0;
   };
 
   start();
@@ -213,16 +213,22 @@ function createParticles(layer: HTMLElement, count: number, context: ParticleCon
   });
 }
 
-function animateParticles(particles: Particle[], pointer: PointerState, time: number): void {
+function animateParticles(
+  particles: Particle[],
+  pointer: PointerState,
+  time: number,
+  motionStep: number,
+  pointerStep: number
+): void {
   for (const particle of particles) {
-    particle.x += particle.driftX;
-    particle.y += particle.driftY;
-    applyPointerInfluence(particle, pointer);
-    particle.phase += particle.speed;
+    particle.x += particle.driftX * motionStep;
+    particle.y += particle.driftY * motionStep;
+    applyPointerInfluence(particle, pointer, pointerStep);
+    particle.phase += particle.speed * motionStep;
 
     const flicker = 0.72 + Math.sin(time * 0.0017 + particle.phase) * 0.28;
     particle.element.style.opacity = (particle.opacity * flicker).toFixed(3);
-    particle.element.style.transform = `translate3d(${particle.x.toFixed(1)}px, ${particle.y.toFixed(1)}px, 0)`;
+    particle.element.style.transform = `translate3d(${particle.x.toFixed(2)}px, ${particle.y.toFixed(2)}px, 0)`;
 
     if (
       particle.y < -24 ||
@@ -282,7 +288,7 @@ function runtimeProfile(): RuntimeProfile {
   const mobile = isMobileParticleViewport();
   const saveData = prefersReducedData();
   const lowPower = saveData || lowPowerDevice();
-  const frameMs = frameMsByContext[context][mobile ? "mobile" : "desktop"] * (lowPower ? 1.45 : 1);
+  const frameMs = frameMsByContext[context][mobile ? "mobile" : "desktop"] * (lowPower ? 1.15 : 1);
   const countScale = saveData ? 0.45 : lowPower ? 0.68 : 1;
 
   return {
@@ -294,7 +300,7 @@ function runtimeProfile(): RuntimeProfile {
   };
 }
 
-function frameDelay(profile: RuntimeProfile, pointer: PointerState): number {
+function pointerFrameMs(profile: RuntimeProfile, pointer: PointerState): number {
   return pointerActive(pointer) ? Math.min(profile.frameMs, tapFrameMs) : profile.frameMs;
 }
 
@@ -344,7 +350,7 @@ function randomParticleOpacity(context: ParticleContext): number {
   return randomBetween(...config.contexts[context].opacity);
 }
 
-function applyPointerInfluence(particle: Particle, pointer: PointerState): void {
+function applyPointerInfluence(particle: Particle, pointer: PointerState, pointerStep: number): void {
   if (!pointerActive(pointer)) {
     return;
   }
@@ -364,9 +370,9 @@ function applyPointerInfluence(particle: Particle, pointer: PointerState): void 
   const unitX = distance > 0 ? dx / distance : Math.cos(particle.phase);
   const unitY = distance > 0 ? dy / distance : Math.sin(particle.phase);
 
-  particle.x += unitX * force * contextScale * 1.8;
-  particle.y += unitY * force * contextScale * 1.2;
-  particle.phase += force * contextScale * 0.08;
+  particle.x += unitX * force * contextScale * 1.8 * pointerStep;
+  particle.y += unitY * force * contextScale * 1.2 * pointerStep;
+  particle.phase += force * contextScale * 0.08 * pointerStep;
 }
 
 function pointerFalloff(pointer: PointerState): number {

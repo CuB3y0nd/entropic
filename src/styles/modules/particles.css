@@ -4,6 +4,7 @@
   z-index: 2;
   overflow: hidden;
   pointer-events: none;
+  contain: layout paint style;
 }
 
 .ascii-particles span {
@@ -17,6 +18,7 @@
   opacity: 0;
   mix-blend-mode: screen;
   text-shadow: 0 0 4px var(--particle-home-glow);
+  backface-visibility: hidden;
   will-change: opacity, transform;
 }
 

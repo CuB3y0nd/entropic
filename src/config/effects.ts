@@ -44,9 +44,9 @@ export const effectsConfig: EffectsConfig = {
     mobileBreakpoint: 760,
     contentSafeWidth: 760,
     pointerInfluenceRadius: 150,
-    driftX: [-0.07, 0.07],
-    driftY: [-0.14, -0.04],
-    speed: [0.018, 0.055],
+    driftX: [-0.28, 0.28],
+    driftY: [-0.72, -0.2],
+    speed: [0.03, 0.085],
     contexts: {
       home: {
         desktopCount: 86,
