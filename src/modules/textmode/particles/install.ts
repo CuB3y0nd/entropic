@@ -20,6 +20,16 @@ type RuntimeProfile = {
   frameMs: number;
   countScale: number;
   pointerEnabled: boolean;
+  tapEnabled: boolean;
+};
+
+type PointerState = {
+  x: number;
+  y: number;
+  forceScale: number;
+  radiusScale: number;
+  startedAt: number;
+  durationMs: number;
 };
 
 const frameMsByContext: Record<ParticleContext, { desktop: number; mobile: number }> = {
@@ -27,6 +37,10 @@ const frameMsByContext: Record<ParticleContext, { desktop: number; mobile: numbe
   volume: { desktop: 56, mobile: 96 },
   article: { desktop: 90, mobile: 140 }
 };
+const tapInfluenceMs = 620;
+const tapFrameMs = 48;
+const tapForceScale = 1.3;
+const tapRadiusScale = 1.28;
 
 export function installAsciiParticles(): void {
   if (
@@ -49,7 +63,14 @@ export function installAsciiParticles(): void {
   document.body.append(layer);
 
   const particles = createParticles(layer, particleCount(profile), profile.context);
-  const pointer = { x: Number.NaN, y: Number.NaN };
+  const pointer: PointerState = {
+    x: Number.NaN,
+    y: Number.NaN,
+    forceScale: 1,
+    radiusScale: 1,
+    startedAt: 0,
+    durationMs: 0
+  };
   let animationId = 0;
   let timerId = 0;
   let running = true;
@@ -67,10 +88,13 @@ export function installAsciiParticles(): void {
     }
 
     animateParticles(particles, pointer, time);
-    timerId = window.setTimeout(() => {
-      timerId = 0;
-      animationId = window.requestAnimationFrame(frame);
-    }, profile.frameMs);
+    timerId = window.setTimeout(
+      () => {
+        timerId = 0;
+        animationId = window.requestAnimationFrame(frame);
+      },
+      frameDelay(profile, pointer)
+    );
   };
   const start = () => {
     if (animationId === 0 && timerId === 0) {
@@ -106,6 +130,10 @@ export function installAsciiParticles(): void {
       (event) => {
         pointer.x = event.clientX;
         pointer.y = event.clientY;
+        pointer.forceScale = 1;
+        pointer.radiusScale = 1;
+        pointer.startedAt = 0;
+        pointer.durationMs = 0;
       },
       { passive: true }
     );
@@ -114,6 +142,37 @@ export function installAsciiParticles(): void {
       () => {
         pointer.x = Number.NaN;
         pointer.y = Number.NaN;
+        pointer.startedAt = 0;
+        pointer.durationMs = 0;
+      },
+      { passive: true }
+    );
+  }
+  if (profile.tapEnabled) {
+    let tapTimeout = 0;
+
+    window.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (event.pointerType === "mouse") {
+          return;
+        }
+
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+        pointer.forceScale = tapForceScale;
+        pointer.radiusScale = tapRadiusScale;
+        pointer.startedAt = performance.now();
+        pointer.durationMs = tapInfluenceMs;
+        window.clearTimeout(tapTimeout);
+        tapTimeout = window.setTimeout(() => {
+          pointer.x = Number.NaN;
+          pointer.y = Number.NaN;
+          pointer.forceScale = 1;
+          pointer.radiusScale = 1;
+          pointer.startedAt = 0;
+          pointer.durationMs = 0;
+        }, tapInfluenceMs);
       },
       { passive: true }
     );
@@ -154,7 +213,7 @@ function createParticles(layer: HTMLElement, count: number, context: ParticleCon
   });
 }
 
-function animateParticles(particles: Particle[], pointer: { x: number; y: number }, time: number): void {
+function animateParticles(particles: Particle[], pointer: PointerState, time: number): void {
   for (const particle of particles) {
     particle.x += particle.driftX;
     particle.y += particle.driftY;
@@ -230,8 +289,25 @@ function runtimeProfile(): RuntimeProfile {
     context,
     frameMs,
     countScale,
-    pointerEnabled: !mobile && !lowPower
+    pointerEnabled: !mobile && !lowPower,
+    tapEnabled: mobile || lowPower
   };
+}
+
+function frameDelay(profile: RuntimeProfile, pointer: PointerState): number {
+  return pointerActive(pointer) ? Math.min(profile.frameMs, tapFrameMs) : profile.frameMs;
+}
+
+function pointerActive(pointer: PointerState): boolean {
+  if (!Number.isFinite(pointer.x) || !Number.isFinite(pointer.y)) {
+    return false;
+  }
+
+  if (pointer.durationMs === 0) {
+    return true;
+  }
+
+  return performance.now() - pointer.startedAt < pointer.durationMs;
 }
 
 function isMobileParticleViewport(): boolean {
@@ -268,24 +344,39 @@ function randomParticleOpacity(context: ParticleContext): number {
   return randomBetween(...config.contexts[context].opacity);
 }
 
-function applyPointerInfluence(particle: Particle, pointer: { x: number; y: number }): void {
-  if (!Number.isFinite(pointer.x) || !Number.isFinite(pointer.y)) {
+function applyPointerInfluence(particle: Particle, pointer: PointerState): void {
+  if (!pointerActive(pointer)) {
     return;
   }
 
   const dx = particle.x - pointer.x;
   const dy = particle.y - pointer.y;
   const distance = Math.hypot(dx, dy);
+  const falloff = pointerFalloff(pointer);
+  const radius = config.pointerInfluenceRadius * pointer.radiusScale * (0.72 + falloff * 0.28);
 
-  if (distance <= 0 || distance > config.pointerInfluenceRadius) {
+  if (distance > radius) {
     return;
   }
 
-  const force = (1 - distance / config.pointerInfluenceRadius) ** 2;
-  const contextScale = config.contexts[particle.context].pointerScale;
-  particle.x += (dx / distance) * force * contextScale * 1.8;
-  particle.y += (dy / distance) * force * contextScale * 1.2;
+  const force = (1 - distance / radius) ** 2;
+  const contextScale = config.contexts[particle.context].pointerScale * pointer.forceScale * falloff;
+  const unitX = distance > 0 ? dx / distance : Math.cos(particle.phase);
+  const unitY = distance > 0 ? dy / distance : Math.sin(particle.phase);
+
+  particle.x += unitX * force * contextScale * 1.8;
+  particle.y += unitY * force * contextScale * 1.2;
   particle.phase += force * contextScale * 0.08;
+}
+
+function pointerFalloff(pointer: PointerState): number {
+  if (pointer.durationMs === 0) {
+    return 1;
+  }
+
+  const elapsed = Math.max(0, performance.now() - pointer.startedAt);
+  const progress = Math.min(1, elapsed / pointer.durationMs);
+  return (1 - progress) ** 1.4;
 }
 
 function sample<T>(items: T[]): T {
