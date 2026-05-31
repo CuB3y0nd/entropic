@@ -13,6 +13,7 @@ const gameHeight: number = 17;
 const layoutReadyTimeoutMs = 1200;
 let installed = false;
 let installStarted = false;
+let intervalId = 0;
 
 export function initLifeArt(): void {
   if (installed || installStarted || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -56,7 +57,7 @@ async function installLifeArt(): Promise<void> {
     render(instance);
   }
 
-  window.setInterval(() => {
+  const tick = () => {
     for (const instance of instances) {
       instance.cells = nextGeneration(instance.cells);
       if (population(instance.cells) < 8) {
@@ -64,7 +65,32 @@ async function installLifeArt(): Promise<void> {
       }
       render(instance);
     }
-  }, frameMs);
+  };
+  const start = () => {
+    if (intervalId === 0) {
+      intervalId = window.setInterval(tick, frameMs);
+    }
+  };
+  const stop = () => {
+    if (intervalId !== 0) {
+      window.clearInterval(intervalId);
+      intervalId = 0;
+    }
+  };
+  const positionAll = createScheduledPositioner(instances);
+
+  start();
+  window.addEventListener("resize", positionAll, { passive: true });
+  window.addEventListener("orientationchange", positionAll, { passive: true });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      positionAll();
+      start();
+      return;
+    }
+
+    stop();
+  });
 }
 
 async function waitForTextmodeLayout(): Promise<void> {
@@ -120,13 +146,29 @@ function population(cells: boolean[][]): number {
 }
 
 function render(instance: LifeInstance): void {
-  positionGrid(instance.root, instance.lines[0]);
-
   for (const [index, pixel] of instance.pixels.entries()) {
     const row = Math.floor(index / gameWidth);
     const column = index % gameWidth;
     pixel.classList.toggle("is-alive", Boolean(instance.cells[row]?.[column]));
   }
+}
+
+function createScheduledPositioner(instances: LifeInstance[]): () => void {
+  let animationFrame = 0;
+
+  return () => {
+    if (animationFrame !== 0) {
+      return;
+    }
+
+    animationFrame = window.requestAnimationFrame(() => {
+      animationFrame = 0;
+
+      for (const instance of instances) {
+        positionGrid(instance.root, instance.lines[0]);
+      }
+    });
+  };
 }
 
 function installGrid(root: HTMLElement, firstLine: HTMLElement): HTMLElement[] {

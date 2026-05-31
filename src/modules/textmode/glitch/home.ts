@@ -43,6 +43,10 @@ export function initHomeAsciiGlitch(): void {
   let lastGlitchFrame = "";
 
   const schedule = () => {
+    if (document.visibilityState !== "visible") {
+      return;
+    }
+
     const nextDelay =
       followupBudget > 0 && maybe(0.58)
         ? randomBetween(config.minIntervalMs * 0.18, config.minIntervalMs * 0.55)
@@ -133,8 +137,27 @@ export function initHomeAsciiGlitch(): void {
     schedule();
   };
 
+  const reset = () => {
+    window.clearTimeout(timeoutId);
+    timeoutId = 0;
+    burstActive = false;
+    lastGlitchFrame = "";
+    hero.classList.remove("is-glitching");
+    base.textContent = source;
+    glitch.textContent = "";
+    clearGlitchVisualState(hero);
+  };
+
   schedule();
 
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      schedule();
+      return;
+    }
+
+    reset();
+  });
   window.addEventListener("beforeunload", () => {
     window.clearTimeout(timeoutId);
   });

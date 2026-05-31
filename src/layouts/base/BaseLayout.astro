@@ -1,7 +1,7 @@
 ---
-import "../../styles/global.css";
 import Analytics from "@vercel/analytics/astro";
-import { appearanceConfig, siteConfig } from "../../config";
+import stylesheetUrl from "../../styles/global.css?url";
+import { appearanceConfig, effectsConfig, siteConfig, textmodeConfig } from "../../config";
 import { appearanceCssVariables } from "../../modules/textmode/core/css-vars";
 
 type Props = {
@@ -21,6 +21,8 @@ const pageType = Astro.props.pageType ?? "website";
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
 const rssUrl = new URL("/rss.xml", Astro.site ?? Astro.url).toString();
 const appearanceCss = appearanceCssVariables(appearanceConfig);
+const mobileFitBreakpoint = textmodeConfig.mobileFitBreakpoint;
+const particlesEnabled = effectsConfig.particles.enable;
 ---
 
 <!doctype html>
@@ -45,6 +47,7 @@ const appearanceCss = appearanceCssVariables(appearanceConfig);
         <meta property="article:published_time" content={Astro.props.publishedTime.toISOString()} />
       )
     }
+    <link rel="stylesheet" href={stylesheetUrl} />
     <style set:html={appearanceCss}></style>
     <link
       rel="preload"
@@ -57,56 +60,13 @@ const appearanceCss = appearanceCssVariables(appearanceConfig);
     {preloadCjk && <link rel="preload" href="/assets/cjk/wqy-cjk-link.png" as="image" />}
     <title>{tabTitle}</title>
   </head>
-  <body>
+  <body data-mobile-fit-breakpoint={mobileFitBreakpoint} data-particles-enabled={particlesEnabled}>
     <slot />
     <Analytics />
     <script>
-      import { effectsConfig, textmodeConfig } from "../../config";
+      import { installTextmodeBootstrap } from "../../modules/textmode/bootstrap/install";
 
-      const mobileFitBreakpoint = textmodeConfig.mobileFitBreakpoint;
-      const particlesEnabled = effectsConfig.particles.enable;
-      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const fitMedia = window.matchMedia(`(max-width: ${mobileFitBreakpoint}px)`);
-      let fitLoaded = false;
-
-      const loadFit = () => {
-        if (!fitMedia.matches || fitLoaded) {
-          return;
-        }
-
-        fitLoaded = true;
-        void import("../../modules/textmode/fit/install").then(({ installTextmodeFit }) => {
-          installTextmodeFit();
-        });
-      };
-
-      loadFit();
-      fitMedia.addEventListener("change", loadFit, { passive: true });
-
-      const runWhenIdle = (callback: () => void) => {
-        window.setTimeout(() => {
-          if ("requestIdleCallback" in window) {
-            window.requestIdleCallback(callback, { timeout: 1600 });
-            return;
-          }
-
-          callback();
-        }, 1200);
-      };
-
-      if (particlesEnabled && !reducedMotion) {
-        window.addEventListener(
-          "load",
-          () => {
-            runWhenIdle(() => {
-              void import("../../modules/textmode/particles/install").then(({ installAsciiParticles }) => {
-                installAsciiParticles();
-              });
-            });
-          },
-          { once: true, passive: true }
-        );
-      }
+      installTextmodeBootstrap();
     </script>
   </body>
 </html>

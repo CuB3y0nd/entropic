@@ -154,7 +154,6 @@ Run `pnpm assets:fonts` only when the committed font outputs need to change:
 The command regenerates:
 
     public/fonts/gohu-subset.woff
-    public/fonts/wqy-zenhei-sharp-bitmap-subset.ttf
     public/assets/cjk/wqy-cjk-body.png
     public/assets/cjk/wqy-cjk-link.png
     src/generated/cjk-atlas.ts

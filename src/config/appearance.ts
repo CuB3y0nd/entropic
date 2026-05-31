@@ -15,11 +15,8 @@ export type AppearanceConfig = {
   };
   fonts: {
     asciiFamily: string;
-    cjkFamily: string;
     asciiUrl: string;
     asciiFormat: string;
-    cjkUrl: string;
-    cjkFormat: string;
   };
   sizing: {
     textSize: string;
@@ -35,7 +32,7 @@ export const appearanceConfig: AppearanceConfig = {
     background: "#0c0d10",
     homeBackground: "#0a0b11",
     foreground: "#fefefe",
-    link: "#00a17a",
+    link: "#93ffd7",
     linkHover: "#c7ffe9",
     linkHoverBackground: "#153329",
     particleHome: "#b47ae2",
@@ -47,11 +44,8 @@ export const appearanceConfig: AppearanceConfig = {
   },
   fonts: {
     asciiFamily: "gohu",
-    cjkFamily: "WenQuanYi Sharp",
     asciiUrl: "/fonts/gohu-subset.woff",
-    asciiFormat: "woff",
-    cjkUrl: "/fonts/wqy-zenhei-sharp-bitmap-subset.ttf",
-    cjkFormat: "truetype"
+    asciiFormat: "woff"
   },
   sizing: {
     textSize: "14px",

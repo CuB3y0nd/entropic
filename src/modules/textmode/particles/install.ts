@@ -15,6 +15,19 @@ type Particle = {
   context: ParticleContext;
 };
 
+type RuntimeProfile = {
+  context: ParticleContext;
+  frameMs: number;
+  countScale: number;
+  pointerEnabled: boolean;
+};
+
+const frameMsByContext: Record<ParticleContext, { desktop: number; mobile: number }> = {
+  home: { desktop: 42, mobile: 72 },
+  volume: { desktop: 56, mobile: 96 },
+  article: { desktop: 90, mobile: 140 }
+};
+
 export function installAsciiParticles(): void {
   if (
     !config.enable ||
@@ -28,25 +41,56 @@ export function installAsciiParticles(): void {
     return;
   }
 
+  const profile = runtimeProfile();
   const layer = document.createElement("div");
   layer.className = particleLayerClass;
-  layer.dataset.particleContext = particleContext();
+  layer.dataset.particleContext = profile.context;
   layer.setAttribute("aria-hidden", "true");
   document.body.append(layer);
 
-  const particles = createParticles(layer, particleCount());
+  const particles = createParticles(layer, particleCount(profile), profile.context);
   const pointer = { x: Number.NaN, y: Number.NaN };
   let animationId = 0;
+  let timerId = 0;
   let running = true;
   const frame = (time: number) => {
+    animationId = 0;
+
     if (!running) {
       return;
     }
 
-    animateParticles(layer, particles, pointer, time);
-    animationId = window.requestAnimationFrame(frame);
+    if (!document.body.contains(layer)) {
+      running = false;
+      animationId = 0;
+      return;
+    }
+
+    animateParticles(particles, pointer, time);
+    timerId = window.setTimeout(() => {
+      timerId = 0;
+      animationId = window.requestAnimationFrame(frame);
+    }, profile.frameMs);
   };
-  animationId = window.requestAnimationFrame(frame);
+  const start = () => {
+    if (animationId === 0 && timerId === 0) {
+      running = true;
+      animationId = window.requestAnimationFrame(frame);
+    }
+  };
+  const stop = () => {
+    running = false;
+    if (animationId !== 0) {
+      window.cancelAnimationFrame(animationId);
+      animationId = 0;
+    }
+    if (timerId !== 0) {
+      window.clearTimeout(timerId);
+      timerId = 0;
+    }
+  };
+
+  start();
 
   const reset = () => {
     for (const particle of particles) {
@@ -56,44 +100,38 @@ export function installAsciiParticles(): void {
 
   window.addEventListener("resize", reset, { passive: true });
   window.addEventListener("orientationchange", reset, { passive: true });
-  window.addEventListener(
-    "pointermove",
-    (event) => {
-      pointer.x = event.clientX;
-      pointer.y = event.clientY;
-    },
-    { passive: true }
-  );
-  window.addEventListener(
-    "pointerleave",
-    () => {
-      pointer.x = Number.NaN;
-      pointer.y = Number.NaN;
-    },
-    { passive: true }
-  );
+  if (profile.pointerEnabled) {
+    window.addEventListener(
+      "pointermove",
+      (event) => {
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+      },
+      { passive: true }
+    );
+    window.addEventListener(
+      "pointerleave",
+      () => {
+        pointer.x = Number.NaN;
+        pointer.y = Number.NaN;
+      },
+      { passive: true }
+    );
+  }
   window.addEventListener("beforeunload", () => {
-    window.cancelAnimationFrame(animationId);
-    animationId = 0;
+    stop();
   });
   document.addEventListener("visibilitychange", () => {
-    running = document.visibilityState === "visible";
-
-    if (running && animationId === 0) {
-      animationId = window.requestAnimationFrame(frame);
+    if (document.visibilityState === "visible") {
+      start();
       return;
     }
 
-    if (!running && animationId !== 0) {
-      window.cancelAnimationFrame(animationId);
-      animationId = 0;
-    }
+    stop();
   });
 }
 
-function createParticles(layer: HTMLElement, count: number): Particle[] {
-  const context = particleContext();
-
+function createParticles(layer: HTMLElement, count: number, context: ParticleContext): Particle[] {
   return Array.from({ length: count }, () => {
     const element = document.createElement("span");
     element.textContent = sample(config.chars);
@@ -116,16 +154,7 @@ function createParticles(layer: HTMLElement, count: number): Particle[] {
   });
 }
 
-function animateParticles(
-  layer: HTMLElement,
-  particles: Particle[],
-  pointer: { x: number; y: number },
-  time: number
-): void {
-  if (!document.body.contains(layer)) {
-    return;
-  }
-
+function animateParticles(particles: Particle[], pointer: { x: number; y: number }, time: number): void {
   for (const particle of particles) {
     particle.x += particle.driftX;
     particle.y += particle.driftY;
@@ -169,12 +198,12 @@ function resetParticle(particle: Particle, anywhere: boolean): void {
   particle.element.textContent = sample(config.chars);
 }
 
-function particleCount(): number {
-  const mobile = window.matchMedia(`(max-width: ${config.mobileBreakpoint}px)`).matches;
-  const context = particleContext();
-  const contextConfig = config.contexts[context];
+function particleCount(profile: RuntimeProfile): number {
+  const mobile = isMobileParticleViewport();
+  const contextConfig = config.contexts[profile.context];
+  const baseCount = mobile ? contextConfig.mobileCount : contextConfig.desktopCount;
 
-  return mobile ? contextConfig.mobileCount : contextConfig.desktopCount;
+  return Math.max(4, Math.round(baseCount * profile.countScale));
 }
 
 function particleContext(): ParticleContext {
@@ -187,6 +216,39 @@ function particleContext(): ParticleContext {
   }
 
   return "article";
+}
+
+function runtimeProfile(): RuntimeProfile {
+  const context = particleContext();
+  const mobile = isMobileParticleViewport();
+  const saveData = prefersReducedData();
+  const lowPower = saveData || lowPowerDevice();
+  const frameMs = frameMsByContext[context][mobile ? "mobile" : "desktop"] * (lowPower ? 1.45 : 1);
+  const countScale = saveData ? 0.45 : lowPower ? 0.68 : 1;
+
+  return {
+    context,
+    frameMs,
+    countScale,
+    pointerEnabled: !mobile && !lowPower
+  };
+}
+
+function isMobileParticleViewport(): boolean {
+  return window.matchMedia(`(max-width: ${config.mobileBreakpoint}px), (pointer: coarse)`).matches;
+}
+
+function lowPowerDevice(): boolean {
+  const navigatorInfo = navigator as Navigator & { deviceMemory?: number };
+  const cores = navigator.hardwareConcurrency ?? 8;
+  const memory = navigatorInfo.deviceMemory ?? 8;
+
+  return cores <= 4 || memory <= 4;
+}
+
+function prefersReducedData(): boolean {
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  return connection?.saveData === true;
 }
 
 function randomParticleX(width: number, context: ParticleContext): number {

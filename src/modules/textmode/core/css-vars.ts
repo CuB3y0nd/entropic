@@ -15,7 +15,6 @@ export function appearanceCssVariables(config: AppearanceConfig): string {
     "--particle-volume": config.colors.particleVolume,
     "--particle-volume-glow": config.colors.particleVolumeGlow,
     "--text-font": quoteFont(config.fonts.asciiFamily),
-    "--cjk-font": quoteFont(config.fonts.cjkFamily),
     "--text-size": config.sizing.textSize,
     "--cjk-size": config.sizing.cjkSize,
     "--cjk-link-size": config.sizing.cjkLinkSize,
@@ -24,8 +23,6 @@ export function appearanceCssVariables(config: AppearanceConfig): string {
   };
 
   return `${fontFace(config.fonts.asciiFamily, config.fonts.asciiUrl, config.fonts.asciiFormat)}
-${fontFace(config.fonts.cjkFamily, config.fonts.cjkUrl, config.fonts.cjkFormat, "U+2E80-2EFF, U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF")}
-
 :root {\n${Object.entries(variables)
     .map(([name, value]) => `  ${name}: ${value};`)
     .join("\n")}\n}`;

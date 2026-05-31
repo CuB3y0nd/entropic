@@ -29,9 +29,12 @@ function cjkSpan(char: string): string {
   }
 
   const style = cjkAtlasStyle(char);
-  const html = style
-    ? `<span class="cjk cjk-bitmap" style="${style}">${char}</span>`
-    : `<span class="cjk">${char}</span>`;
+
+  if (!style) {
+    throw new Error(`Missing CJK atlas glyph for ${JSON.stringify(char)}. Run pnpm assets:fonts.`);
+  }
+
+  const html = `<span class="cjk cjk-bitmap" style="${style}">${char}</span>`;
 
   cjkSpanCache.set(char, html);
   return html;

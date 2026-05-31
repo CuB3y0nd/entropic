@@ -1,0 +1,67 @@
+body.image-lightbox-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+body.image-lightbox-open .screen {
+  filter: blur(5px) saturate(0.75);
+  transition: filter 120ms ease-out;
+}
+
+.image-lightbox {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  cursor: zoom-out;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+.image-lightbox::backdrop {
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.image-lightbox-frame {
+  display: grid;
+  place-items: center;
+  gap: var(--text-size);
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: calc(var(--text-size) * 3);
+  box-sizing: border-box;
+  touch-action: none;
+}
+
+.image-lightbox-image {
+  display: block;
+  max-width: min(92vw, calc(var(--text-cell) * 140));
+  max-height: 86vh;
+  cursor: grab;
+  object-fit: contain;
+  touch-action: none;
+  transform-origin: center center;
+  user-select: none;
+  will-change: transform;
+}
+
+.image-lightbox-image-dragging {
+  cursor: grabbing;
+}
+
+.image-lightbox-caption {
+  max-width: min(92vw, calc(var(--text-cell) * 120));
+  color: var(--fg);
+  font-family: var(--text-font);
+  font-size: var(--text-size);
+  line-height: 1;
+  text-align: center;
+}

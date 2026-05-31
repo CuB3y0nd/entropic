@@ -1,0 +1,32 @@
+.ascii-particles {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ascii-particles span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--particle-home);
+  font-family: var(--text-font);
+  font-size: calc(var(--text-size) + 1px);
+  line-height: 1;
+  opacity: 0;
+  mix-blend-mode: screen;
+  text-shadow: 0 0 4px var(--particle-home-glow);
+  will-change: opacity, transform;
+}
+
+body:has(.phile-wrap) .ascii-particles span,
+body:has(.volume-wrap) .ascii-particles span {
+  color: var(--particle-page);
+  text-shadow: 0 0 2px var(--particle-page-glow);
+}
+
+body:has(.volume-wrap) .ascii-particles span {
+  color: var(--particle-volume);
+  text-shadow: 0 0 3px var(--particle-volume-glow);
+}

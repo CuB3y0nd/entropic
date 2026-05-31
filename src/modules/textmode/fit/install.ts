@@ -8,13 +8,28 @@ export function installTextmodeFit(): void {
     return;
   }
 
-  const fit = () => fitTextmodeElements();
+  const fit = createScheduledFit();
 
   fit();
   window.addEventListener("resize", fit, { passive: true });
   window.addEventListener("orientationchange", fit, { passive: true });
 
   void waitForFonts().then(fit);
+}
+
+function createScheduledFit(): () => void {
+  let animationFrame = 0;
+
+  return () => {
+    if (animationFrame !== 0) {
+      return;
+    }
+
+    animationFrame = window.requestAnimationFrame(() => {
+      animationFrame = 0;
+      fitTextmodeElements();
+    });
+  };
 }
 
 async function waitForFonts(): Promise<void> {

@@ -1,0 +1,79 @@
+.cjk {
+  display: inline-block;
+  width: calc(var(--text-cell) * 2);
+  font-family: var(--text-font);
+  font-size: var(--cjk-size);
+  font-synthesis: none;
+  font-weight: 400;
+  font-variant-ligatures: none;
+  font-kerning: none;
+  line-height: var(--text-size);
+  position: relative;
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: auto;
+  vertical-align: baseline;
+}
+
+.cjk-bitmap {
+  --cjk-ink: var(--fg);
+  color: transparent;
+  font-family: var(--text-font);
+}
+
+.cjk-bitmap::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  background: var(--cjk-ink);
+  pointer-events: none;
+  -webkit-mask-image: url("/assets/cjk/wqy-cjk-body.png");
+  mask-image: url("/assets/cjk/wqy-cjk-body.png");
+  -webkit-mask-position: var(--cjk-x) var(--cjk-y);
+  mask-position: var(--cjk-x) var(--cjk-y);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+a .cjk {
+  font-size: var(--cjk-link-size);
+  top: -1px;
+}
+
+a .cjk-bitmap {
+  --cjk-ink: var(--link);
+}
+
+a .cjk-bitmap::before {
+  top: -2px;
+  -webkit-mask-image: url("/assets/cjk/wqy-cjk-link.png");
+  mask-image: url("/assets/cjk/wqy-cjk-link.png");
+}
+
+a:hover .cjk-bitmap,
+a:focus-visible .cjk-bitmap {
+  --cjk-ink: var(--link-hover);
+}
+
+a:hover .cjk::after,
+a:focus-visible .cjk::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -2px;
+  left: 0;
+  border-bottom: 1px solid var(--cjk-ink, currentColor);
+}
+
+@supports not ((mask-image: url("")) or (-webkit-mask-image: url(""))) {
+  .cjk-bitmap {
+    color: inherit;
+  }
+
+  .cjk-bitmap::before {
+    display: none;
+  }
+}

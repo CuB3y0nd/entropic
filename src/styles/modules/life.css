@@ -1,0 +1,28 @@
+.life-art {
+  color: var(--fg);
+  position: relative;
+  overflow: visible;
+}
+
+.life-grid {
+  --life-grid-size: 13px;
+  display: grid;
+  position: absolute;
+  grid-template-columns: repeat(var(--life-grid-width), var(--life-grid-size));
+  grid-template-rows: repeat(var(--life-grid-height), var(--life-grid-size));
+  width: calc(var(--life-grid-width) * var(--life-grid-size));
+  height: calc(var(--life-grid-height) * var(--life-grid-size));
+  pointer-events: none;
+  z-index: 3;
+}
+
+.life-pixel {
+  display: block;
+  width: var(--life-grid-size);
+  height: var(--life-grid-size);
+}
+
+.life-pixel.is-alive {
+  background: currentColor;
+  box-shadow: 0 0 0 0.5px currentColor;
+}
