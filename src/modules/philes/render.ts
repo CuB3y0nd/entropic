@@ -124,5 +124,5 @@ function renderImage(src: string, alt: string): string {
   const safeAlt = escapeHtml(alt);
   const caption = alt.trim().length > 0 ? `\n<figcaption>${textHtml(alt)}</figcaption>` : "";
 
-  return `<figure class="phile-image"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy" decoding="async" />${caption}</figure>`;
+  return `<figure class="phile-image"><button class="phile-image-trigger" type="button" data-lightbox-image aria-label="Open image preview"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy" decoding="async" /></button>${caption}</figure>`;
 }
