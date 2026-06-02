@@ -74,7 +74,7 @@ export const siteConfig: SiteConfig = {
         { label: "root -at- cubeyond -dot- net" },
         {
           label: "PGP Encryption Key",
-          href: "/key.asc",
+          href: "/key.asc"
         },
         {
           label: "github@plt",
