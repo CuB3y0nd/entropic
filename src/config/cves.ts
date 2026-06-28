@@ -7,7 +7,7 @@ export type CveRecord = {
 export const cveRecords: CveRecord[] = [
   {
     id: "CVE-2024-25817",
-    title: "eza buffer overflow via .git metadata",
+    title: "eza Heap Buffer Overflow via .git Metadata",
     date: "2024-03-05"
   },
   {
@@ -17,22 +17,22 @@ export const cveRecords: CveRecord[] = [
   },
   {
     id: "CVE-2026-56113",
-    title: "DHCPv6 PD RENEW Use-After-Free",
+    title: "dhcpcd Heap Use-After-Free in dhcp6_deprecateaddrs via DHCPv6 RENEW",
     date: "2026-06-23"
   },
   {
     id: "CVE-2026-56114",
-    title: "DHCPv6 PD Exclude Stack OOB Write",
-    date: "2026-06-23"
-  },
-  {
-    id: "CVE-2026-56115",
-    title: "IPv6 RA RouteInfo Memory Leak",
+    title: "dhcpcd Stack Out-of-Bounds Write in dhcp6_makemessage()",
     date: "2026-06-23"
   },
   {
     id: "CVE-2026-56116",
-    title: "Control Socket Use-After-Free",
+    title: "dhcpcd Memory Leak DoS via IPv6 Router Advertisement Handling",
+    date: "2026-06-23"
+  },
+  {
+    id: "CVE-2026-56117",
+    title: "dhcpcd Heap Use-After-Free via Control Socket Handling",
     date: "2026-06-23"
   }
 ];

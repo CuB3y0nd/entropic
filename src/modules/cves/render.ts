@@ -4,37 +4,27 @@ import { cellWidth, padCells, wrapWordsCells } from "../textmode/core/layout";
 
 const innerWidth = textmodeConfig.volumeRightColumn - 1;
 const contentWidth = innerWidth - 2;
-const cveIdWidth = 14;
-const dateWidth = 10;
-const columnGap = 2;
-const titleWidth = contentWidth - cveIdWidth - dateWidth - columnGap * 2;
+const descriptionFirstIndent = "  \\_ ";
+const descriptionRestIndent = "     ";
+const descriptionWidth = contentWidth - Math.max(cellWidth(descriptionFirstIndent), cellWidth(descriptionRestIndent));
 
 export function renderCveRegister(records: CveRecord[]): string {
   const sortedRecords = [...records].sort(compareCveIdsDesc);
-  const lines = [
-    "",
-    frameTop(),
-    renderHeader(),
-    frameRule(),
-    ...sortedRecords.flatMap(renderCveRow),
-    frameBottom(),
-    "",
-    textHtml(renderStats(sortedRecords.length))
-  ];
+  const rows = sortedRecords.flatMap(renderCveRow);
+  const lines = ["", frameTop(), ...rows, frameBottom(), "", textHtml(renderStats(sortedRecords.length))];
 
   return `${lines.join("\n")}\n`;
 }
 
 function renderCveRow(record: CveRecord): string[] {
-  const titleLines = wrapWordsCells(record.title, titleWidth);
+  const descriptionLines = wrapWordsCells(record.title, descriptionWidth);
 
-  return titleLines.map((titleLine, index) => {
-    const idHtml = index === 0 ? renderLinkedCveId(record.id) : textHtml(" ".repeat(cveIdWidth));
-    const titleHtml = textHtml(padCells(titleLine, titleWidth));
-    const dateHtml = index === 0 ? textHtml(padCells(record.date, dateWidth)) : textHtml(" ".repeat(dateWidth));
-
-    return `│ ${idHtml}${" ".repeat(columnGap)}${titleHtml}${" ".repeat(columnGap)}${dateHtml} │`;
-  });
+  return [
+    renderRecordMarker(record),
+    ...descriptionLines.map((line, index) =>
+      frameTextLine(`${index === 0 ? descriptionFirstIndent : descriptionRestIndent}${line}`)
+    )
+  ];
 }
 
 function compareCveIdsDesc(left: CveRecord, right: CveRecord): number {
@@ -53,10 +43,11 @@ function parseCveId(id: CveRecord["id"]): { year: number; sequence: number } {
   };
 }
 
-function renderLinkedCveId(id: CveRecord["id"]): string {
-  const padding = " ".repeat(Math.max(0, cveIdWidth - cellWidth(id)));
+function renderRecordMarker(record: CveRecord): string {
+  const visibleText = `[ ${record.id} ] @ ${record.date}`;
+  const html = `[ ${externalLink(cveUrl(record.id), record.id)} ] @ ${textHtml(record.date)}`;
 
-  return `${externalLink(cveUrl(id), id)}${textHtml(padding)}`;
+  return frameHtmlLine(html, visibleText);
 }
 
 function cveUrl(id: CveRecord["id"]): string {
@@ -71,20 +62,18 @@ function renderStats(count: number): string {
   ].join("\n");
 }
 
-function renderHeader(): string {
-  return `│ ${textHtml(padCells("ID", cveIdWidth))}${" ".repeat(columnGap)}${textHtml(
-    padCells("TITLE", titleWidth)
-  )}${" ".repeat(columnGap)}${textHtml(padCells("DATE", dateWidth))} │`;
-}
-
 function frameTop(): string {
   return `┌${"─".repeat(innerWidth)}┐`;
 }
 
-function frameRule(): string {
-  return `├${"─".repeat(innerWidth)}┤`;
-}
-
 function frameBottom(): string {
   return `└${"─".repeat(innerWidth)}┘`;
+}
+
+function frameTextLine(input: string): string {
+  return `│ ${textHtml(padCells(input, contentWidth))} │`;
+}
+
+function frameHtmlLine(html: string, visibleText: string): string {
+  return `│ ${html}${" ".repeat(Math.max(0, contentWidth - cellWidth(visibleText)))} │`;
 }
