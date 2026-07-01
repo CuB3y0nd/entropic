@@ -1,5 +1,5 @@
 .cve-wrap {
-  width: calc(var(--text-cell) * 90);
+  width: calc(var(--text-cell) * var(--cve-columns));
   margin-top: var(--text-size);
 }
 

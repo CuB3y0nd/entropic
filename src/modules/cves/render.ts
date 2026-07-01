@@ -4,6 +4,7 @@ import { cellWidth, padCells, wrapWordsCells } from "../textmode/core/layout";
 
 const innerWidth = textmodeConfig.volumeRightColumn - 1;
 const contentWidth = innerWidth - 2;
+export const cveRegisterColumns = innerWidth + 2;
 const descriptionFirstIndent = "  \\_ ";
 const descriptionRestIndent = "     ";
 const descriptionWidth = contentWidth - Math.max(cellWidth(descriptionFirstIndent), cellWidth(descriptionRestIndent));
