@@ -34,5 +34,15 @@ export const cveRecords: CveRecord[] = [
     id: "CVE-2026-56117",
     title: "dhcpcd Heap Use-After-Free via Control Socket Handling",
     date: "2026-06-23"
+  },
+  {
+    id: "CVE-2026-58458",
+    title: "Don't Starve Together Public Lobby world_gen_data Client DoS",
+    date: "2026-06-27"
+  },
+  {
+    id: "CVE-2026-58459",
+    title: "GPSD gpsprof gnuplot Command Injection via GPS Metadata",
+    date: "2026-06-27"
   }
 ];
