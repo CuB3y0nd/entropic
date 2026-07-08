@@ -52,7 +52,11 @@ const ansiRoles = new Map<string, string>([
   ["bright-cyan", "bright-cyan"],
   ["W", "bright-white"],
   ["br-white", "bright-white"],
-  ["bright-white", "bright-white"]
+  ["bright-white", "bright-white"],
+  ["bold", "bold"],
+  ["italic", "italic"],
+  ["underline", "underline"],
+  ["strike", "strike"],
 ]);
 
 const inkBlockPattern = /^\s*--\[ ink \]--\s*$/;
@@ -225,15 +229,22 @@ function parseMarker(input: string, start: number): { role: string; text: string
     return undefined;
   }
 
-  const alias = input.slice(start + 2, pipe).trim();
-  const role = ansiRoles.get(alias);
+  const aliases = input.slice(start + 2, pipe).trim().split(";");
+  const roles: string[] = [];
 
-  if (!role) {
-    throw new Error(`Unknown ANSI role "${alias}".`);
+  for (const alias of aliases) {
+    const trimmedAlias = alias.trim();
+    const role = ansiRoles.get(trimmedAlias);
+
+    if (!role) {
+      throw new Error(`Unknown ANSI role "${trimmedAlias}".`);
+    }
+
+    roles.push(role);
   }
 
   return {
-    role,
+    role: roles.join(" "), // Space-separated roles
     text: unescapeAnsiText(input.slice(pipe + 1, close)),
     end: close + 1
   };
@@ -285,9 +296,14 @@ function appendChunk(chunks: RenderChunk[], chunk: RenderChunk): void {
 
 function renderChunks(chunks: RenderChunk[]): string {
   return chunks
-    .map((chunk) =>
-      chunk.role ? `<span class="ansi ansi-${chunk.role}">${textHtml(chunk.text)}</span>` : textHtml(chunk.text)
-    )
+    .map((chunk) => {
+      if (!chunk.role) {
+        return textHtml(chunk.text);
+      }
+
+      const classes = ["ansi", ...chunk.role.split(" ").map(r => `ansi-${r}`)].join(" ");
+      return `<span class="${classes}">${textHtml(chunk.text)}</span>`;
+    })
     .join("");
 }
 
