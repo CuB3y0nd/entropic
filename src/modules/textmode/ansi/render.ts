@@ -56,7 +56,7 @@ const ansiRoles = new Map<string, string>([
   ["bold", "bold"],
   ["italic", "italic"],
   ["underline", "underline"],
-  ["strike", "strike"],
+  ["strike", "strike"]
 ]);
 
 const inkBlockPattern = /^\s*--\[ ink \]--\s*$/;
@@ -229,7 +229,10 @@ function parseMarker(input: string, start: number): { role: string; text: string
     return undefined;
   }
 
-  const aliases = input.slice(start + 2, pipe).trim().split(";");
+  const aliases = input
+    .slice(start + 2, pipe)
+    .trim()
+    .split(";");
   const roles: string[] = [];
 
   for (const alias of aliases) {
@@ -301,7 +304,7 @@ function renderChunks(chunks: RenderChunk[]): string {
         return textHtml(chunk.text);
       }
 
-      const classes = ["ansi", ...chunk.role.split(" ").map(r => `ansi-${r}`)].join(" ");
+      const classes = ["ansi", ...chunk.role.split(" ").map((r) => `ansi-${r}`)].join(" ");
       return `<span class="${classes}">${textHtml(chunk.text)}</span>`;
     })
     .join("");
