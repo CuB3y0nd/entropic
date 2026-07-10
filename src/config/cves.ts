@@ -44,5 +44,10 @@ export const cveRecords: CveRecord[] = [
     id: "CVE-2026-58459",
     title: "GPSD gpsprof gnuplot Command Injection via GPS Metadata",
     date: "2026-06-27"
+  },
+  {
+    id: "CVE-2026-61702",
+    title: "cups Root-side Banner File Disclosure",
+    date: "2026-06-27"
   }
 ];
