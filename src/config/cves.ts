@@ -42,12 +42,27 @@ export const cveRecords: CveRecord[] = [
   },
   {
     id: "CVE-2026-58459",
-    title: "GPSD gpsprof gnuplot Command Injection via GPS Metadata",
+    title: "GPSd gpsprof gnuplot Command Injection via GPS Metadata",
     date: "2026-06-27"
   },
   {
     id: "CVE-2026-61702",
     title: "cups Root-side Banner File Disclosure",
     date: "2026-06-27"
-  }
+  },
+  {
+    id: "CVE-2026-60122",
+    title: "GPSd gpsprof Code Injection via SKY.satellites used Field",
+    date: "2026-07-23"
+  },
+  {
+    id: "CVE-2026-65601",
+    title: "Traefik before 3.7.7 Namespace Confusion via HTTPRoute ExtensionRef",
+    date: "2026-07-22"
+  },
+  {
+    id: "CVE-2026-65602",
+    title: "Traefik before 3.6.23 IngressRouteTCP ServersTransport Namespace Bypass",
+    date: "2026-07-22"
+  },
 ];
