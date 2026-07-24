@@ -75,9 +75,13 @@
 }
 
 .ansi-underline {
-  text-decoration: underline;
+  text-decoration-line: underline;
 }
 
 .ansi-strike {
-  text-decoration: line-through;
+  text-decoration-line: line-through;
+}
+
+.ansi-underline.ansi-strike {
+  text-decoration-line: underline line-through;
 }

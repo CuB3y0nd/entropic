@@ -4,12 +4,18 @@ import { normalizeText } from "../core/text";
 
 type AnsiToken = {
   text: string;
-  role?: string;
+  roles?: string[];
 };
 
 type RenderChunk = {
   text: string;
-  role?: string;
+  roles?: string[];
+};
+
+type ParsedMarker = {
+  roles: string[];
+  text: string;
+  end: number;
 };
 
 const ansiRoles = new Map<string, string>([
@@ -124,7 +130,7 @@ function renderPlainAnsiLines(input: string, width: number): string[] {
         flushLine();
       }
 
-      appendChunk(lineChunks, { text: char, role: token.role });
+      appendChunk(lineChunks, { text: char, roles: token.roles });
       lineWidth += charWidth;
     }
   }
@@ -171,7 +177,7 @@ function renderInkTextLine(text: string, mask: string, width: number): string[] 
 
   for (const char of text) {
     const role = roleForMask(mask[index]);
-    appendChunk(chunks, { text: char, role });
+    appendChunk(chunks, { text: char, roles: role ? [role] : undefined });
     index += 1;
   }
 
@@ -195,7 +201,7 @@ function parseInlineAnsi(input: string): AnsiToken[] {
 
       if (parsed) {
         flushPlain();
-        tokens.push({ text: parsed.text, role: parsed.role });
+        tokens.push({ text: parsed.text, roles: parsed.roles });
         cursor = parsed.end;
         continue;
       }
@@ -216,7 +222,7 @@ function parseInlineAnsi(input: string): AnsiToken[] {
   }
 }
 
-function parseMarker(input: string, start: number): { role: string; text: string; end: number } | undefined {
+function parseMarker(input: string, start: number): ParsedMarker | undefined {
   const pipe = findUnescaped(input, "|", start + 2);
 
   if (pipe === -1) {
@@ -247,7 +253,7 @@ function parseMarker(input: string, start: number): { role: string; text: string
   }
 
   return {
-    role: roles.join(" "), // Space-separated roles
+    roles,
     text: unescapeAnsiText(input.slice(pipe + 1, close)),
     end: close + 1
   };
@@ -289,7 +295,7 @@ function roleForMask(char: string | undefined): string | undefined {
 function appendChunk(chunks: RenderChunk[], chunk: RenderChunk): void {
   const previous = chunks[chunks.length - 1];
 
-  if (previous && previous.role === chunk.role) {
+  if (previous && sameRoles(previous.roles, chunk.roles)) {
     previous.text += chunk.text;
     return;
   }
@@ -297,14 +303,26 @@ function appendChunk(chunks: RenderChunk[], chunk: RenderChunk): void {
   chunks.push(chunk);
 }
 
+function sameRoles(left: string[] | undefined, right: string[] | undefined): boolean {
+  if (left === right) {
+    return true;
+  }
+
+  if (!left || !right || left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((role, index) => role === right[index]);
+}
+
 function renderChunks(chunks: RenderChunk[]): string {
   return chunks
     .map((chunk) => {
-      if (!chunk.role) {
+      if (!chunk.roles) {
         return textHtml(chunk.text);
       }
 
-      const classes = ["ansi", ...chunk.role.split(" ").map((r) => `ansi-${r}`)].join(" ");
+      const classes = ["ansi", ...chunk.roles.map((role) => `ansi-${role}`)].join(" ");
       return `<span class="${classes}">${textHtml(chunk.text)}</span>`;
     })
     .join("");
@@ -323,7 +341,7 @@ function renderWrappedChunks(chunks: RenderChunk[], width: number): string[] {
         flushLine();
       }
 
-      appendChunk(lineChunks, { text: char, role: chunk.role });
+      appendChunk(lineChunks, { text: char, roles: chunk.roles });
       lineWidth += charWidth;
     }
   }

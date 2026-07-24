@@ -76,7 +76,7 @@ Escaping is local:
     #[c|escape a pipe: \|]
     #[c|escape a close bracket: \]]
 
-Additional text sequencies can be used:
+Additional text styles can be used:
 
     #[bold|bold] #[italic|italic] #[underline|underline] #[strike|strike]
 
@@ -85,7 +85,11 @@ They can even be combined using a semicolon:
     source: An \#[underline;r|underlined red] text
     render: An #[underline;r|underlined red] text
 
-Bold and italic are not render because the font is missing those glyphs.
+    #[underline;strike|underlined and struck through]
+
+Bold and italic syntax is accepted, but the styles are not visible because the
+current font bundle only contains a regular face and synthetic styles are
+disabled.
 
 [ 2. Palette ]─────────────────────────────────────────────────────────────//───
 
