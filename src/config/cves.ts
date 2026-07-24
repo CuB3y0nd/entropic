@@ -64,5 +64,5 @@ export const cveRecords: CveRecord[] = [
     id: "CVE-2026-65602",
     title: "Traefik before 3.6.23 IngressRouteTCP ServersTransport Namespace Bypass",
     date: "2026-07-22"
-  },
+  }
 ];
