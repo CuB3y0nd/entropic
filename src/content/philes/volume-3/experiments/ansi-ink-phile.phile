@@ -76,6 +76,21 @@ Escaping is local:
     #[c|escape a pipe: \|]
     #[c|escape a close bracket: \]]
 
+Additional text styles can be used:
+
+    #[bold|bold] #[italic|italic] #[underline|underline] #[strike|strike]
+
+They can even be combined using a semicolon:
+
+    source: An \#[underline;r|underlined red] text
+    render: An #[underline;r|underlined red] text
+
+    #[underline;strike|underlined and struck through]
+
+Bold and italic syntax is accepted, but the styles are not visible because the
+current font bundle only contains a regular face and synthetic styles are
+disabled.
+
 [ 2. Palette ]─────────────────────────────────────────────────────────────//───
 
 The palette follows Tokyo Night terminal colors [1], but remains ANSI-shaped,

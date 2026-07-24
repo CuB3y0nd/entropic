@@ -65,3 +65,23 @@
 .ansi-bright-white {
   color: var(--ansi-bright-white, #ffffff);
 }
+
+.ansi-bold {
+  font-weight: bold;
+}
+
+.ansi-italic {
+  font-style: italic;
+}
+
+.ansi-underline {
+  text-decoration-line: underline;
+}
+
+.ansi-strike {
+  text-decoration-line: line-through;
+}
+
+.ansi-underline.ansi-strike {
+  text-decoration-line: underline line-through;
+}
