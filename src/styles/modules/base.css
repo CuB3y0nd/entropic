@@ -56,3 +56,10 @@ a:focus-visible {
   max-width: 100vw;
   overflow-x: auto;
 }
+
+.screen > .home-shell,
+.screen > .textmode-wrap {
+  position: relative;
+  left: var(--pixel-align-x, 0px);
+  top: var(--pixel-align-y, 0px);
+}
