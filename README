@@ -137,6 +137,9 @@ Commands
     pnpm build
         build the static site
 
+    pnpm test:wkd
+        verify optional WKD generation and key handling
+
     pnpm assets:fonts
         regenerate font subsets and CJK atlases
 
@@ -170,3 +173,39 @@ Branches
 
 Feature and fix work should branch from `dev`.  Pull requests should be
 squash-merged.  Commits should be signed and should use Conventional Commits.
+
+
+Public Key Discovery
+--------------------
+
+WKD is optional and disabled by default.  To publish a public key by email,
+set both `WKD_EMAIL` and `WKD_PUBLIC_KEY_PATH` in `.env.local` or the hosting
+provider's build environment.  See `.env.example` for the available settings.
+
+    WKD_EMAIL=hello@example.org
+    WKD_PUBLIC_KEY_PATH=public/assets/pgp/public-key.asc
+
+Replace `public/assets/pgp/public-key.asc` with your public key export and
+update the Contact details in `src/config/site.ts`.  The manual download at
+`/assets/pgp/public-key.asc` also works without WKD.  The same source file is
+used to generate WKD, so key updates require replacing only one file.
+
+Both variables empty disables WKD; partial configuration, a private key, or
+an email missing from the public key's UIDs fails the build.  Restart the dev
+server after changing the variables or key file.  Production needs a new
+deployment; the ignored `.env.local` does not configure the hosting provider.
+
+The build derives the mail domain and lookup hash, then generates the policy
+and binary public key under `dist/.well-known/openpgpkey/`.  Generated WKD
+files are not committed.  The Vercel header rules work with any mail domain.
+
+For Vercel, set the variables for Production, deploy, then attach
+`openpgpkey.<mail-domain>` directly to the Production environment.  In
+Cloudflare DNS, add a CNAME named `openpgpkey` using Vercel's displayed target,
+with DNS only (gray cloud) and TTL Auto.  Wait for domain verification and
+HTTPS certificate issuance.  WKD URLs must be public without authentication
+or browser challenges.  Other static hosts need equivalent response headers.
+
+Verify discovery using a fresh GnuPG keyring and compare the complete primary
+fingerprint with your trusted public key export.  Local checks and builds
+cannot verify production DNS, HTTPS, or the hosting provider's access rules.
