@@ -1,3 +1,5 @@
+import { installTextmodeAlignment } from "../alignment/install";
+
 type BootstrapOptions = {
   mobileFitBreakpoint: number;
   particlesEnabled: boolean;
@@ -10,6 +12,7 @@ export function installTextmodeBootstrap(options = readOptions()): void {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   installMobileFit(options.mobileFitBreakpoint);
+  installTextmodeAlignment(options.mobileFitBreakpoint);
 
   if (options.particlesEnabled && !reducedMotion) {
     window.addEventListener(
