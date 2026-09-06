@@ -38,6 +38,9 @@ yarn-error.log*
 .codex/
 .agents/
 
+# local documentation
+/docs/
+
 # test and coverage output
 coverage/
 playwright-report/
