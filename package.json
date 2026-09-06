@@ -17,6 +17,7 @@
     "check": "astro check && biome check .",
     "format": "biome format --write .",
     "lint": "biome lint .",
+    "test:wkd": "node --experimental-strip-types --test scripts/check-wkd.mjs",
     "assets:fonts": "pnpm fonts:subset && pnpm fonts:atlas",
     "fonts:atlas": "node scripts/build-cjk-atlas.mjs",
     "fonts:subset": "node scripts/subset-fonts.mjs"
@@ -26,6 +27,7 @@
     "@chenglou/pretext": "^0.0.7",
     "@vercel/analytics": "^2.0.1",
     "astro": "^7.1.0",
+    "openpgp": "^6.3.1",
     "typescript": "^5.8.3",
     "yaml": "^2.9.0"
   },
