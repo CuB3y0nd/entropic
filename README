@@ -199,13 +199,54 @@ The build derives the mail domain and lookup hash, then generates the policy
 and binary public key under `dist/.well-known/openpgpkey/`.  Generated WKD
 files are not committed.  The Vercel header rules work with any mail domain.
 
-For Vercel, set the variables for Production, deploy, then attach
-`openpgpkey.<mail-domain>` directly to the Production environment.  In
-Cloudflare DNS, add a CNAME named `openpgpkey` using Vercel's displayed target,
-with DNS only (gray cloud) and TTL Auto.  Wait for domain verification and
-HTTPS certificate issuance.  WKD URLs must be public without authentication
-or browser challenges.  Other static hosts need equivalent response headers.
+For Vercel, set the variables for Production and attach
+`openpgpkey.<mail-domain>` directly to that environment, without a domain
+redirect.  Redeploy after setting the variables.  In Cloudflare DNS, add a
+CNAME named `openpgpkey` using Vercel's displayed target, with Proxied (orange
+cloud) and TTL Auto.  Use Full (strict) for the connection to Vercel and wait
+for domain verification, HTTPS certificates, and DNS caches to update.
 
-Verify discovery using a fresh GnuPG keyring and compare the complete primary
-fingerprint with your trusted public key export.  Local checks and builds
-cannot verify production DNS, HTTPS, or the hosting provider's access rules.
+Preserve Vercel's proxy prerequisites for certificate issuance and renewal:
+allow HTTP access to `/.well-known/acme-challenge/*` without redirects or
+browser checks, and leave `/.well-known/vercel/*` uncached.  See:
+https://vercel.com/docs/security/reverse-proxy
+
+The proxy setting reflects deployment testing: direct Vercel connections
+failed during TLS 1.3 shutdown with GnuPG 2.5.21 / GnuTLS 3.8.13, while the
+same WKD lookup succeeded through Cloudflare with default TLS settings.
+Other static hosts need equivalent WKD response headers and their own live
+discovery checks.
+
+WKD clients need public access without authentication or browser challenges.
+Cloudflare's Browser Integrity Check can reject non-browser clients with
+HTTP 403 / error 1010 even when GnuPG succeeds.  Add a scoped exception:
+
+1. Select your domain in Cloudflare, then open Rules > Overview.
+2. Select Create rule > Configuration Rule and name it `WKD public access`.
+3. Under When incoming requests match, choose a custom filter expression
+   and open Edit expression.  Replace the example hostname with your WKD
+   hostname:
+
+       (http.host eq "openpgpkey.example.org"
+        and starts_with(http.request.uri.path, "/.well-known/openpgpkey/")
+        and http.request.method in {"GET" "HEAD"})
+
+4. Under Then the settings are, add Browser Integrity Check and set it to
+   Off.  This exception applies only to WKD GET/HEAD requests on that host.
+5. Select Deploy.
+
+Cloudflare documents configuration rules and selective BIC exceptions here:
+https://developers.cloudflare.com/rules/configuration-rules/create-dashboard/
+https://developers.cloudflare.com/waf/tools/browser-integrity-check/#disable-selectively
+
+After DNS changes have propagated, verify discovery with a fresh keyring:
+
+    gpg --homedir "$(mktemp -d)" --auto-key-locate clear,wkd \
+        --locate-keys hello@example.org
+
+Use your configured email and compare the complete primary fingerprint with
+your trusted public key export.  Check that policy and key URLs accept both
+GET and HEAD with the expected content types and CORS headers.  Test generic
+HTTP clients too: a successful GnuPG lookup alone does not rule out a
+Cloudflare browser check blocking another client.  Local builds cannot
+verify production DNS, HTTPS, or the hosting provider's access rules.
