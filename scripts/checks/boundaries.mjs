@@ -2,6 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { isBuiltin } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse } from "@astrojs/compiler-rs";
 import ts from "typescript";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -14,13 +15,7 @@ const errors = [];
 for (const file of files) {
   const text = await readFile(file, "utf8");
   const scripts = file.endsWith(".astro")
-    ? [
-        { source: /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? "", browser: false },
-        ...[...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((match) => ({
-          source: match[1],
-          browser: true
-        }))
-      ]
+    ? astroScripts(text, file)
     : [{ source: text, browser: /(?:\/client(?:\/|\.ts)|\/glitch\/)/.test(file) }];
   const dependencies = [];
   for (const { source, browser } of scripts) {
@@ -77,6 +72,40 @@ async function walk(directory) {
     })
   );
   return files.flat();
+}
+
+function astroScripts(source, file) {
+  const { ast, diagnostics } = parse(source);
+  const failures = diagnostics.filter((diagnostic) => diagnostic.severity === "error");
+  if (failures.length > 0) {
+    errors.push(`${relative(file)}: Unable to parse Astro: ${failures.map((failure) => failure.text).join("; ")}`);
+    return [];
+  }
+  const frontmatter = ast.frontmatter.program;
+  const scripts = [{ source: source.slice(frontmatter.start, frontmatter.end), browser: false }];
+
+  function visit(node) {
+    if (!node || typeof node !== "object") return;
+    if (
+      node.type === "JSXElement" &&
+      node.openingElement.name.type === "JSXIdentifier" &&
+      node.openingElement.name.name.toLowerCase() === "script"
+    ) {
+      if (node.closingElement) {
+        scripts.push({
+          source: source.slice(node.openingElement.end, node.closingElement.start),
+          browser: true
+        });
+      }
+      return;
+    }
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(visit);
+      else visit(value);
+    }
+  }
+  visit(ast.body);
+  return scripts;
 }
 
 function imports(source) {
