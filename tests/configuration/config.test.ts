@@ -7,6 +7,33 @@ import { sitemapEntries } from "../../src/features/seo/xml";
 
 const site = { url: "https://example.org/", name: "My Philes", description: "A personal textmode site" };
 
+test("sharing images accept public paths and absolute HTTP(S) URLs, including query strings", () => {
+  for (const src of ["/assets/og.jpg", "https://cdn.example.org/og?id=123", "http://cdn.example.org/og.jpg"]) {
+    assert.doesNotThrow(() =>
+      resolveConfig({ site: { ...site, socialImage: { src, alt: "My Philes", width: 1200, height: 630 } } })
+    );
+  }
+});
+
+test("sharing image validation rejects ambiguous URLs and invalid metadata at the responsible field", () => {
+  const socialImage = { src: "/assets/og.jpg", alt: "My Philes", type: "image/jpeg", width: 1200, height: 630 };
+  const cases: readonly [Partial<typeof socialImage>, RegExp][] = [
+    [{ src: "assets/og.jpg" }, /site.socialImage.src/],
+    [{ src: "//cdn.example.org/og.jpg" }, /site.socialImage.src/],
+    [{ src: " https://cdn.example.org/og.jpg" }, /site.socialImage.src/],
+    [{ src: "https://user:password@cdn.example.org/og.jpg" }, /site.socialImage.src/],
+    [{ src: "/assets/og.jpg#preview" }, /site.socialImage.src/],
+    [{ src: "javascript:alert(1)" }, /site.socialImage.src/],
+    [{ alt: " " }, /site.socialImage.alt/],
+    [{ type: "text/html" }, /site.socialImage.type/],
+    [{ width: 0 }, /site.socialImage.width/],
+    [{ height: 630.5 }, /site.socialImage.height/]
+  ];
+  for (const [override, field] of cases) {
+    assert.throws(() => resolveConfig({ site: { ...site, socialImage: { ...socialImage, ...override } } }), field);
+  }
+});
+
 test("an explicit ASCII banner is used verbatim, including leading spaces and empty lines", () => {
   const asciiArt = "  ENTROPIC\n\n    /_\\";
   assert.equal(resolveConfig({ site, home: { asciiArt } }).home.asciiArt, asciiArt);

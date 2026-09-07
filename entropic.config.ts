@@ -36,7 +36,18 @@ export default {
   site: {
     url: "https://www.cubeyond.net/",
     name: "Entropic",
-    description: "Security Research Philes"
+    description: "Security research, reverse engineering, exploitation notes, and CTF write-ups.",
+    // Sharing image: src is a path from public/ (starting with /), or an
+    // absolute HTTP(S) URL. width and height are the image dimensions in px.
+    // alt conveys the image's meaningful text/content for accessibility.
+    // type is the actual image MIME type; omit it if unknown.
+    socialImage: {
+      src: "/assets/social/entropic-og.jpg",
+      alt: "Entropic — Research Philes: vulnerability research, reverse engineering, and exploitation notes.",
+      type: "image/jpeg",
+      width: 1200,
+      height: 630
+    }
   },
   home: {
     // Single-line text; sections/items can override prefix individually. ""

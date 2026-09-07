@@ -69,6 +69,18 @@ export type EntropicConfig = {
     readonly url: string;
     readonly name: string;
     readonly description: string;
+    /** Site-wide sharing image; omit when no image is available. */
+    readonly socialImage?: {
+      /** A path from public/ starting with /, or an absolute HTTP(S) URL. */
+      readonly src: string;
+      /** The meaningful information in the image, for assistive technology. */
+      readonly alt: string;
+      /** Actual image MIME type, such as image/jpeg; omit if unknown. */
+      readonly type?: string;
+      /** Intrinsic image dimensions in pixels. */
+      readonly width: number;
+      readonly height: number;
+    };
   };
   readonly home?: {
     /** Default section heading prefix. Empty string omits the marker and separator. */
