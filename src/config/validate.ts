@@ -21,6 +21,25 @@ export function validateConfig(config: ResolvedConfig): void {
   });
   nonEmpty(config.site.name, "site.name");
   nonEmpty(config.site.description, "site.description");
+  const socialImage = config.site.socialImage;
+  if (socialImage) {
+    at("site.socialImage.src", () => {
+      safeUrl(socialImage.src, "image");
+      if (!/^(?:\/(?!\/)|https?:\/\/)/i.test(socialImage.src) || socialImage.src.trim() !== socialImage.src) {
+        throw new Error("Use a path from public/ starting with /, or an absolute HTTP(S) URL.");
+      }
+      const url = new URL(socialImage.src, config.site.url);
+      if (url.username || url.password || url.hash) {
+        throw new Error("Sharing image URLs must not contain credentials or a fragment.");
+      }
+    });
+    nonEmpty(socialImage.alt, "site.socialImage.alt");
+    if (socialImage.type !== undefined && !/^image\/[a-z0-9.+-]+$/i.test(socialImage.type)) {
+      fail("site.socialImage.type", "Use an image MIME type such as image/jpeg, or omit it if unknown.");
+    }
+    integer(socialImage.width, "site.socialImage.width", 1);
+    integer(socialImage.height, "site.socialImage.height", 1);
+  }
   singleLinePrefix(config.home.sectionPrefix, "home.sectionPrefix");
   singleLinePrefix(config.home.itemPrefix, "home.itemPrefix");
   nonEmpty(config.home.asciiArt, "home.asciiArt");
