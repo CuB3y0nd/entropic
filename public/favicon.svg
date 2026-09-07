@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Entropic</title>
+  <path fill="#0a0b11" d="M2 0h28v2h2v28h-2v2H2v-2H0V2h2Z" />
+  <path
+    fill="#c5fbe6"
+    d="M11 2 15 4 25 3 22 8H14L12 14 20 13 23 10 21 18H12V24L20 23 29 18 25 26 10 30 5 27 8 23V10L6 8Z"
+  />
+</svg>
