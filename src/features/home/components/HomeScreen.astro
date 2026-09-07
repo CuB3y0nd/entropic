@@ -1,0 +1,37 @@
+---
+import { effectsConfig } from "@/config/server";
+import SiteBadgePanel from "@/features/site-badges/components/SiteBadgePanel.astro";
+import PreBlock from "@/shared/textmode/PreBlock.astro";
+import type { Volume } from "@/features/volumes";
+import { renderHome } from "../rendering/render";
+import "../styles.css";
+
+type Props = { volumes: readonly Volume[] };
+const { asciiText, asciiHtml, homeText } = renderHome(Astro.props.volumes);
+---
+
+<div class="home-page inline-grid grid-cols-[min-content]">
+  <section class="home-shell inline-block text-left">
+    <div
+      class="ascii-hero relative inline-block mb-line"
+      data-glitch-config={effectsConfig.homeAsciiGlitch.enabled
+        ? JSON.stringify(effectsConfig.homeAsciiGlitch)
+        : undefined}
+    >
+      <pre id="home-ascii" class="textmode-pre home-pre ascii-pre" data-ascii-text={asciiText} set:html={asciiHtml} />
+      <pre id="home-ascii-glitch" class="textmode-pre home-pre ascii-pre ascii-glitch" aria-hidden="true"></pre>
+    </div>
+    <PreBlock class="home-pre" html={homeText} />
+  </section>
+  <SiteBadgePanel />
+</div>
+
+<script>
+  import { initHomeAsciiGlitch } from "../glitch/controller";
+
+  import { afterPageLoad } from "@/shared/browser/ready";
+
+  afterPageLoad(() => {
+    window.setTimeout(initHomeAsciiGlitch, 1200);
+  });
+</script>

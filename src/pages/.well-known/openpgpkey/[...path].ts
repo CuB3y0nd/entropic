@@ -1,11 +1,9 @@
 import type { APIRoute, GetStaticPaths } from "astro";
-import { createWkdResources, type WkdResource } from "../../../modules/wkd/publication";
+import { config } from "@/config/server";
+import { createWkdResources, type WkdResource } from "@/features/wkd/publication";
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const resources = await createWkdResources({
-    email: import.meta.env.WKD_EMAIL,
-    publicKeyPath: import.meta.env.WKD_PUBLIC_KEY_PATH
-  });
+  const resources = await createWkdResources(config.wkd.enabled ? config.wkd : {});
 
   return resources.map((resource) => ({
     params: { path: resource.path },

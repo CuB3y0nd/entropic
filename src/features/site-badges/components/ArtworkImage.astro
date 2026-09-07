@@ -1,0 +1,25 @@
+---
+import { Image } from "astro:assets";
+import { safeUrl } from "@/shared/urls";
+import type { ArtworkImage } from "../model";
+
+type Props = { image: ArtworkImage; class?: string };
+const { image, class: className } = Astro.props;
+const attributes = {
+  class: className,
+  alt: "",
+  "aria-hidden": "true" as const,
+  width: image.displayWidthPx,
+  height: image.displayHeightPx,
+  loading: "lazy" as const,
+  decoding: "async" as const
+};
+---
+
+{
+  typeof image.source === "string" ? (
+    <img src={safeUrl(image.source, "image")} {...attributes} />
+  ) : (
+    <Image src={image.source} format="webp" densities={[1, 2]} {...attributes} />
+  )
+}

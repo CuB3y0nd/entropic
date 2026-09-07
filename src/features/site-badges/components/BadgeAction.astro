@@ -1,0 +1,70 @@
+---
+import { safeUrl } from "@/shared/urls";
+import { badgeHeightPx, badgeWidthPx } from "../layout";
+import type { SiteBadge } from "../model";
+
+type Props = { badge: SiteBadge; hasOverlap: boolean };
+const { badge, hasOverlap } = Astro.props;
+const isCopy = badge.copyText !== undefined;
+const Action = isCopy ? "button" : "a";
+const href = badge.href === undefined ? undefined : safeUrl(badge.href);
+const opensTab = href !== undefined && /^(?:https?:)?\/\//i.test(href);
+const imageSrc = safeUrl(badge.imageSrc, "image");
+const copyDialogId = isCopy ? `badge-copy-${crypto.randomUUID()}` : undefined;
+---
+
+<li class="badge-item">
+  <Action
+    class="badge-action"
+    href={href}
+    type={isCopy ? "button" : undefined}
+    title={isCopy ? `Copy ${badge.label}` : badge.label}
+    aria-label={isCopy ? `Copy ${badge.label}` : undefined}
+    target={opensTab ? "_blank" : undefined}
+    rel={opensTab ? "noopener noreferrer" : undefined}
+    data-copy-text={badge.copyText}
+    popovertarget={copyDialogId}
+  >
+    <img src={imageSrc} alt={badge.label} width={badgeWidthPx} height={badgeHeightPx} decoding="async" />
+    {
+      hasOverlap && (
+        <span class="badge-reveal" aria-hidden="true">
+          <img src={imageSrc} alt="" width={badgeWidthPx} height={badgeHeightPx} decoding="async" />
+        </span>
+      )
+    }
+  </Action>
+  {
+    isCopy && (
+      <>
+        <span class="badge-copy-status" role="status" aria-atomic="true" />
+        <div
+          id={copyDialogId}
+          class="badge-copy-dialog"
+          popover="auto"
+          role="dialog"
+          aria-labelledby={`${copyDialogId}-label`}
+        >
+          <label id={`${copyDialogId}-label`} for={`${copyDialogId}-text`}>
+            Copy {badge.label}
+          </label>
+          {/* HTML drops the first newline in a textarea; a sentinel preserves the configured text. */}
+          <textarea
+            id={`${copyDialogId}-text`}
+            rows="2"
+            readonly
+            spellcheck="false"
+            autocomplete="off"
+            set:text={`\n${badge.copyText}`}
+          />
+          <div class="badge-copy-dialog-footer">
+            <span>Select and copy.</span>
+            <button type="button" popovertarget={copyDialogId} popovertargetaction="hide">
+              Close
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
+</li>

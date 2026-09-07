@@ -1,0 +1,13 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+import type { PageProps } from "./types";
+
+type Props = PageProps;
+---
+
+<BaseLayout {...Astro.props}>
+  <main class="screen relative z-1 max-w-screen overflow-x-auto text-center">
+    <slot />
+  </main>
+</BaseLayout>

@@ -1,0 +1,1 @@
+export { installImageLightbox } from "./images";

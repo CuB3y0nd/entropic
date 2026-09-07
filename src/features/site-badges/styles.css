@@ -1,0 +1,292 @@
+@import "../../styles/layers.css";
+
+@layer components.features {
+  .artwork-rotation,
+  .badge-decoration {
+    display: contents;
+  }
+
+  .site-badges {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    margin-top: 24px;
+    padding-inline: 20px;
+    font-family: var(--text-font);
+    font-size: var(--home-size);
+    line-height: 1;
+    text-align: left;
+    container: site-badges / inline-size;
+  }
+
+  .badge-panel {
+    --badge-artwork-side-gap: 16px;
+    --badge-artwork-bottom-gap: var(--badge-gap);
+    width: min(var(--badge-panel-width), calc(100% - 16px));
+    max-width: 472px;
+    margin-left: 16px;
+  }
+
+  .badge-panel[data-overlap] {
+    --badge-artwork-side-gap: calc(-1 * var(--badge-artwork-overlap));
+    --badge-artwork-bottom-gap: calc(-1 * var(--badge-artwork-overlap));
+  }
+
+  .badge-composition {
+    display: grid;
+    isolation: isolate;
+    grid-template-areas: "art" "actions" "companion";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .badge-artwork {
+    grid-area: art;
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: var(--badge-artwork-width);
+    max-width: 100%;
+    height: auto;
+    justify-self: center;
+    align-self: end;
+    margin-bottom: calc(-1 * var(--badge-artwork-overlap));
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .badge-companion {
+    grid-area: companion;
+    justify-self: end;
+    width: var(--badge-companion-width);
+    max-width: 100%;
+    margin-top: 8px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .badge-companion[data-placement="bottom-left"] {
+    justify-self: start;
+  }
+
+  .badge-companion img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .badge-panel:is([data-placement="top-left"], [data-placement="bottom-left"], [data-placement="left"]) .badge-artwork {
+    justify-self: start;
+  }
+
+  .badge-panel:is([data-placement="top-right"], [data-placement="bottom-right"], [data-placement="right"])
+    .badge-artwork {
+    justify-self: end;
+  }
+
+  .badge-panel:is([data-placement^="bottom"], [data-placement="left"], [data-placement="right"]) .badge-composition {
+    grid-template-areas: "actions" "art" "companion";
+  }
+
+  .badge-panel:is([data-placement^="bottom"], [data-placement="left"], [data-placement="right"]) .badge-artwork {
+    margin-top: var(--badge-artwork-bottom-gap);
+    margin-bottom: 0;
+  }
+
+  @container site-badges (min-width: 400px) {
+    .badge-panel:is([data-placement="left"], [data-placement="right"]) {
+      width: min(var(--badge-horizontal-width), calc(100% - 16px));
+    }
+
+    .badge-panel[data-placement="left"] .badge-composition {
+      grid-template-areas: "art actions" ". companion";
+      grid-template-columns: max(0px, calc(var(--badge-artwork-width) + var(--badge-artwork-side-gap))) minmax(0, 1fr);
+    }
+
+    .badge-panel[data-placement="right"] .badge-composition {
+      grid-template-areas: "actions art" "companion .";
+      grid-template-columns: minmax(0, 1fr) max(0px, calc(var(--badge-artwork-width) + var(--badge-artwork-side-gap)));
+    }
+
+    .badge-panel:is([data-placement="left"], [data-placement="right"]) .badge-artwork {
+      max-width: none;
+      align-self: end;
+      margin: 0;
+    }
+
+    .badge-panel:is([data-placement="left"], [data-placement="right"]) .badge-actions {
+      align-self: end;
+      justify-content: start;
+    }
+  }
+
+  .badge-actions {
+    /* Each badge reveal must paint above the decoration. */
+    grid-area: actions;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, var(--badge-width));
+    justify-content: center;
+    gap: var(--badge-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .badge-item,
+  .badge-action,
+  .badge-item img {
+    display: block;
+    width: var(--badge-width);
+    height: var(--badge-height);
+  }
+
+  .badge-action {
+    position: relative;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--home-bg, var(--bg));
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    appearance: none;
+    outline: 1px solid transparent;
+    outline-offset: 2px;
+  }
+
+  .badge-panel[data-overlap] .badge-action {
+    background: transparent;
+  }
+
+  .badge-panel:not([data-overlap]) .badge-action:is(:focus-visible, :active) {
+    outline-color: var(--link);
+  }
+
+  .badge-reveal {
+    /* Crossfade above the art without moving controls or switching layers. */
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: var(--home-bg, var(--bg));
+    opacity: 0;
+    pointer-events: none;
+    outline: 1px solid transparent;
+    outline-offset: 2px;
+    transition:
+      opacity 180ms ease-out,
+      outline-color 180ms ease-out;
+  }
+
+  .badge-panel[data-overlap] .badge-reveal {
+    display: block;
+  }
+
+  .badge-action:focus-visible .badge-reveal,
+  .badge-action:active .badge-reveal {
+    opacity: 1;
+    outline-color: var(--link);
+  }
+
+  @media (hover: hover) {
+    .badge-panel:not([data-overlap]) .badge-action:hover {
+      outline-color: var(--link);
+    }
+
+    .badge-action:hover .badge-reveal {
+      opacity: 1;
+      outline-color: var(--link);
+    }
+  }
+
+  @media (hover: none) {
+    .badge-reveal {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .badge-reveal {
+      transition: none;
+    }
+  }
+
+  .badge-item img {
+    image-rendering: pixelated;
+  }
+
+  .badge-item {
+    position: relative;
+  }
+
+  .badge-copy-status {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    z-index: 3;
+    translate: -50% 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .badge-copy-status:not(:empty) {
+    padding: 4px 6px;
+    border: 1px solid var(--link);
+    background: var(--home-bg, var(--bg));
+    color: var(--link);
+  }
+
+  .badge-copy-dialog {
+    box-sizing: border-box;
+    width: min(320px, calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    margin: auto;
+    padding: 16px;
+    border: 1px solid var(--link);
+    background: var(--home-bg, var(--bg));
+    color: var(--fg);
+    font: inherit;
+    line-height: 1.5;
+    text-align: left;
+    overflow: auto;
+  }
+
+  .badge-copy-dialog label,
+  .badge-copy-dialog textarea {
+    display: block;
+  }
+
+  .badge-copy-dialog textarea {
+    box-sizing: border-box;
+    width: 100%;
+    margin-block: 8px 12px;
+    padding: 6px;
+    border: 1px solid currentColor;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    resize: vertical;
+  }
+
+  .badge-copy-dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .badge-copy-dialog button {
+    padding: 4px 8px;
+    border: 1px solid currentColor;
+    border-radius: 0;
+    background: transparent;
+    color: var(--link);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .badge-copy-dialog :is(textarea, button):focus-visible {
+    outline: 1px solid var(--link);
+    outline-offset: 2px;
+  }
+}

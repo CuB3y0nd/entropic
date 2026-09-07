@@ -1,11 +1,18 @@
-@import "./modules/tokens.css";
-@import "./modules/base.css";
-@import "./modules/particles.css";
-@import "./modules/home.css";
-@import "./modules/life.css";
-@import "./modules/ansi.css";
-@import "./modules/phile.css";
-@import "./modules/cves.css";
-@import "./modules/lightbox.css";
-@import "./modules/cjk.css";
-@import "./modules/responsive.css";
+@import "./layers.css";
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "./foundation/tokens.css" layer(foundation);
+@import "./foundation/base.css" layer(foundation);
+@import "../shared/textmode/styles/cjk.css" layer(components.textmode);
+@import "./responsive.css" layer(responsive);
+
+/* Only UI templates supply utility names; article text and generated atlases do not. */
+@source "../layouts/**/*.astro";
+@source "../features/**/*.astro";
+@source "../shared/**/*.astro";
+
+/* Keep the typed appearance configuration as the source of theme values. */
+@theme inline {
+  --font-textmode: var(--text-font);
+  --color-foreground: var(--fg);
+  --spacing-line: var(--text-size);
+}

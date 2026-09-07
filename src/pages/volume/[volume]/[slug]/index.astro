@@ -1,30 +1,29 @@
 ---
-import TextmodeLayout from "../../../../layouts/textmode/TextmodeLayout.astro";
-import PhileShell from "../../../../components/phile/PhileShell.astro";
-import { getAllPhiles, getPhileByRoute } from "../../../../modules/philes/repository";
-import { phileExcerpt } from "../../../../modules/seo/xml";
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import TextmodeLayout from "@/layouts/TextmodeLayout.astro";
+import PhileShell from "@/features/philes/components/PhileShell.astro";
+import { getAllPhiles } from "@/features/philes/server";
+import { phileExcerpt } from "@/features/seo";
 
-export async function getStaticPaths() {
+export const getStaticPaths = (async () => {
   const philes = await getAllPhiles();
   return philes.map((phile) => ({
     params: {
       volume: String(phile.route.volume),
       slug: phile.route.slug
-    }
+    },
+    props: { phile }
   }));
-}
+}) satisfies GetStaticPaths;
 
-const volumeNumber = Number(Astro.params.volume);
-const phile = await getPhileByRoute(volumeNumber, Astro.params.slug ?? "");
-
-if (!phile) {
-  return Astro.redirect("/");
-}
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { phile } = Astro.props;
 
 const hasCjk = phile.data.lang === "zh" || /[\p{Script=Han}]/u.test(`${phile.data.title}\n${phile.body}`);
 ---
 
 <TextmodeLayout
+  lang={phile.data.lang}
   title={phile.data.title}
   description={phileExcerpt(phile)}
   preloadCjk={hasCjk}
