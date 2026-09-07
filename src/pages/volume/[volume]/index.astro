@@ -1,22 +1,20 @@
 ---
-import TextmodeLayout from "../../../layouts/textmode/TextmodeLayout.astro";
-import VolumeScreen from "../../../components/volume/VolumeScreen.astro";
-import { getAllVolumes, getVolume } from "../../../modules/volumes/repository";
-import { volumeListLabel, volumeTitle } from "../../../modules/volumes/labels";
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import TextmodeLayout from "@/layouts/TextmodeLayout.astro";
+import VolumeScreen from "@/features/volumes/components/VolumeScreen.astro";
+import { getAllVolumes } from "@/features/volumes/server";
+import { volumeListLabel, volumeTitle } from "@/features/volumes";
 
-export async function getStaticPaths() {
+export const getStaticPaths = (async () => {
   const volumes = await getAllVolumes();
   return volumes.map((volume) => ({
-    params: { volume: String(volume.number) }
+    params: { volume: String(volume.number) },
+    props: { volume }
   }));
-}
+}) satisfies GetStaticPaths;
 
-const volumeNumber = Number(Astro.params.volume);
-const volume = await getVolume(volumeNumber);
-
-if (!volume) {
-  return Astro.redirect("/");
-}
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { volume } = Astro.props;
 
 const hasCjk = volume.philes.some((phile) => phile.data.lang === "zh" || /[\p{Script=Han}]/u.test(phile.data.title));
 ---

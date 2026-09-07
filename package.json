@@ -5,37 +5,49 @@
   "description": "A retro textmode blog theme for purists.",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1",
+  "packageManager": "pnpm@12.3.4",
   "engines": {
-    "node": ">=22.12.0",
-    "pnpm": ">=9"
+    "node": ">=24",
+    "pnpm": ">=12"
   },
   "scripts": {
     "dev": "astro dev",
     "build": "pnpm check && astro build",
     "preview": "astro preview",
-    "check": "astro check && biome check .",
-    "format": "biome format --write .",
+    "check": "pnpm check:config && pnpm check:types && biome check . && pnpm check:astro && pnpm check:boundaries",
+    "format": "biome format --write . && prettier --write \"src/**/*.astro\"",
     "lint": "biome lint .",
-    "test:wkd": "node --experimental-strip-types --test scripts/check-wkd.mjs",
+    "test:browser": "node tests/browser/run.mjs",
+    "test:wkd": "node --import tsx --test tests/wkd/*.test.mjs",
     "assets:fonts": "pnpm fonts:subset && pnpm fonts:atlas",
-    "fonts:atlas": "node scripts/build-cjk-atlas.mjs",
-    "fonts:subset": "node scripts/subset-fonts.mjs"
+    "fonts:atlas": "node scripts/fonts/build-cjk-atlas.mjs",
+    "fonts:subset": "node scripts/fonts/subset-fonts.mjs",
+    "check:astro": "prettier --check \"src/**/*.astro\"",
+    "check:boundaries": "node scripts/checks/boundaries.mjs",
+    "test": "node --import tsx --test tests/*/*.test.ts tests/*/*.test.mjs",
+    "check:types": "astro check && tsc --noEmit",
+    "check:config": "node --import tsx scripts/checks/configuration.ts"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.9",
-    "@chenglou/pretext": "^0.0.7",
+    "@chenglou/pretext": "^0.0.8",
     "@vercel/analytics": "^2.0.1",
-    "astro": "^7.1.0",
+    "astro": "^7.3.1",
+    "entities": "^8.0.0",
     "openpgp": "^6.3.1",
-    "typescript": "^5.8.3",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
-    "@tailwindcss/vite": "^4.3.0",
-    "@types/node": "^25.9.1",
-    "playwright": "^1.60.0",
-    "tailwindcss": "^4.3.0"
+    "@astrojs/check": "^0.9.10",
+    "@biomejs/biome": "^2.5.12",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.4.1",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "playwright": "^1.63.0",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "sharp": "^0.35.4",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.13",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

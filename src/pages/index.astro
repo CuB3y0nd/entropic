@@ -1,7 +1,7 @@
 ---
-import TextmodeLayout from "../layouts/textmode/TextmodeLayout.astro";
-import HomeScreen from "../components/home/HomeScreen.astro";
-import { getAllVolumes } from "../modules/volumes/repository";
+import TextmodeLayout from "@/layouts/TextmodeLayout.astro";
+import HomeScreen from "@/features/home/components/HomeScreen.astro";
+import { getAllVolumes } from "@/features/volumes/server";
 
 const volumes = await getAllVolumes();
 ---

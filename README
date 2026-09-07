@@ -3,33 +3,69 @@ Entropic
 
 Entropic is a retro textmode blog theme for purists.
 
-The implementation is modern Astro.  The surface is not: fixed-width text,
-ASCII frames, volume indexes, ANSI colors, bitmap CJK glyphs, and plain `.phile`
-documents.
+The implementation uses Astro, Vite, and Tailwind CSS utilities. The surface
+uses fixed-width text, ASCII frames, volume indexes, ANSI colors, bitmap CJK
+glyphs, and plain `.phile` documents.
+
+
+Configuration
+-------------
+
+Edit `entropic.config.ts` at the repository root. It is the single entry for
+site identity, home sections, 88x31 buttons, decorative artwork, colors,
+effects, volume metadata, CVE records, analytics, and optional WKD publishing.
+You do not need to edit files inside `src/` to customize these settings.
+
+The checked-in file is also the personal site configuration. `home.asciiArt`
+inherits the banner from `src/config/defaults.ts` unless overridden; WKD and
+the CVE page are explicitly enabled.
+Set `cves.enabled: false` to omit the CVE page, its homepage links, and its sitemap
+entry; the records can remain in `cves.records` for later use.
+
+The file is a plain TypeScript object with `as const satisfies EntropicConfig`.
+Your editor provides field descriptions and completion, including artwork
+preset names and rotation modes. Omitted settings inherit internal defaults;
+objects merge at documented leaves and arrays replace their defaults.
+
+    pnpm check:config
+        validate values, artwork selection, and optional public key input
+
+    pnpm check
+        also check unknown fields/types, source boundaries, and formatting
+
+    pnpm dev
+        preview configuration edits locally
+
+Field comments in `entropic.config.ts` describe supported values, examples,
+and default inheritance. The configuration types live in `src/config/types.ts`.
 
 
 Directory Layout
 ----------------
 
-The tree is organized by site responsibility.
-
-    src/config/             public site, volume, appearance, and effect config
+    entropic.config.ts      the user-editable configuration
+    src/config/             internal types, defaults, validation, and projections
     src/content/philes/     article source files
-    src/components/         Astro components
+    src/pages/              Astro file routes and HTTP output adapters
+    src/features/           home, site-badges, philes, volumes, cves, seo, and wkd
+    src/shared/textmode/    text cells, ANSI, bitmap CJK, and browser behaviors
+    src/shared/browser/     browser lifecycle helpers
     src/layouts/            shared page shells
-    src/modules/philes/     phile loading and parsing
-    src/modules/volumes/    volume discovery, labels, and sorting
-    src/modules/textmode/   ANSI, bitmap CJK, layout, particles, and fit logic
-    src/modules/seo/        RSS, sitemap, and robots helpers
-    scripts/                maintenance scripts
-    scripts/hooks/          repository hooks
+    src/styles/             foundation, layer ordering, and responsive rules
+    src/assets/decorations/  original artwork grouped by series
+    src/generated/          generated glyph metadata
+    scripts/                font generation, checks, and Git hooks
+    tests/                  configuration, content, browser, and security regressions
 
-The main knobs are:
+Features own their data access, rendering, components, and styles. Shared
+textmode primitives have separate pure, server, and browser entry points.
+Cross-feature imports use public entries; `pnpm check:boundaries` verifies
+these interfaces and keeps server dependencies out of browser modules.
 
-    src/config/site.ts          home page text and links
-    src/config/volumes.ts       volume titles, sorting, and postscripts
-    src/config/appearance.ts    colors, fonts, and text cell sizing
-    src/config/effects.ts       glitch and particle behavior
+Tailwind handles common layout and spacing. Pixel typography, ANSI/CJK output,
+and animation rules live in native CSS. Theme utilities use the typed
+configuration; Preflight is not enabled. Astro bundles styles from their owning
+components and modules instead of loading every feature's CSS on every page.
 
 
 Content
@@ -50,8 +86,9 @@ Required fields:
 Optional fields:
 
     order
-    subtitle
+    slug
     redacted
+    lang
 
 The body is rendered as textmode content.  It preserves layout, wraps to the
 configured article width, renders images, accepts ANSI escape sequences, and
@@ -101,7 +138,8 @@ The public routes are:
     /volume/<n>/
     /volume/<n>/<phile-name>/
 
-Per-volume behavior is configured in `src/config/volumes.ts`.
+Per-volume behavior is configured in `entropic.config.ts` under `volumes`.
+Only the fields supplied for a volume override its generated defaults.
 
 
 Redactions
@@ -111,16 +149,69 @@ A redacted phile uses:
 
     redacted: true
 
-The public page renders the redacted screen.  The pre-commit hook also unstages
-redacted philes, leaving the worktree untouched.
+The loader discards redacted bodies from the content store and the public page
+renders the redacted screen. The pre-commit hook parses staged YAML with the
+same parser and unstages redacted philes, leaving the worktree untouched.
+Install dependencies before using the hook. Invalid frontmatter blocks the
+commit before the hook changes the index.
+
+Redaction is a publishing flag, not secret storage: it does not erase files
+from existing Git history. Keep confidential source material outside Git.
 
 Enable hooks in a fresh clone:
 
     git config core.hooksPath scripts/hooks
 
 
+Site Badges and Artwork
+-----------------------
+
+`entropic.config.ts` groups links and decoration under `buttons`. The default
+rotates through all 25 presets daily in `Asia/Shanghai`:
+
+    buttons: {
+      items: [/* your 88x31 links or copy controls */],
+      shuffleOnBuild: true,
+      artwork: {
+        mode: "daily",
+        timeZone: "Asia/Shanghai",
+        seed: "entropic-artwork-v1",
+        fallback: "nagaraNozomi"
+      }
+    }
+
+All visitors with the same date see the same composition, including after a
+refresh. Each cycle shuffles every selected preset once and avoids repeats at
+the cycle boundary. The date is checked on load and when returning to a tab or
+cached page; a continuously open page does not swap on a timer.
+No daily rebuild, endpoint, cookie, or browser storage is needed.
+
+Use `artwork: false` for links alone, or
+`artwork: { mode: "fixed", preset: "nagaraNozomi" }` for a fixed image.
+An empty `items` array hides the panel. The inline configuration comments cover
+custom images, preset pools, interval/visit modes, and the no-JavaScript fallback.
+
+`shuffleOnBuild: true` shuffles buttons once per production build and keeps
+that order across visits and artwork changes. Local development uses items order.
+Each item supplies `label`, `imageSrc`, and either `href` or `copyText`.
+
+Artwork originals live under `src/assets/decorations/<series>/`. Presets retain
+the approved display sizes, overlap, and companion placement. Astro builds 1x
+and 2x WebP images with lossless encoding; originals remain unchanged. Inert HTML
+templates keep unselected compositions from fetching images. The shareable
+animated site badge stays at `/assets/88x31/button.gif` for other sites to link to.
+
+CSS grid and container queries own layout. Overlapped badges appear above the
+artwork on hover or keyboard focus; touch devices show them immediately.
+Artwork is decorative and cannot intercept link activation.
+
+
 Commands
 --------
+
+Use Node.js 24 or newer and the pinned pnpm 12.3.4. `pnpm check:types` runs
+Astro diagnostics with the official TS 6 compatibility API and the native
+TypeScript 7 checker. Keep both aliases until Astro supports the new API.
 
     pnpm install --frozen-lockfile
         install dependencies
@@ -129,13 +220,26 @@ Commands
         run the local development server
 
     pnpm check
-        run Astro diagnostics and Biome checks
+        run Astro and TypeScript diagnostics, formatting/lint, and module boundaries
 
     pnpm format
-        format source files
+        format TS/JS/CSS/JSON with Biome and Astro templates with Prettier
+
+    pnpm lint
+        lint the files covered by Biome
 
     pnpm build
         build the static site
+
+    pnpm test
+        run content, textmode, redaction-hook, and WKD regression tests
+
+    pnpm exec playwright install chromium firefox
+        install the browser revisions used by this Playwright version
+
+    pnpm test:browser http://127.0.0.1:4329
+        check fitting, animation lifecycle, and site badges against a production preview
+        set PLAYWRIGHT_BROWSER=firefox to use Firefox
 
     pnpm test:wkd
         verify optional WKD generation and key handling
@@ -156,7 +260,7 @@ Run `pnpm assets:fonts` only when the committed font outputs need to change:
 
 The command regenerates:
 
-    public/fonts/gohu-subset.woff
+    public/assets/fonts/gohu-subset.woff
     public/assets/cjk/wqy-cjk-body.png
     public/assets/cjk/wqy-cjk-link.png
     src/generated/cjk-atlas.ts
@@ -178,30 +282,41 @@ squash-merged.  Commits should be signed and should use Conventional Commits.
 Public Key Discovery
 --------------------
 
-WKD is optional and disabled by default.  To publish a public key by email,
-set both `WKD_EMAIL` and `WKD_PUBLIC_KEY_PATH` in `.env.local` or the hosting
-provider's build environment.  See `.env.example` for the available settings.
+This personal site enables WKD for `root@cubeyond.net` in `entropic.config.ts`.
+A new site that omits WKD settings leaves publication disabled. To configure it:
 
-    WKD_EMAIL=hello@example.org
-    WKD_PUBLIC_KEY_PATH=public/assets/pgp/public-key.asc
+    wkd: {
+      enabled: true,
+      email: "hello@example.org",
+      publicKeyPath: "public/assets/pgp/public-key.asc"
+    }
 
-Replace `public/assets/pgp/public-key.asc` with your public key export and
-update the Contact details in `src/config/site.ts`.  The manual download at
-`/assets/pgp/public-key.asc` also works without WKD.  The same source file is
-used to generate WKD, so key updates require replacing only one file.
+Set `wkd.enabled: false` to disable publication while retaining the email and path. Replace the referenced file with your
+public key export; its manual download URL also works without WKD. Key changes
+require replacing only that file and rebuilding.
 
-Both variables empty disables WKD; partial configuration, a private key, or
-an email missing from the public key's UIDs fails the build.  Restart the dev
-server after changing the variables or key file.  Production needs a new
-deployment; the ignored `.env.local` does not configure the hosting provider.
+The configuration check rejects missing settings, private keys, and public
+keys whose UIDs do not match the email. The development server watches the
+configured public key file. Production requires a new deployment.
+
+Migration: move the former `WKD_EMAIL` and `WKD_PUBLIC_KEY_PATH` values from
+`.env.local` or the hosting environment into this object. Those old environment
+variables no longer configure WKD; there is one source of truth. The email and
+public-key path are public publishing settings, not credentials.
 
 The build derives the mail domain and lookup hash, then generates the policy
 and binary public key under `dist/.well-known/openpgpkey/`.  Generated WKD
 files are not committed.  The Vercel header rules work with any mail domain.
 
-For Vercel, set the variables for Production and attach
+For pnpm 12 on Vercel, use the pinned `packageManager` via Corepack
+(`ENABLE_EXPERIMENTAL_COREPACK=1` in the build environment). Confirm the actual
+Node.js and pnpm versions in the deployment log; Vercel's default package-manager
+detection is not the same as honoring this pin. Local builds do not verify the
+remote environment.
+
+For Vercel, deploy the configured public key and attach
 `openpgpkey.<mail-domain>` directly to that environment, without a domain
-redirect.  Redeploy after setting the variables.  In Cloudflare DNS, add a
+redirect.  Redeploy after changing the configuration. In Cloudflare DNS, add a
 CNAME named `openpgpkey` using Vercel's displayed target, with Proxied (orange
 cloud) and TTL Auto.  Use Full (strict) for the connection to Vercel and wait
 for domain verification, HTTPS certificates, and DNS caches to update.

@@ -1,0 +1,1 @@
+export { initLifeArt } from "./runtime";

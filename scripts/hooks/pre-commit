@@ -1,31 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-redacted_paths=()
-
-while IFS= read -r -d "" path; do
-  if git show ":$path" | awk '
-    BEGIN { in_frontmatter = 0; status = 1 }
-    NR == 1 && $0 == "---" { in_frontmatter = 1; next }
-    in_frontmatter && $0 == "---" { exit status }
-    in_frontmatter && $0 ~ /^[[:space:]]*redacted:[[:space:]]*true[[:space:]]*(#.*)?$/ {
-      status = 0
-      exit status
-    }
-    END { exit status }
-  '; then
-    redacted_paths+=("$path")
-  fi
-done < <(git diff --cached --name-only -z --diff-filter=ACMR -- "*.phile")
-
-if ((${#redacted_paths[@]} == 0)); then
-  exit 0
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+tsx="$script_dir/../../node_modules/.bin/tsx"
+if [[ ! -x "$tsx" ]]; then
+  printf '%s\n' 'pre-commit: run pnpm install --frozen-lockfile before checking redacted philes.' >&2
+  exit 1
 fi
-
-printf "pre-commit: unstaging redacted philes:\\n" >&2
-
-for path in "${redacted_paths[@]}"; do
-  printf "  %s\\n" "$path" >&2
-  git restore --staged -- "$path"
-done
-
+exec "$tsx" "$script_dir/../content/check-redacted.ts"

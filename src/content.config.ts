@@ -1,6 +1,5 @@
 import { defineCollection } from "astro:content";
-import { phileLoader } from "./modules/philes/loader";
-import { phileSchema } from "./modules/philes/schema";
+import { phileLoader, phileSchema } from "@/features/philes/content";
 
 const philes = defineCollection({
   loader: phileLoader(),

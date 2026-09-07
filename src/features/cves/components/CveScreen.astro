@@ -1,0 +1,12 @@
+---
+import PreBlock from "@/shared/textmode/PreBlock.astro";
+import { cveRecords } from "@/config/server";
+import { cveRegisterColumns, renderCveRegister } from "../rendering/render";
+import "../styles.css";
+
+const cveHtml = renderCveRegister(cveRecords);
+---
+
+<section class="textmode-wrap cve-wrap mt-line" style={`--cve-columns: ${cveRegisterColumns}`}>
+  <PreBlock class="cve-pre relative z-2" html={cveHtml} />
+</section>

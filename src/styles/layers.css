@@ -1,0 +1,3 @@
+/* Every CSS entry declares the order, including styles loaded by dynamic imports. */
+@layer theme, foundation, components, utilities, responsive;
+@layer components.textmode, components.features;

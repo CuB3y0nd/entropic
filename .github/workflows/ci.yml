@@ -26,28 +26,29 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup pnpm, Node.js, and dependencies
+        uses: pnpm/setup@v2.1.0
         with:
-          run_install: false
+          runtime: node@24
+          cache: true
+          require-lockfile: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+      - name: Validate site configuration
+        run: pnpm check:config
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Check Astro and TypeScript
+        run: pnpm check:types
 
-      - name: Run Astro checks
-        run: pnpm exec astro check
+      - name: Check Astro formatting
+        run: pnpm check:astro
 
-      - name: Run WKD checks
-        run: pnpm test:wkd
+      - name: Check module boundaries
+        run: pnpm check:boundaries
+
+      - name: Run regression tests
+        run: pnpm test
 
   biome:
     name: Biome
@@ -56,22 +57,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup pnpm, Node.js, and dependencies
+        uses: pnpm/setup@v2.1.0
         with:
-          run_install: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@24
+          cache: true
+          require-lockfile: true
 
       - name: Run Biome
         run: pnpm exec biome ci . --reporter=github
@@ -84,22 +77,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.1
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup pnpm, Node.js, and dependencies
+        uses: pnpm/setup@v2.1.0
         with:
-          run_install: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          runtime: node@24
+          cache: true
+          require-lockfile: true
 
       - name: Build site
         run: pnpm exec astro build

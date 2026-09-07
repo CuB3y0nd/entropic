@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
-import { requireSite, xmlHeaders } from "../modules/seo/http";
-import { absoluteUrl } from "../modules/seo/xml";
+import { absoluteUrl, requireSite, xmlHeaders } from "@/features/seo";
 
 export const GET: APIRoute = ({ site }) => {
   const siteUrl = requireSite(site, "Robots");

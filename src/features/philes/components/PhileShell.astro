@@ -1,0 +1,39 @@
+---
+import type { Phile } from "../model";
+import { renderPhile } from "../rendering";
+import "@/shared/textmode/styles/life.css";
+import "@/shared/textmode/styles/ansi.css";
+import "../styles.css";
+
+type Props = { phile: Phile };
+const { header, body, footerHtml } = renderPhile(Astro.props.phile);
+---
+
+<article class="textmode-wrap phile-wrap mt-line">
+  <header
+    class="phile-header relative z-2"
+    style={`--phile-header-lines: ${header.lineCount}; --phile-meta-lines: ${header.metaLineCount}; --phile-title-lines: ${header.titleLineCount}`}
+  >
+    <pre class="textmode-pre phile-pre phile-header-side life-art" data-life-root set:html={header.sideHtml} />
+    <pre class="textmode-pre phile-pre phile-header-meta" set:html={header.metaHtml} />
+  </header>
+  {
+    body.kind === "redacted" ? (
+      <pre class="textmode-pre phile-pre phile-body-pre phile-redacted-pre" set:html={body.html} />
+    ) : (
+      body.blocks.map((block) =>
+        block.kind === "image" ? (
+          <div class="phile-media" set:html={block.html} />
+        ) : (
+          <pre class="textmode-pre phile-pre phile-body-pre" set:html={block.html} />
+        )
+      )
+    )
+  }
+  <pre class="textmode-pre phile-pre phile-footer-pre" set:html={footerHtml} />
+</article>
+
+<script>
+  import { installPhileInteractions } from "../client";
+  installPhileInteractions();
+</script>

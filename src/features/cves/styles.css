@@ -1,0 +1,7 @@
+@import "../../styles/layers.css";
+
+@layer components.features {
+  .cve-wrap {
+    width: calc(var(--text-cell) * var(--cve-columns));
+  }
+}

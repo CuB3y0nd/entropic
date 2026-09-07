@@ -1,0 +1,11 @@
+---
+import type { SiteBadge } from "../model";
+import BadgeAction from "./BadgeAction.astro";
+
+type Props = { badges: readonly SiteBadge[]; hasOverlap: boolean };
+const { badges, hasOverlap } = Astro.props;
+---
+
+<ul class="badge-actions">
+  {badges.map((badge) => <BadgeAction badge={badge} hasOverlap={hasOverlap} />)}
+</ul>

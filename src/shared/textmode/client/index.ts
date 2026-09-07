@@ -1,0 +1,1 @@
+export { installTextmodeBootstrap } from "./bootstrap";

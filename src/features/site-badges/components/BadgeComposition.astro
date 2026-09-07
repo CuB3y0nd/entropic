@@ -1,0 +1,50 @@
+---
+import { badgeGapPx, badgeHeightPx, badgeWidthPx, calculateBadgeLayout } from "../layout";
+import type { BadgeArtwork } from "../model";
+import ArtworkImage from "./ArtworkImage.astro";
+import "../styles.css";
+
+type Props = {
+  badgeCount: number;
+  artwork: BadgeArtwork | null;
+  deferArtwork?: boolean;
+};
+const { badgeCount, artwork, deferArtwork = false } = Astro.props;
+const layout = calculateBadgeLayout(badgeCount, artwork);
+const companion = artwork?.companion;
+const hasOverlap = layout.overlapPx > 0;
+const Decoration = deferArtwork ? "noscript" : "div";
+---
+
+{
+  badgeCount > 0 && (
+    <nav
+      class="site-badges"
+      aria-label="Site buttons"
+      style={{
+        "--badge-width": `${badgeWidthPx}px`,
+        "--badge-height": `${badgeHeightPx}px`,
+        "--badge-gap": `${badgeGapPx}px`,
+        "--badge-panel-width": `${layout.panelWidthPx}px`,
+        "--badge-horizontal-width": `${layout.horizontalPanelWidthPx}px`,
+        "--badge-artwork-width": `${layout.artworkWidthPx}px`,
+        "--badge-artwork-overlap": `${layout.overlapPx}px`,
+        "--badge-companion-width": `${layout.companionWidthPx}px`
+      }}
+    >
+      <div class="badge-panel" data-placement={artwork?.placement ?? "top"} data-overlap={hasOverlap || undefined}>
+        <div class="badge-composition">
+          <Decoration class="badge-decoration">
+            {artwork && <ArtworkImage image={artwork} class="badge-artwork" />}
+            {companion && (
+              <div class="badge-companion" data-placement={companion.placement}>
+                <ArtworkImage image={companion} />
+              </div>
+            )}
+          </Decoration>
+          <slot />
+        </div>
+      </div>
+    </nav>
+  )
+}

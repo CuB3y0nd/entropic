@@ -1,0 +1,45 @@
+---
+import { type ArtworkRotation, validateArtworkRotation } from "../artwork/rotation";
+import rotationScript from "../client/rotate-artwork.js?raw";
+import { badgeArtworkRotation, fixedBadgeArtwork, rotationPresets, siteBadges } from "../server";
+import type { BadgeArtwork, SiteBadge } from "../model";
+import BadgeActions from "./BadgeActions.astro";
+import BadgeComposition from "./BadgeComposition.astro";
+
+type Props = {
+  badges?: readonly SiteBadge[];
+  artwork?: BadgeArtwork | null;
+  rotation?: ArtworkRotation | null;
+};
+const {
+  badges = siteBadges,
+  artwork = fixedBadgeArtwork,
+  rotation = Astro.props.artwork === undefined ? badgeArtworkRotation : null
+} = Astro.props;
+if (rotation) validateArtworkRotation(rotation);
+---
+
+{
+  badges.length > 0 &&
+    (rotation ? (
+      <div class="artwork-rotation" data-artwork-rotation={JSON.stringify(rotation)}>
+        <BadgeComposition badgeCount={badges.length} artwork={artwork} deferArtwork>
+          <BadgeActions badges={badges} hasOverlap />
+        </BadgeComposition>
+        {rotationPresets.map(([id, preset]) => (
+          <template data-artwork-id={id}>
+            <BadgeComposition badgeCount={badges.length} artwork={preset} />
+          </template>
+        ))}
+        <script is:inline set:html={rotationScript} />
+      </div>
+    ) : (
+      <BadgeComposition badgeCount={badges.length} artwork={artwork}>
+        <BadgeActions badges={badges} hasOverlap={(artwork?.badgeOverlapPx ?? 0) > 0} />
+      </BadgeComposition>
+    ))
+}
+
+<script>
+  import "../client/copy";
+</script>

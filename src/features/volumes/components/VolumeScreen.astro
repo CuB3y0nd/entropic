@@ -1,0 +1,22 @@
+---
+import type { Volume } from "../model";
+import { renderVolumePre } from "../rendering/render";
+import "@/shared/textmode/styles/life.css";
+
+type Props = {
+  volume: Volume;
+};
+
+const volume = Astro.props.volume;
+const volumeHtml = renderVolumePre(volume);
+---
+
+<section class="textmode-wrap volume-wrap mt-line">
+  <pre class="textmode-pre volume-pre life-art" data-life-root set:html={volumeHtml} />
+</section>
+
+<script>
+  import { initLifeArt } from "@/shared/textmode/life/client";
+
+  initLifeArt();
+</script>
