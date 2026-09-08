@@ -1,0 +1,119 @@
+@import "../../../styles/layers.css";
+
+@layer components.features {
+  .byte-inspector {
+    position: fixed;
+    z-index: 80;
+    width: max-content;
+    max-width: var(--inspector-width, calc(100vw - 24px));
+    color: var(--fg);
+    font-family: var(--text-font);
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+  }
+
+  .byte-inspector[hidden],
+  .byte-inspector [hidden] {
+    display: none;
+  }
+
+  .byte-inspector button {
+    border-radius: 0;
+    font: inherit;
+    text-align: inherit;
+    cursor: pointer;
+  }
+
+  .byte-inspector button:focus-visible {
+    outline: 1px solid var(--link);
+    outline-offset: -3px;
+  }
+
+  .byte-inspector-trigger {
+    padding: 4px 8px;
+    border: 1px solid color-mix(in srgb, var(--link) 55%, var(--bg));
+    background: var(--bg);
+    color: var(--link);
+  }
+
+  .byte-inspector-trigger:hover {
+    background: var(--link-hover-bg);
+    color: var(--link-hover);
+  }
+
+  .byte-inspector-panel {
+    box-sizing: border-box;
+    width: 336px;
+    max-width: var(--inspector-width, calc(100vw - 24px));
+    max-height: var(--inspector-height, calc(100dvh - 24px));
+    overflow-y: auto;
+    border: 1px solid color-mix(in srgb, var(--link) 55%, var(--bg));
+    background: var(--bg);
+    outline: none;
+  }
+
+  .byte-inspector-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 8px 4px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--link) 22%, var(--bg));
+    color: var(--link);
+  }
+
+  .byte-inspector-kind {
+    color: color-mix(in srgb, var(--fg) 60%, var(--bg));
+  }
+
+  .byte-inspector-heading button {
+    padding: 4px;
+    border: 0;
+    background: transparent;
+    color: var(--link);
+  }
+
+  .byte-inspector-rows {
+    padding: 6px 0;
+  }
+
+  .byte-inspector-row {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 8px;
+    width: 100%;
+    padding: 5px 12px;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+  }
+
+  .byte-inspector-row:hover,
+  .byte-inspector-row:focus-visible,
+  .byte-inspector-heading button:hover {
+    background: var(--link-hover-bg);
+    color: var(--link-hover);
+  }
+
+  .byte-inspector-label {
+    color: color-mix(in srgb, var(--fg) 60%, var(--bg));
+  }
+
+  .byte-inspector-value {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .byte-inspector-note {
+    margin: 0;
+    padding: 0 12px 8px;
+    color: color-mix(in srgb, var(--fg) 65%, var(--bg));
+  }
+
+  .byte-inspector-footer {
+    padding: 6px 12px;
+    border-top: 1px solid color-mix(in srgb, var(--link) 22%, var(--bg));
+    color: var(--link);
+  }
+}
