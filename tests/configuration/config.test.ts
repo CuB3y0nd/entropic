@@ -43,6 +43,7 @@ test("undefined optional settings inherit defaults, including nested theme field
   const config = resolveConfig({
     site,
     home: { asciiArt: undefined, sectionPrefix: undefined, itemPrefix: undefined },
+    philes: { inspect: undefined },
     theme: {
       appearance: {
         colors: { background: undefined, link: undefined },
@@ -149,6 +150,13 @@ test("disabling CVEs removes internal home links and empty sections while preser
 test("WKD can be disabled without deleting its email or public key path", () => {
   const wkd = { enabled: false, email: "root@example.org", publicKeyPath: "public/key.asc" } as const;
   assert.deepEqual(resolveConfig({ site, wkd }).wkd, wkd);
+});
+
+test("article inspection defaults to enabled and accepts an explicit opt-out", () => {
+  assert.equal(resolveConfig({ site }).philes.inspect, true);
+  assert.equal(resolveConfig({ site, philes: { inspect: false } }).philes.inspect, false);
+  // @ts-expect-error Check the runtime boundary for JavaScript configuration too.
+  assert.throws(() => resolveConfig({ site, philes: { inspect: "false" } }), /philes.inspect/);
 });
 
 test("a minimal configuration creates a new site without inheriting the theme author's links or records", () => {

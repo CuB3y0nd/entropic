@@ -1,6 +1,7 @@
+import { INSPECTION_LIMITS } from "./limits";
+
 export type ByteInput = { bytes: number[]; address?: bigint };
 export type Endian = "le" | "be";
-const MAX_BYTES = 32;
 
 function byteTokens(source: string, grouped = false): number[] | null {
   const tokens = source.trim().split(/\s+/);
@@ -22,7 +23,7 @@ export function parseBytes(source: string): ByteInput | null {
       .split(/\\x/i)
       .slice(1)
       .map((token) => Number.parseInt(token, 16));
-  if (bytes) return bytes.length <= MAX_BYTES ? { bytes } : null;
+  if (bytes) return bytes.length <= INSPECTION_LIMITS.byteCount ? { bytes } : null;
 
   const lines = source.split(/\r?\n/);
   const result: number[] = [];
@@ -40,7 +41,7 @@ export function parseBytes(source: string): ByteInput | null {
     const xxd = match[2]?.startsWith(":") && !/^0x/i.test(match[1] ?? "");
     const column = xxd ? (gutter.split(/\s{2,}/)[0] ?? "") : gutter;
     const row = byteTokens(column, xxd);
-    if (!row?.length || result.length + row.length > MAX_BYTES) return null;
+    if (!row?.length || result.length + row.length > INSPECTION_LIMITS.byteCount) return null;
     if (start === undefined) start = address;
     if (address !== start + BigInt(result.length)) return null;
     result.push(...row);
@@ -49,8 +50,12 @@ export function parseBytes(source: string): ByteInput | null {
 }
 
 export function bytesInteger(bytes: number[], endian: Endian): bigint {
-  const ordered = endian === "be" ? bytes : [...bytes].reverse();
-  return ordered.reduce((value, byte) => (value << 8n) | BigInt(byte), 0n);
+  let value = 0n;
+  for (let offset = 0; offset < bytes.length; offset++) {
+    const byte = bytes[endian === "be" ? offset : bytes.length - offset - 1] ?? 0;
+    value = (value << 8n) | BigInt(byte);
+  }
+  return value;
 }
 
 export function integerBytes(value: bigint, width: number, endian: Endian): number[] {

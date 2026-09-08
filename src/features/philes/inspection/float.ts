@@ -1,7 +1,9 @@
 export type FloatWidth = 32 | 64;
 
+// These synchronous conversions return primitives; the scratch storage never escapes.
+const view = new DataView(new ArrayBuffer(8));
+
 export function floatBits(value: number, width: FloatWidth): bigint {
-  const view = new DataView(new ArrayBuffer(8));
   if (width === 32) {
     view.setFloat32(0, value);
     return BigInt(view.getUint32(0));
@@ -11,7 +13,6 @@ export function floatBits(value: number, width: FloatWidth): bigint {
 }
 
 export function bitsFloat(bits: bigint, width: FloatWidth): number {
-  const view = new DataView(new ArrayBuffer(8));
   if (width === 32) {
     view.setUint32(0, Number(BigInt.asUintN(32, bits)));
     return view.getFloat32(0);
@@ -57,12 +58,19 @@ export function literalFloat(source: string, width: FloatWidth): number {
   const decimal = source.match(/^(\d*)(?:\.(\d*))?(?:e([+-]?\d+))?$/i);
   const match = hex ?? decimal;
   if (!match) throw new Error("Invalid floating literal");
-  const digits = `${match[1] || "0"}${match[2] ?? ""}`;
-  const n = BigInt(hex ? `0x${digits}` : digits);
+  const digits = `${match[1] ?? ""}${match[2] ?? ""}`.replace(/^0+/, "");
   const exponent = Number(match[3] ?? 0) - (match[2]?.length ?? 0) * (hex ? 4 : 1);
-  if (n === 0n) return 0;
-  if (exponent > 4096) return Infinity;
-  if (exponent < -4096) return 0;
+  if (!digits) return 0;
+  // Reject only orders wholly outside the rounding boundary. Borderline values
+  // still take the exact rational path, including ties and subnormals.
+  const order = hex
+    ? (digits.length - 1) * 4 + 31 - Math.clz32(Number.parseInt(digits[0] ?? "0", 16)) + exponent
+    : digits.length - 1 + exponent;
+  const maximum = hex ? (width === 32 ? 127 : 1023) : width === 32 ? 38 : 308;
+  const minimum = hex ? (width === 32 ? -150 : -1075) : width === 32 ? -46 : -324;
+  if (order > maximum) return Infinity;
+  if (order < minimum) return 0;
+  const n = BigInt(hex ? `0x${digits}` : digits);
   const power = (hex ? 2n : 10n) ** BigInt(Math.abs(exponent));
   return ratioFloat(exponent >= 0 ? n * power : n, exponent < 0 ? power : 1n, false, width);
 }

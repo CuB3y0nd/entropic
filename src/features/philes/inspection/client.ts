@@ -1,6 +1,9 @@
-import { type Inspection, type InspectionOptions, inspectSelection } from "./inspect";
+import type { InspectionOptions, PreparedInspection } from "./inspect";
+import { INSPECTION_LIMITS } from "./limits";
+import { createInspectorPanel } from "./panel";
 
-type Candidate = { range: Range; source: string; inspection: Inspection };
+type Candidate = { range: Range; inspection: PreparedInspection };
+let engine: Promise<typeof import("./inspect")> | null = null;
 
 function bodyFor(node: Node): Element | null {
   const element = node instanceof Element ? node : node.parentElement;
@@ -16,15 +19,12 @@ function sameRange(first: Range | null, second: Range): boolean {
   );
 }
 
-function readSelection(): Candidate | null {
+function readSelection(): Range | null {
   const selection = window.getSelection();
   if (!selection || selection.isCollapsed || selection.rangeCount !== 1) return null;
   const range = selection.getRangeAt(0);
   const body = bodyFor(range.startContainer);
-  if (!body || body !== bodyFor(range.endContainer)) return null;
-  const source = selection.toString();
-  const inspection = inspectSelection(source);
-  return inspection ? { range: range.cloneRange(), source, inspection } : null;
+  return body && body === bodyFor(range.endContainer) ? range : null;
 }
 
 export function installByteInspector(): void {
@@ -32,20 +32,30 @@ export function installByteInspector(): void {
   if (!root || root.dataset.installed) return;
   const trigger = root.querySelector<HTMLButtonElement>("[data-inspect-trigger]");
   const panel = root.querySelector<HTMLElement>("[data-inspect-panel]");
-  const kind = root.querySelector<HTMLElement>("[data-inspect-kind]");
-  const rows = root.querySelector<HTMLElement>("[data-inspect-rows]");
-  const note = root.querySelector<HTMLElement>("[data-inspect-note]");
-  const controls = root.querySelector<HTMLElement>("[data-inspect-controls]");
-  if (!trigger || !panel || !kind || !rows || !note || !controls) return;
-  root.dataset.installed = "true";
+  if (!trigger || !panel) return;
 
   let candidate: Candidate | null = null;
   let dismissedRange: Range | null = null;
   let selectionTimer = 0;
+  let selectionRevision = 0;
+  let placementFrame = 0;
   let selecting = false;
   let options: InspectionOptions = {};
 
+  const render = createInspectorPanel(panel, (key, value) => {
+    if (!candidate) return;
+    options[key] = value;
+    render?.(candidate.inspection.render(options));
+    if (!place(candidate.range)) hide();
+  });
+  if (!render) return;
+  root.dataset.installed = "true";
+
   const hide = (): void => {
+    selectionRevision++;
+    window.clearTimeout(selectionTimer);
+    window.cancelAnimationFrame(placementFrame);
+    placementFrame = 0;
     if (candidate) dismissedRange = candidate.range;
     candidate = null;
     root.hidden = true;
@@ -59,8 +69,8 @@ export function installByteInspector(): void {
     const viewport = window.visualViewport;
     const leftEdge = (viewport?.offsetLeft ?? 0) + 12;
     const topEdge = (viewport?.offsetTop ?? 0) + 12;
-    const rightEdge = leftEdge + (viewport?.width ?? document.documentElement.clientWidth) - 24;
-    const bottomEdge = topEdge + (viewport?.height ?? window.innerHeight) - 24;
+    const rightEdge = leftEdge + Math.max(1, (viewport?.width ?? document.documentElement.clientWidth) - 24);
+    const bottomEdge = topEdge + Math.max(1, (viewport?.height ?? window.innerHeight) - 24);
     if (rect.bottom < topEdge || rect.top > bottomEdge || rect.right < leftEdge || rect.left > rightEdge) return false;
 
     root.style.setProperty("--inspector-width", `${rightEdge - leftEdge}px`);
@@ -75,100 +85,53 @@ export function installByteInspector(): void {
     return true;
   };
 
-  const updateSelection = (): void => {
+  const updateSelection = async (): Promise<void> => {
     if (selecting || (!panel.hidden && root.contains(document.activeElement))) return;
-    const next = readSelection();
-    if (!next) {
+    const range = readSelection();
+    if (!range) {
       if (panel.hidden) {
         hide();
         dismissedRange = null;
       }
       return;
     }
-    if (sameRange(dismissedRange, next.range)) return;
-    if (candidate && sameRange(candidate.range, next.range)) return;
+    if (sameRange(dismissedRange, range) || (candidate && sameRange(candidate.range, range))) return;
+    const source = range.toString();
     hide();
-    candidate = next;
-    options = {};
-    dismissedRange = null;
-    root.hidden = false;
-    if (!place(next.range)) hide();
+    if (source.length > INSPECTION_LIMITS.selectionLength) return;
+    const revision = selectionRevision;
+    const savedRange = range.cloneRange();
+    try {
+      engine ??= import("./inspect");
+      const { prepareInspection } = await engine;
+      // A changed/dismissed selection must not reappear after the first lazy load.
+      if (revision !== selectionRevision) return;
+      const inspection = prepareInspection(source);
+      if (!inspection) return;
+      candidate = { range: savedRange, inspection };
+      options = {};
+      dismissedRange = null;
+      root.hidden = false;
+      if (!place(savedRange)) hide();
+    } catch {
+      engine = null;
+      if (revision === selectionRevision) hide();
+    }
   };
 
   const scheduleSelection = (): void => {
+    selectionRevision++;
     window.clearTimeout(selectionTimer);
-    selectionTimer = window.setTimeout(updateSelection, 160);
-  };
-
-  const render = (inspection: Inspection): void => {
-    kind.textContent = `/ ${inspection.title}`;
-    controls.replaceChildren();
-    controls.hidden = inspection.controls.length === 0;
-    for (const setting of inspection.controls) {
-      const label = document.createElement("label");
-      const caption = document.createElement("span");
-      caption.textContent = setting.label;
-      const select = document.createElement("select");
-      select.dataset.inspectControl = setting.key;
-      select.setAttribute(
-        "aria-label",
-        setting.label === "ORDER" ? "Byte order" : setting.label === "BITS" ? "Bit width" : "View"
-      );
-      for (const entry of setting.choices) {
-        const option = document.createElement("option");
-        option.value = entry.value;
-        option.textContent = entry.label;
-        select.append(option);
-      }
-      select.value = setting.value;
-      select.addEventListener("change", () => {
-        if (!candidate) return;
-        options[setting.key] = select.value;
-        const next = inspectSelection(candidate.source, options);
-        if (!next) return;
-        candidate.inspection = next;
-        render(next);
-        if (!place(candidate.range)) hide();
-        else
-          controls
-            .querySelector<HTMLSelectElement>(`[data-inspect-control="${setting.key}"]`)
-            ?.focus({ preventScroll: true });
-      });
-      label.append(caption, select);
-      controls.append(label);
-    }
-    rows.replaceChildren();
-    for (const result of inspection.rows) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "byte-inspector-row";
-      button.setAttribute("aria-label", `Select ${result.label}: ${result.value}`);
-      const label = document.createElement("span");
-      label.className = "byte-inspector-label";
-      label.textContent = result.label;
-      const value = document.createElement("span");
-      value.className = "byte-inspector-value";
-      value.textContent = result.value;
-      button.append(label, value);
-      button.addEventListener("click", () => {
-        const range = document.createRange();
-        range.selectNodeContents(value);
-        const selection = window.getSelection();
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-      });
-      rows.append(button);
-    }
-    note.textContent = inspection.note;
-    note.hidden = !inspection.note;
+    selectionTimer = window.setTimeout(() => void updateSelection(), 160);
   };
 
   const open = (): void => {
     if (!candidate) return;
-    render(candidate.inspection);
+    render(candidate.inspection.render(options));
     trigger.hidden = true;
     trigger.setAttribute("aria-expanded", "true");
     panel.hidden = false;
+    panel.scrollTop = 0;
     if (!place(candidate.range)) {
       hide();
       return;
@@ -188,6 +151,14 @@ export function installByteInspector(): void {
     } else hide();
   };
 
+  const schedulePlacement = (): void => {
+    if (root.hidden || placementFrame) return;
+    placementFrame = window.requestAnimationFrame(() => {
+      placementFrame = 0;
+      if (candidate && !place(candidate.range)) hide();
+    });
+  };
+
   trigger.addEventListener("pointerdown", (event) => event.preventDefault());
   trigger.addEventListener("click", open);
   document.addEventListener("selectionchange", scheduleSelection);
@@ -203,6 +174,7 @@ export function installByteInspector(): void {
   });
   document.addEventListener("pointercancel", () => {
     selecting = false;
+    scheduleSelection();
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !root.hidden) {
@@ -218,6 +190,7 @@ export function installByteInspector(): void {
     },
     true
   );
-  window.addEventListener("resize", () => hide());
-  window.visualViewport?.addEventListener("resize", () => hide());
+  window.addEventListener("resize", schedulePlacement);
+  window.visualViewport?.addEventListener("resize", schedulePlacement);
+  window.visualViewport?.addEventListener("scroll", schedulePlacement);
 }

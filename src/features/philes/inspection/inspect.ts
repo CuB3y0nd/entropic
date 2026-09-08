@@ -11,14 +11,17 @@ import {
 import { cast, type Floating, fixedType, InspectionError, type Integer, integer, typeName } from "./c-values";
 import { type Evaluation, evaluateExpression } from "./expression";
 import { bitsFloat, type FloatWidth, floatBits, floatFields, floatText } from "./float";
+import { INSPECTION_LIMITS } from "./limits";
 
 export type InspectionRow = { label: string; value: string };
+/** DOM option values are normalized against the choices valid for this input. */
 export type InspectionOptions = { width?: string; view?: string; endian?: string };
-type Control = {
+type Choice<Value extends string = string> = { value: Value; label: string };
+type Control<Value extends string = string> = {
   key: keyof InspectionOptions;
   label: string;
-  value: string;
-  choices: { value: string; label: string }[];
+  value: Value;
+  choices: Choice<Value>[];
 };
 export type Inspection = {
   kind: "integer" | "float" | "bytes" | "error";
@@ -28,27 +31,30 @@ export type Inspection = {
   note: string | null;
 };
 
+/** One parsed selection, independent of the DOM; rendering never evaluates it again. */
+export type PreparedInspection = { render: (options?: InspectionOptions) => Inspection };
+
 const TARGET = "C / LP64 · int32, long64 · GCC casts";
 const row = (label: string, value: string): InspectionRow => ({ label, value });
-const choice = (value: string, label = value): { value: string; label: string } => ({ value, label });
+const choice = <Value extends string>(value: Value, label: string = value): Choice<Value> => ({ value, label });
 const widths = [8, 16, 32, 64, 128, 256];
 
-function control(
+function control<Value extends string>(
   key: keyof InspectionOptions,
   label: string,
-  choices: Control["choices"],
+  choices: Choice<Value>[],
   requested: string | undefined,
-  fallback: string
-): Control {
+  fallback: Value
+): Control<Value> {
   return {
     key,
     label,
     choices,
-    value: choices.some((entry) => entry.value === requested) ? (requested ?? fallback) : fallback
+    value: choices.find((entry) => entry.value === requested)?.value ?? fallback
   };
 }
 
-function endianControl(options: InspectionOptions): Control {
+function endianControl(options: InspectionOptions): Control<Endian> {
   return control("endian", "ORDER", [choice("le", "LE"), choice("be", "BE")], options.endian, "le");
 }
 
@@ -87,13 +93,15 @@ function integerRows(value: Integer, width: number): InspectionRow[] {
 
 function bitRows(value: bigint, width: number): InspectionRow[] {
   const bits = BigInt.asUintN(width, value);
-  const set = Array.from({ length: width }, (_, index) => index).filter(
-    (index) => ((bits >> BigInt(index)) & 1n) !== 0n
-  );
+  const binary = bits.toString(2).padStart(width, "0");
+  const set: number[] = [];
+  for (let index = width - 1; index >= 0; index--) {
+    if (binary[index] === "1") set.push(width - 1 - index);
+  }
   const half = width / 2;
   return [
     row("HEX", `0x${bits.toString(16)}`),
-    row("BIN", `0b${bits.toString(2).padStart(width, "0")}`),
+    row("BIN", `0b${binary}`),
     row("SET BITS", set.length ? set.join(", ") : "none"),
     row("POPCNT", String(set.length)),
     row(`LOW ${half}`, `0x${BigInt.asUintN(half, bits).toString(16)}`),
@@ -102,12 +110,12 @@ function bitRows(value: bigint, width: number): InspectionRow[] {
 }
 
 function inspectInteger(
-  evaluation: Evaluation,
+  evaluation: Evaluation & { value: Integer },
   options: InspectionOptions,
   permissions: boolean,
   raw = false
 ): Inspection {
-  const value = evaluation.value as Integer;
+  const { value } = evaluation;
   const allowedWidths = widths.filter((width) => width <= 64 || width <= value.type.bits);
   const widthControl = control(
     "width",
@@ -117,7 +125,7 @@ function inspectInteger(
     String(value.type.bits)
   );
   const width = Number(widthControl.value);
-  const choices = [
+  const choices: Choice[] = [
     choice("integer", "Integer"),
     choice("bits", "Bits"),
     choice("float32", "Float32 bits"),
@@ -137,12 +145,13 @@ function inspectInteger(
         : `${floatWidth < value.type.bits ? "Low " : ""}${floatWidth} bits`;
     notes.push(`${sourceBits} reinterpreted as float${floatWidth}; no numeric conversion.`);
   } else if (view.value === "permissions") {
+    const mode = permissionText(value.value);
     rows = [
       row("OCT", `0o${value.value.toString(8).padStart(4, "0")}`),
-      row("MODE", permissionText(value.value)),
-      row("OWNER", permissionText(value.value).slice(0, 3)),
-      row("GROUP", permissionText(value.value).slice(3, 6)),
-      row("OTHER", permissionText(value.value).slice(6))
+      row("MODE", mode),
+      row("OWNER", mode.slice(0, 3)),
+      row("GROUP", mode.slice(3, 6)),
+      row("OTHER", mode.slice(6))
     ];
   } else {
     controls.push(widthControl);
@@ -178,13 +187,13 @@ function inspectFloat(value: Floating, options: InspectionOptions): Inspection {
     `float${value.width}`
   );
   const width = view.value === "float32" ? 32 : 64;
-  const converted = cast(value, width) as Floating;
+  const converted = cast(value, width);
   const order = endianControl(options);
   const bits = floatBits(converted.value, width);
   const rows = [
     row("TYPE", `float${value.width}${width === value.width ? "" : ` → float${width}`}`),
     ...floatRows(bits, width),
-    row("BYTES", hexBytes(integerBytes(bits, width, order.value as Endian)))
+    row("BYTES", hexBytes(integerBytes(bits, width, order.value)))
   ];
   return {
     kind: "float",
@@ -198,7 +207,7 @@ function inspectFloat(value: Floating, options: InspectionOptions): Inspection {
 
 function inspectByteInput(input: ByteInput, options: InspectionOptions): Inspection {
   const { bytes } = input;
-  const choices = [
+  const choices: Choice[] = [
     choice("bytes", "Bytes"),
     choice("integer", "Integer"),
     choice("bits", "Bits"),
@@ -220,13 +229,12 @@ function inspectByteInput(input: ByteInput, options: InspectionOptions): Inspect
   } else {
     const order = endianControl(options);
     controls.push(order);
-    const endian = order.value as Endian;
+    const endian = order.value;
     if (view.value === "text") {
+      const data = new Uint8Array(bytes);
       const decode = (encoding: string): string => {
         try {
-          return JSON.stringify(
-            new TextDecoder(encoding, { fatal: true, ignoreBOM: true }).decode(new Uint8Array(bytes))
-          );
+          return JSON.stringify(new TextDecoder(encoding, { fatal: true, ignoreBOM: true }).decode(data));
         } catch {
           return "invalid encoding";
         }
@@ -245,12 +253,13 @@ function inspectByteInput(input: ByteInput, options: InspectionOptions): Inspect
         options.width,
         String(numericWidths.at(-1))
       );
-      const width = view.value === "float32" ? 32 : view.value === "float64" ? 64 : Number(widthControl.value);
-      if (!view.value.startsWith("float")) controls.push(widthControl);
+      const floatWidth = view.value === "float32" ? 32 : view.value === "float64" ? 64 : null;
+      const width = floatWidth ?? Number(widthControl.value);
+      if (!floatWidth) controls.push(widthControl);
       const used = bytes.slice(0, width / 8);
       const bits = bytesInteger(used, endian);
-      rows = view.value.startsWith("float")
-        ? floatRows(bits, width as FloatWidth)
+      rows = floatWidth
+        ? floatRows(bits, floatWidth)
         : view.value === "bits"
           ? bitRows(bits, width)
           : [
@@ -278,44 +287,44 @@ function rawInteger(source: string): Integer | null {
   if (!/^[+-]?(?:0x[\da-f]+|0b[01]+|0o[0-7]+|[1-9]\d*|0)$/i.test(source)) return null;
   const negative = source.startsWith("-");
   const magnitude = BigInt(source.replace(/^[+-]/, ""));
-  if (magnitude >= 1n << 256n) return null;
+  if (magnitude >= 1n << BigInt(INSPECTION_LIMITS.integerBits)) return null;
   const value = negative ? -magnitude : magnitude;
-  const needed = magnitude.toString(2).length + (negative ? 1 : 0);
+  const needed = negative ? (magnitude - 1n).toString(2).length + 1 : magnitude.toString(2).length;
   const bits = widths.find((width) => width >= needed);
   return bits ? integer(value, fixedType(bits, negative)) : null;
 }
 
-/** Bounded, local constant evaluation. No JavaScript eval, symbols or memory access. */
-export function inspectSelection(selection: string, options: InspectionOptions = {}): Inspection | null {
-  if (selection.length > 2048) return null;
+/** Parse once within fixed work bounds. Invalid syntax returns null; recognized
+ * undefined/unsupported operations render a status instead of a numeric result. */
+export function prepareInspection(selection: string): PreparedInspection | null {
+  if (selection.length > INSPECTION_LIMITS.selectionLength) return null;
   const source = selection.trim();
   const bytes = parseBytes(source);
-  if (bytes) return inspectByteInput(bytes, options);
-  if (!source || source.length > 512) return null;
+  if (bytes) return { render: (options = {}) => inspectByteInput(bytes, options) };
+  if (!source || source.length > INSPECTION_LIMITS.expressionLength) return null;
   const mode = source.match(/^(?:chmod|mode)\s+(?:0o)?([0-7]{3,4})$/);
   try {
     const evaluation = evaluateExpression(mode ? `0o${mode[1]}` : source);
-    return evaluation.value.kind === "float"
-      ? inspectFloat(evaluation.value, options)
-      : inspectInteger(
-          evaluation,
-          options,
-          Boolean(mode) || (/^0(?:o)?[0-7]+$/.test(source) && evaluation.value.value <= 0o7777n)
-        );
+    const { value } = evaluation;
+    if (value.kind === "float") return { render: (options = {}) => inspectFloat(value, options) };
+    const permissions = Boolean(mode) || (/^0(?:o)?[0-7]+$/.test(source) && value.value <= 0o7777n);
+    return { render: (options = {}) => inspectInteger({ ...evaluation, value }, options, permissions) };
   } catch (error) {
     if (!(error instanceof InspectionError)) throw error;
     if (error.category === "invalid") return null;
     if (error.category === "unsupported") {
       const raw = rawInteger(source);
-      if (raw) return inspectInteger({ value: raw }, options, false, true);
+      if (raw) return { render: (options = {}) => inspectInteger({ value: raw }, options, false, true) };
       if (/^[+-]?(?:0x[\da-f]+|\d+)$/i.test(source)) return null;
     }
     return {
-      kind: "error",
-      title: error.category.toUpperCase(),
-      rows: [row("STATUS", error.message)],
-      controls: [],
-      note: TARGET
+      render: () => ({
+        kind: "error",
+        title: error.category.toUpperCase(),
+        rows: [row("STATUS", error.message)],
+        controls: [],
+        note: TARGET
+      })
     };
   }
 }

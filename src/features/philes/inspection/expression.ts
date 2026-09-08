@@ -14,6 +14,7 @@ import {
   type Value
 } from "./c-values";
 import { bitsFloat, floatText } from "./float";
+import { INSPECTION_LIMITS } from "./limits";
 
 type Node =
   | { kind: "literal"; value: Value }
@@ -57,7 +58,8 @@ function tokenize(source: string): string[] {
     const match = rest.match(
       /^(?:'(?:\\(?:x[\da-fA-F]+|[0-7]{1,3}|[^\n])|[^'\\\n])+'|(?:\d|\.\d)(?:[\w.]|(?<=[eEpP])[+-])*|[a-zA-Z_]\w*|<<|>>|<=|>=|==|!=|&&|\|\||[()+\-*/%~!&|^<>,?:])/
     );
-    if (!match || tokens.length >= 128) throw new InspectionError("invalid", "Invalid or oversized expression.");
+    if (!match || tokens.length >= INSPECTION_LIMITS.tokenCount)
+      throw new InspectionError("invalid", "Invalid or oversized expression.");
     tokens.push(match[0]);
     rest = rest.slice(match[0].length);
   }
@@ -105,7 +107,7 @@ class Parser {
   }
 
   parse(minimum = 0, depth = 0): Node {
-    if (depth > 32) throw new InspectionError("invalid", "Expression nesting limit.");
+    if (depth > INSPECTION_LIMITS.depth) throw new InspectionError("invalid", "Expression nesting limit.");
     let left = this.prefix(depth + 1);
     for (;;) {
       const op = this.tokens[this.position] ?? "";
@@ -124,7 +126,7 @@ class Parser {
   }
 
   private prefix(depth: number): Node {
-    if (depth > 32) throw new InspectionError("invalid", "Expression nesting limit.");
+    if (depth > INSPECTION_LIMITS.depth) throw new InspectionError("invalid", "Expression nesting limit.");
     const token = this.take();
     if (["+", "-", "~", "!"].includes(token)) return { kind: "unary", op: token, child: this.prefix(depth + 1) };
     if (token === "(") {
@@ -338,9 +340,12 @@ function evaluate(node: Node, run = true): Value {
 
 export function evaluateExpression(source: string): Evaluation {
   const node = new Parser(tokenize(source)).finish();
-  const value = evaluate(node);
-  if (node.kind !== "binary" || !comparisonOperators.has(node.op)) return { value };
+  if (node.kind !== "binary" || !comparisonOperators.has(node.op)) return { value: evaluate(node) };
   const [left, right] = common(evaluate(node.left), evaluate(node.right));
+  const result = compare(node.op, left.value, right.value);
   const text = (entry: Value): string => (entry.kind === "integer" ? entry.value.toString() : floatText(entry.value));
-  return { value, comparison: { type: typeName(left), left: text(left), right: text(right), result: truth(value) } };
+  return {
+    value: integer(BigInt(result)),
+    comparison: { type: typeName(left), left: text(left), right: text(right), result }
+  };
 }

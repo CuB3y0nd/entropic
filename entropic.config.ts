@@ -104,6 +104,12 @@ export default {
       }
     ]
   },
+  // Article reading features. Omission/undefined keeps inspection enabled;
+  // false removes the [inspect] menu for selected numbers and bytes.
+  philes: {
+    inspect: true
+  },
+
   // 88x31 buttons. Each item has label, imageSrc, and exactly one action:
   // href: an HTTP(S), mailto:, or local URL; copyText: the text to copy when
   // clicked.

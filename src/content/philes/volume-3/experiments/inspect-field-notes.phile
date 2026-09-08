@@ -1,17 +1,17 @@
 ---
-title: "Inspect: Bits on the Table"
+title: "Inspect: Read the Bits"
 date: 2026-09-09
-author: "Entropic"
+author: "CuB3y0nd"
 lang: en
 slug: inspect-field-notes
 ---
 
-─── Before we start ────────────────────────────────────────────────────────────
+#[K|─── ]#[Y|Before we start] #[K|───────────────────────────────────────────────────────────]
 
 A hex constant in a write-up. A signed comparison that went the wrong way.
 Four bytes from a debugger. Usually that means opening another tab or a REPL.
 
-Try selecting #[Y|-1] here, then open [inspect]. The decimal value is still -1.
+Try selecting -1 here, then open [inspect]. The decimal value is still -1.
 The hex is 0xffffffff. Change BITS to 16: now it is 0xffff. Same idea, less
 window shuffling.
 
@@ -19,25 +19,25 @@ The examples below are meant to be used. Select the input itself, without the
 answer beside it. For a comparison, select the whole expression. A result
 stays put until you select something else, scroll away, or press Esc.
 
-[ On the bench ]
+[ Contents ]
 
-  01  Bases & permissions       06  Floating point
-  02  Signed meets unsigned     07  Numbers versus bits
-  03  A pocket C evaluator      08  Bytes & byte order
-  04  Widths & decompiler types  09  Reading a dump
-  05  Masks & partial values    10  Text hiding in bytes
+  01    Bases & permissions          06    Floating point
+  02    Signed meets unsigned        07    Numbers versus bits
+  03    A pocket C evaluator         08    Bytes & byte order
+  04    Widths & decompiler types    09    Reading a dump
+  05    Masks & partial values       10    Text hiding in bytes
 
 C expressions use Linux x86-64: signed char, 16-bit short, 32-bit int,
 64-bit long and long long. Signed integer casts follow GCC. There is no
 process attached; all operands have to be in the selected text.
 
-─── 1. Bases & permissions ─────────────────────────────────────────────────────
+#[K|─── ]#[Y|1. Bases & permissions] #[K|────────────────────────────────────────────────────]
 
 The four base rows describe one bit pattern. HEX, OCT and BIN use the selected
 width, so a negative integer has a two's-complement representation.
 
-  Input                         DEC                  HEX
-  ────────────────────────────  ───────────────────  ──────────────────
+  #[C|Input]                         #[C|DEC]                  #[C|HEX]
+#[K|  ────────────────────────────  ───────────────────  ──────────────────]
   4096                          4096                 0x1000
   0X1000                        4096                 0x1000
   0b1001                        9                    0x9
@@ -48,66 +48,66 @@ width, so a negative integer has a two's-complement representation.
 
 That last row is already past JavaScript's safe integer range. It stays exact.
 
-/// mode bits /////////////////////////////////////////////////////////////////
+#[K|/// ]#[Y|mode bits] #[K|/////////////////////////////////////////////////////////////////]
 
 Bare 755 is decimal. C's 0755 and the explicit 0o755 are octal. A chmod mode
 is also octal, even without the leading zero. Select the command and its mode:
 
-  #[Y|chmod 755]       rwxr-xr-x
-  chmod 4755      rwsr-xr-x
-  mode 2644       rw-r-Sr--
-  01777           rwxrwxrwt
-  07000           --S--S--T
+  chmod 755   rwxr-xr-x
+  chmod 4755  rwsr-xr-x
+  mode 2644   rw-r-Sr--
+  01777       rwxrwxrwt
+  07000       --S--S--T
 
 Switch VIEW to Permissions to split owner, group and other. The uppercase
 S or T means the special bit is set but the corresponding execute bit is not.
 This view describes permission bits; it does not run chmod.
 
-─── 2. Signed meets unsigned ───────────────────────────────────────────────────
+#[K|─── ]#[Y|2. Signed meets unsigned] #[K|──────────────────────────────────────────────────]
 
-Here is the CSAPP table, with each row made into a complete expression.
+Here is a table, with each row written as a complete expression.
 Every comparison below is true. The interesting part is the COMPARE row:
 it shows the type used for the operands, followed by their converted values.
 
-  Expression                                Operands compared as
-  ────────────────────────────────────────  ─────────────────────
+  #[C|Expression]                                #[C|Operands compared as]
+#[K|  ────────────────────────────────────────  ─────────────────────]
   0 == 0U                                   unsigned int / 32
   -1 < 0                                    int / 32
-  #[Y|-1 > 0U]                                   unsigned int / 32
-  2147483647 > -2147483647-1                  int / 32
-  2147483647U < -2147483647-1                 unsigned int / 32
+  -1 > 0U                                   unsigned int / 32
+  2147483647 > -2147483647-1                int / 32
+  2147483647U < -2147483647-1               unsigned int / 32
   -1 > -2                                   int / 32
-  (unsigned)-1 > -2                          unsigned int / 32
-  2147483647 < 2147483648U                    unsigned int / 32
-  2147483647 > (int)2147483648U               int / 32
+  (unsigned)-1 > -2                         unsigned int / 32
+  2147483647 < 2147483648U                  unsigned int / 32
+  2147483647 > (int)2147483648U             int / 32
 
 Now try these two together:
 
-  -1 < 0U          false     LEFT becomes 4294967295
-  -1L < 0U         true      a signed long can hold every unsigned int
+  -1 < 0U   false  LEFT becomes 4294967295
+  -1L < 0U  true   a signed long can hold every unsigned int
 
 "Unsigned always wins" misses that second case. Width and rank both matter.
 The comparison result itself is an int: 0 or 1.
 
 Literal spelling matters too:
 
-  2147483648                 long / 64
-  0x80000000                 unsigned int / 32
-  (int)2147483648U           -2147483648
-  -2147483647-1              int / 32
-  -2147483648                long / 64
+  2147483648        long / 64
+  0x80000000        unsigned int / 32
+  (int)2147483648U  -2147483648
+  -2147483647-1     int / 32
+  -2147483648       long / 64
 
 The minus sign is an operator. In that last row, 2147483648 gets its type
 before it is negated.
 
-─── 3. A pocket C evaluator ────────────────────────────────────────────────────
+#[K|─── ]#[Y|3. A pocket C evaluator] #[K|───────────────────────────────────────────────────]
 
 Offsets, alignment, a flag check: small expressions save the most trips.
 
-  Input                                  Result
-  ─────────────────────────────────────  ────────────────────────
-  0x400123 - 0x400000                     0x123
-  (0x1234 + 0xfff) & ~0xfff               0x2000
+  #[C|Input]                                  #[C|Result]
+#[K|  ─────────────────────────────────────  ────────────────────────]
+  0x400123 - 0x400000                    0x123
+  (0x1234 + 0xfff) & ~0xfff              0x2000
   2 + 3 * 4                              14
   (2 + 3) * 4                            20
   -7 / 3                                 -2
@@ -118,7 +118,7 @@ Offsets, alignment, a flag check: small expressions save the most trips.
   1U << 31                               0x80000000
   -8 >> 2                                -2
   !(0 | 0)                               1
-  3 >= 2 && 3 <= 4                        1
+  3 >= 2 && 3 <= 4                       1
   0 && 1/0                               0
   1 || 1/0                               1
   1 ? 3 : 1/0                            3
@@ -129,44 +129,44 @@ still contribute to the result type. Try the last two rows to see the split.
 
 Supported operators:
 
-  unary         + - ~ !
-  arithmetic    + - * / %
-  shifts        << >>
-  bitwise       & ^ |
-  comparison    == != < <= > >=
-  logical       && ||
-  conditional   ? :
+  unary        + - ~ !
+  arithmetic   + - * / %
+  shifts       << >>
+  bitwise      & ^ |
+  comparison   == != < <= > >=
+  logical      && ||
+  conditional  ? :
 
-/// wrapping is not always an answer ///////////////////////////////////////////
+#[K|/// ]#[Y|wrapping is not always an answer] #[K|//////////////////////////////////////////]
 
-  0xffffffffU + 1               0       unsigned arithmetic wraps
-  2147483647 + 1                UNDEFINED: signed overflow
-  1 << 31                       UNDEFINED: signed shift overflow
-  1U << 32                      UNDEFINED: count reaches the width
-  -1 << 1                       UNDEFINED: negative signed operand
-  1 / 0                         UNDEFINED: integer division by zero
-  (-2147483647-1) % -1           UNDEFINED: signed division overflow
-  (int)1e40                     UNDEFINED: conversion out of range
+  0xffffffffU + 1       0  unsigned arithmetic wraps
+  2147483647 + 1        #[R|UNDEFINED:] signed overflow
+  1 << 31               #[R|UNDEFINED:] signed shift overflow
+  1U << 32              #[R|UNDEFINED:] count reaches the width
+  -1 << 1               #[R|UNDEFINED:] negative signed operand
+  1 / 0                 #[R|UNDEFINED:] integer division by zero
+  (-2147483647-1) % -1  #[R|UNDEFINED:] signed division overflow
+  (int)1e40             #[R|UNDEFINED:] conversion out of range
 
 The inspector shows the reason for these cases instead of inventing a result.
 
-─── 4. Widths & decompiler types ───────────────────────────────────────────────
+#[K|─── ]#[Y|4. Widths & decompiler types] #[K|──────────────────────────────────────────────]
 
 BITS changes the displayed interpretation. A cast changes the expression.
 This distinction matters when the next operator performs integer promotion.
 
-  Input                         Result
-  ────────────────────────────  ───────────────────────────────────
-  (uint8_t)0x1234                0x34
-  (int8_t)0xff                   -1
-  (int16_t)0x8000                -32768
-  (uint32_t)-1                   4294967295
-  (int64_t)(int8_t)0x80          -128 / 0xffffffffffffff80
-  (uint64_t)(uint8_t)0x80        128 / 0x80
-  ~ (uint8_t)0                   -1, because uint8_t promotes to int
-  (uint8_t)~0                    255
+  #[C|Input]                         #[C|Result]
+#[K|  ────────────────────────────  ───────────────────────────────────]
+  (uint8_t)0x1234               0x34
+  (int8_t)0xff                  -1
+  (int16_t)0x8000               -32768
+  (uint32_t)-1                  4294967295
+  (int64_t)(int8_t)0x80         -128 / 0xffffffffffffff80
+  (uint64_t)(uint8_t)0x80       128 / 0x80
+  ~ (uint8_t)0                  -1, because uint8_t promotes to int
+  (uint8_t)~0                   255
   (bool)256                     1
-  (int)-3.9                      -3
+  (int)-3.9                     -3
 
 Select 511 and change BITS to 8. The low byte is ff; its signed view is -1.
 The note keeps the original value visible. Widen (int8_t)0x80 to 64 bits for
@@ -175,27 +175,27 @@ sign extension, then do the same with (uint8_t)0x80 for zero extension.
 Signed and unsigned decimal alternatives appear when they differ. To read
 both interpretations of raw memory, choose Integer in a byte selection.
 
-/// spellings from C, asm and IDA //////////////////////////////////////////////
+#[K|/// ]#[Y|spellings from C, asm and IDA] #[K|/////////////////////////////////////////////]
 
-  42U       42UL       42ULL       42L       42LL
-  18h       0FFh       0LL         42i64     42ui64
+  42U  42UL  42ULL  42L    42LL
+  18h  0FFh  0LL    42i64  42ui64
 
 U, L and LL suffixes work in either case and in either legal order. IDA's
 i64/ui64 suffixes name 64-bit values. An h suffix marks an assembler hex
 constant; 18h is 24, not eighteen.
 
-  (_BYTE)0x1234                  0x34
-  (_WORD)0x123456                0x3456
-  (_DWORD)-1                     0xffffffff
-  (_QWORD)-1                     0xffffffffffffffff
-  (__int64)-1                    -1
-  (unsigned __int64)-1           18446744073709551615
-  (size_t)-1                     18446744073709551615
-  (ptrdiff_t)0x100 - 0x120        -32
-  'A'                            65
-  '\n'                           10
-  '\x41'                         65
-  '\101'                         65
+  (_BYTE)0x1234             0x34
+  (_WORD)0x123456           0x3456
+  (_DWORD)-1                0xffffffff
+  (_QWORD)-1                0xffffffffffffffff
+  (__int64)-1               -1
+  (unsigned __int64)-1      18446744073709551615
+  (size_t)-1                18446744073709551615
+  (ptrdiff_t)0x100 - 0x120  -32
+  'A'                       65
+  '\n'                      10
+  '\x41'                    65
+  '\101'                    65
 
 C type names include signed/unsigned char, short, int, long and long long;
 float, double and _Bool; int8_t through uint64_t; size_t, ssize_t, intptr_t,
@@ -203,7 +203,7 @@ uintptr_t and ptrdiff_t. IDA's __int8/16/32/64 and _BYTE/_WORD/_DWORD/_QWORD
 aliases have their stated widths. Character constants cover single ASCII
 bytes and the usual C escapes.
 
-/// larger than a machine word /////////////////////////////////////////////////
+#[K|/// ]#[Y|larger than a machine word] #[K|////////////////////////////////////////////////]
 
 A standalone integer can be inspected up to 256 bits:
 
@@ -213,9 +213,9 @@ A standalone integer can be inspected up to 256 bits:
 These get an exact-integer view, with 128 or 256 available under BITS.
 They are not silently introduced as extra types in C expressions.
 
-─── 5. Masks & partial values ──────────────────────────────────────────────────
+#[K|─── ]#[Y|5. Masks & partial values] #[K|─────────────────────────────────────────────────]
 
-Select #[Y|0x91], choose Bits, then set BITS to 8.
+Select 0x91, choose Bits, then set BITS to 8.
 
          bit   7   6   5   4   3   2   1   0
                │   │   │   │   │   │   │   │
@@ -228,48 +228,48 @@ LOW 4 is 0x1; HIGH 4 is 0x9. Wider selections split into wider halves.
 
 IDA helpers are useful when the text already names the part you need:
 
-  LOBYTE(0x12345678)                      0x78
-  HIBYTE(0x12345678)                      0x12
-  BYTE1(0x12345678)                       0x56
-  LOWORD(0x12345678)                      0x5678
-  HIWORD(0x12345678)                      0x1234
-  WORD1(0x12345678)                       0x1234
-  LODWORD(0x123456789abcdef0ULL)           0x9abcdef0
-  HIDWORD(0x123456789abcdef0ULL)           0x12345678
-  DWORD1(0x123456789abcdef0ULL)            0x12345678
-  SLOBYTE(0xff)                          -1
-  SHIBYTE((uint16_t)0x8000)               -128
+  LOBYTE(0x12345678)              0x78
+  HIBYTE(0x12345678)              0x12
+  BYTE1(0x12345678)               0x56
+  LOWORD(0x12345678)              0x5678
+  HIWORD(0x12345678)              0x1234
+  WORD1(0x12345678)               0x1234
+  LODWORD(0x123456789abcdef0ULL)  0x9abcdef0
+  HIDWORD(0x123456789abcdef0ULL)  0x12345678
+  DWORD1(0x123456789abcdef0ULL)   0x12345678
+  SLOBYTE(0xff)                   -1
+  SHIBYTE((uint16_t)0x8000)       -128
 
 The S-prefixed forms read a signed part. BYTE0..7, WORD0..3 and DWORD0..1
 also work, provided the operand is wide enough. These helpers follow the
 little-endian target. HIBYTE means its highest byte: 0x12 above. For the high
 byte of a 16-bit word, make the word explicit: HIBYTE((uint16_t)0x1234).
 
-  __PAIR16__(0x12, 0x34)                  0x1234
-  __PAIR32__(0x1234, 0x5678)              0x12345678
-  __PAIR64__(0x12345678, 0x9abcdef0)       0x123456789abcdef0
-  __ROL1__(0x81, 1)                      0x03
-  __ROL2__(0x8001, 1)                    0x0003
-  __ROR4__(0x12345678, 8)                 0x78123456
-  __ROR8__(1ULL, 1)                      0x8000000000000000
+  __PAIR16__(0x12, 0x34)              0x1234
+  __PAIR32__(0x1234, 0x5678)          0x12345678
+  __PAIR64__(0x12345678, 0x9abcdef0)  0x123456789abcdef0
+  __ROL1__(0x81, 1)                   0x03
+  __ROL2__(0x8001, 1)                 0x0003
+  __ROR4__(0x12345678, 8)             0x78123456
+  __ROR8__(1ULL, 1)                   0x8000000000000000
 
 PAIR joins high and low halves. ROL/ROR rotate; their suffix is the operand
 size in bytes: 1, 2, 4 or 8. Counts wrap around that width.
 
-─── 6. Floating point ──────────────────────────────────────────────────────────
+#[K|─── ]#[Y|6. Floating point] #[K|─────────────────────────────────────────────────────────]
 
 An f suffix selects float32. Without it, a floating literal is float64.
 The VALUE row shows the stored number. HEX and the sign/exponent/fraction
 rows show why it looks that way.
 
-  Input                 Stored value                IEEE hex
-  ────────────────────  ──────────────────────────  ──────────────────
-  #[Y|0.1f]                  0.10000000149011612         0x3dcccccd
+  #[C|Input]                 #[C|Stored value]                #[C|IEEE hex]
+#[K|  ────────────────────  ──────────────────────────  ──────────────────]
+  0.1f                  0.10000000149011612         0x3dcccccd
   11.28125f             11.28125                    0x41348000
-  1.25e-3               0.00125                     float64
+  1.25e-3               0.00125                     0x3f547ae147ae147b
   0x1.8p+1              3                           0x4008000000000000
   -0.0f                 -0                          0x80000000
-  1e-45f                1.401298464324817e-45        0x00000001
+  1e-45f                1.401298464324817e-45       0x00000001
   0x1p-150f             0                           0x00000000
 
 In a hex float, p scales by a power of two. The significand is still hex.
@@ -278,57 +278,57 @@ Here 0x1.8 is 1.5, multiplied by 2 to get 3.
 Change VIEW from Float64 to Float32 on 0.1 to see the narrower rounding.
 Change ORDER to see the same stored number laid out in LE or BE bytes.
 
-  1.0f + 0.5                    1.5, with a float64 result
-  0x1.000001p0f                 halfway: rounds to 1, ties to even
-  1.000000059604644775390626f    just above halfway: rounds upward
+  1.0f + 0.5                   1.5, with a float64 result
+  0x1.000001p0f                halfway: rounds to 1, ties to even
+  1.000000059604644775390626f  just above halfway: rounds upward
 
 Decimal literals round directly to the requested format. That last example
 would lose the distinction if it went through float64 before float32.
 
 CLASS distinguishes normal, subnormal, zero, infinity and NaN. Try:
 
-  INFINITY       -INFINITY       NAN       inf       nan
-  1e400          1e-400           0.0 / 0.0
+  INFINITY  -INFINITY  NAN  inf  nan
+  1e400     1e-400  0.0 / 0.0
 
 Uppercase NAN/INFINITY use float32, like the C macros. Lowercase spellings
 use float64. Arithmetic uses IEEE round-to-nearest, ties-to-even; there is
 no alternate rounding-mode or floating-exception environment here.
 
-─── 7. Numbers versus bits ─────────────────────────────────────────────────────
+#[K|─── ]#[Y|7. Numbers versus bits] #[K|────────────────────────────────────────────────────]
 
 These two lines have very different jobs:
 
-  (float)0x3f800000              1065353216
-  COERCE_FLOAT(0x3f800000)        1
+  (float)0x3f800000         1065353216
+  COERCE_FLOAT(0x3f800000)  1
 
 The cast converts the integer's value to float. COERCE reads the existing
 bits as a float. You can get that second view by selecting 0x3f800000 and
 choosing Float32 bits, without writing a helper.
 
-  COERCE_DOUBLE(0x3ff0000000000000ULL)     1
-  0x7f800001                             Float32 bits: NaN
-  0x80000000                             Float32 bits: negative zero
+  COERCE_DOUBLE(0x3ff0000000000000ULL)  1
+  0x7f800001                            Float32 bits: NaN
+  0x80000000                            Float32 bits: negative zero
 
 The bit view keeps the original NaN payload in HEX. Integer inputs are
 truncated or sign/zero extended to 32 or 64 bits, as stated in the note.
 COERCE helpers require a source of that width; use a cast first if the
 selected constant has a different C type.
 
-─── 8. Bytes & byte order ──────────────────────────────────────────────────────
+#[K|─── ]#[Y|8. Bytes & byte order] #[K|─────────────────────────────────────────────────────]
 
 Select a whole byte run:
 
-  #[Y|00 02 00 00]
+  00 02 00 00
 
 The default view keeps the bytes in their original order. UINT LE is 512;
 UINT BE is 131072. Neither number is more correct without the format around
 it. Switch to Integer for signed and unsigned readings at a chosen width.
 
-  ff 7f                         Integer / 16 / LE     32767
-  ff 7f                         Integer / 16 / BE     -129
-  91 00                         Bits / 8              set bits 0, 4, 7
-  00 80 34 41                   Float32 / LE          11.28125
-  3f f0 00 00 00 00 00 00       Float64 / BE          1
+  ff 7f                    Integer / 16 / LE  32767
+  ff 7f                    Integer / 16 / BE  -129
+  91 00                    Bits / 8           set bits 0, 4, 7
+  00 80 34 41              Float32 / LE       11.28125
+  3f f0 00 00 00 00 00 00  Float64 / BE       1
 
 The integer and float views read from the start of the selection. BYTES
 shows exactly what was used; the note gives the byte count. To inspect a
@@ -349,12 +349,12 @@ Up to 32 bytes fit in a selection. This run exercises the full buffer:
   00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
   10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
 
-─── 9. Reading a dump ──────────────────────────────────────────────────────────
+#[K|─── ]#[Y|9. Reading a dump] #[K|─────────────────────────────────────────────────────────]
 
 Select one of the complete rows below, including its address. The address
 gets its own row in the inspector; the ASCII gutter is left out of the data.
 
-/// xxd ///////////////////////////////////////////////////////////////////////
+#[K|/// ]#[Y|xxd] #[K|///////////////////////////////////////////////////////////////////////]
 
 00000000: 7f45 4c46 0201 0100  .ELF....
 00000008: 0000 0000 0000 0000  ........
@@ -362,15 +362,15 @@ gets its own row in the inspector; the ASCII gutter is left out of the data.
 Those two rows can also be selected together. Addresses must be contiguous;
 a gap is not filled with guessed bytes.
 
-/// hexdump -C /////////////////////////////////////////////////////////////////
+#[K|/// ]#[Y|hexdump -C] #[K|////////////////////////////////////////////////////////////////]
 
 00000000  7f 45 4c 46 02 01 01 00  |.ELF....|
 
-/// GDB x/bx ///////////////////////////////////////////////////////////////////
+#[K|/// ]#[Y|GDB x/bx] #[K|//////////////////////////////////////////////////////////////////]
 
 0x400000 <header>: 0x7f 0x45 0x4c 0x46
 
-/// pwndbg hexdump /////////////////////////////////////////////////////////////
+#[K|/// ]#[Y|pwndbg hexdump] #[K|////////////////////////////////////////////////////////////]
 
 +0000 0x400000  7f 45 4c 46 02 01 01 00  │.ELF....│
 
@@ -378,13 +378,13 @@ A byte dump records byte order. A debugger word such as 0x41424344 is already
 a number. Select that value on its own; the inspector does not pretend the
 whole debugger row is a byte dump.
 
-─── 10. Text hiding in bytes ───────────────────────────────────────────────────
+#[K|─── ]#[Y|10. Text hiding in bytes] #[K|──────────────────────────────────────────────────]
 
 ASCII is always available in the byte view. A dot stands in for a byte
 outside printable ASCII. Choose Text when the data might be UTF-8 or UTF-16.
 
-  Bytes                         View                  Result
-  ────────────────────────────  ────────────────────  ─────────────────
+  #[C|Bytes]                         #[C|View]                  #[C|Result]
+#[K|  ────────────────────────────  ────────────────────  ─────────────────]
   45 58 53 32 37                ASCII                 EXS27
   20 7e 7f 00                   ASCII                 space, ~, ., .
   c3 a9                         Text / UTF-8          U+00E9
@@ -398,19 +398,19 @@ Decoded text is quoted, with control characters escaped. An invalid sequence
 is reported instead of being quietly replaced. ORDER applies to UTF-16;
 UTF-8 has no byte-order switch.
 
-─── The edge of the bench ──────────────────────────────────────────────────────
+#[K|─── ]#[Y|Where it stops] #[K|────────────────────────────────────────────────────────────]
 
-  1.0L                          unsupported: long double needs 80 bits
-  (long double)1                same limit
-  BYTE7(1)                      unsupported: operand is only 32 bits
+  1.0L            unsupported: long double needs 80 bits
+  (long double)1  same limit
+  BYTE7(1)        unsupported: operand is only 32 bits
 
 These are recognized, but need a representation the current view cannot give.
 Other text simply does not open an inspector:
 
-  $rsp + 8                      needs a register value
-  [rbp-18h]                     needs a register and a memory read
-  *(int*)0x400000                needs memory
-  symbol + 4                    needs a symbol table
+  $rsp + 8         needs a register value
+  [rbp-18h]        needs a register and a memory read
+  *(int*)0x400000  needs memory
+  symbol + 4       needs a symbol table
 
 Select 18h, an actual address, or a numeric difference from such a line.
 The evaluator accepts constants, casts and the helpers listed above. It does
@@ -421,7 +421,7 @@ and 128 tokens, with at most 32 nested levels. Dump selections may use up to
 Click any result to select its value. Ctrl+C uses the browser's normal Copy;
 Esc returns to the selected article text. That is the whole interaction.
 
-─── Reading material ───────────────────────────────────────────────────────────
+#[K|─── ]#[Y|Reading material] #[K|──────────────────────────────────────────────────────────]
 
 C11 draft, integer constants and arithmetic conversions:
 https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf
@@ -435,7 +435,4 @@ https://hex-rays.com/blog/igors-tip-of-the-week-67-decompiler-helpers
 ImHex's data inspector:
 https://docs.werwolv.net/imhex/views/data-inspector
 
-Layout borrowed from the reading room at tmp.0ut; examples and art made here:
-https://tmpout.sh/5/18.html
-
-─────────────────────────────────────────────────────────────────── end / 0x0a ─
+#[K|─────────────────────────────────────────────────────────────────── end / 0x0a ]

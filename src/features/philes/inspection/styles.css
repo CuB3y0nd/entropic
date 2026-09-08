@@ -50,6 +50,8 @@
     max-width: var(--inspector-width, calc(100vw - 24px));
     max-height: var(--inspector-height, calc(100dvh - 24px));
     overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
     border: 1px solid color-mix(in srgb, var(--link) 55%, var(--bg));
     background: var(--bg);
     outline: none;
@@ -59,6 +61,13 @@
     padding: 8px 12px;
     border-bottom: 1px solid color-mix(in srgb, var(--link) 22%, var(--bg));
     color: var(--link);
+  }
+
+  .byte-inspector-toolbar {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    background: var(--bg);
   }
 
   .byte-inspector-kind {
@@ -81,10 +90,14 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
+    max-width: 100%;
     color: color-mix(in srgb, var(--fg) 60%, var(--bg));
   }
 
   .byte-inspector-controls select {
+    min-width: 0;
+    max-width: 100%;
     min-height: 28px;
     padding: 2px 4px;
     border: 1px solid color-mix(in srgb, var(--link) 30%, var(--bg));
@@ -125,5 +138,22 @@
     margin: 0;
     padding: 0 12px 8px;
     color: color-mix(in srgb, var(--fg) 65%, var(--bg));
+  }
+
+  @media (pointer: coarse) {
+    .byte-inspector-trigger,
+    .byte-inspector-row,
+    .byte-inspector-controls select {
+      min-height: 44px;
+    }
+
+    .byte-inspector-row {
+      align-items: center;
+    }
+
+    .byte-inspector-controls select {
+      /* Avoid the automatic form-control zoom on mobile Safari. */
+      font-size: 16px;
+    }
   }
 }

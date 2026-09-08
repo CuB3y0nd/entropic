@@ -50,6 +50,9 @@ export function arithmeticInteger(value: bigint, type: IntType): Integer {
   return integer(value, type);
 }
 
+export function cast(value: Value, target: FloatWidth): Floating;
+export function cast(value: Value, target: IntType): Integer;
+export function cast(value: Value, target: CType): Value;
 export function cast(value: Value, target: CType): Value {
   if (typeof target === "number") {
     const number =

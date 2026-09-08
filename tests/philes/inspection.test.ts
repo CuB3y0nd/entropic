@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { type InspectionOptions, inspectSelection } from "../../src/features/philes/inspection/inspect";
+import { type InspectionOptions, prepareInspection } from "../../src/features/philes/inspection/inspect";
+
+function inspectSelection(source: string, options?: InspectionOptions) {
+  return prepareInspection(source)?.render(options) ?? null;
+}
 
 function values(source: string, options?: InspectionOptions): Record<string, string> {
   const inspection = inspectSelection(source, options);
@@ -34,6 +38,16 @@ test("exact integers, octal modes and fixed-width two's complement", () => {
   assert.match(inspectSelection("511", { width: "8" })?.note ?? "", /Low 8 bits; source 511/);
   assert.equal(values("(int8_t)0x80", { width: "64" }).HEX, "0xffffffffffffff80");
   assert.equal(values("(uint8_t)0x80", { width: "64" }).HEX, "0x80");
+  for (const bits of [128, 256]) {
+    const minimum = -(1n << BigInt(bits - 1));
+    const result = values(minimum.toString());
+    assert.equal(result.TYPE, `int${bits}_t / ${bits}`);
+    assert.equal(result.HEX, `0x8${"0".repeat(bits / 4 - 1)}`);
+  }
+  const prepared = prepareInspection("-1");
+  assert.ok(prepared);
+  for (const width of ["8", "16", "64"]) prepared.render({ width, view: "bits" });
+  assert.equal(prepared.render().rows.find((row) => row.label === "HEX")?.value, "0xffffffff");
 });
 
 test("CSAPP comparisons apply promotions and usual arithmetic conversions", () => {
@@ -144,6 +158,12 @@ test("floating literals round directly to IEEE precision, including ties and sub
     ["0x1.000001p0f", "0x3f800000"],
     ["0x1.000003p0f", "0x3f800002"],
     ["1.000000059604644775390626f", "0x3f800001"],
+    ["3.4028234663852886e38f", "0x7f7fffff"],
+    ["3.4028236e38f", "0x7f800000"],
+    ["7e-46f", "0x00000000"],
+    ["8e-46f", "0x00000001"],
+    ["2e-324", "0x0000000000000000"],
+    ["3e-324", "0x0000000000000001"],
     ["1e400", "0x7ff0000000000000"],
     ["1e-400", "0x0000000000000000"]
   ] as const)

@@ -1,4 +1,5 @@
 ---
+import { phileConfig } from "@/config/server";
 import type { Phile } from "../model";
 import { renderPhile } from "../rendering";
 import ByteInspector from "./ByteInspector.astro";
@@ -34,7 +35,7 @@ const { header, body, footerHtml } = renderPhile(Astro.props.phile);
   <pre class="textmode-pre phile-pre phile-footer-pre" set:html={footerHtml} />
 </article>
 
-{body.kind !== "redacted" && <ByteInspector />}
+{phileConfig.inspect && body.kind !== "redacted" && <ByteInspector />}
 
 <script>
   import { installPhileInteractions } from "../client";

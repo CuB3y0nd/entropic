@@ -171,6 +171,64 @@ try {
       `PASS ${browserName} ${width}px: native copy, width, comparison, endian, floats, text, dismissal, bounds`
     );
   }
+  const phone = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: browserName === "chromium",
+    reducedMotion: "reduce"
+  });
+  await stubExternalResources(phone);
+  const page = await phone.newPage();
+  page.on("pageerror", (error) => errors.push(error.message));
+  const engineUrl = (url) => /\/(?:inspection\/inspect\.ts|_astro\/inspect\.[^/]+\.js)$/.test(url.pathname);
+  const gate = Promise.withResolvers();
+  await page.route(engineUrl, async (route) => {
+    await gate.promise;
+    await route.continue();
+  });
+  try {
+    await page.goto(new URL("/volume/3/inspect-field-notes/", baseUrl).href);
+    await settleTextLayout(page);
+    const loading = page.waitForRequest((request) => engineUrl(new URL(request.url())));
+    await selectText(page, "-1");
+    const request = await loading;
+    await page.touchscreen.tap(1, 100);
+    gate.resolve();
+    await page.evaluate((url) => import(url).then(() => true), request.url());
+    const root = page.locator("[data-byte-inspector]");
+    assert.equal(await root.isVisible(), false, "Canceled selection stays closed after a delayed engine load");
+
+    await selectText(page, "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0");
+    const trigger = page.locator("[data-inspect-trigger]");
+    await trigger.waitFor({ state: "visible" });
+    await trigger.tap();
+    const panel = page.getByRole("dialog", { name: "Byte inspector" });
+    await page.getByRole("combobox", { name: "View", exact: true }).selectOption("bits");
+    await panel.evaluate((node) => {
+      node.scrollTop = node.scrollHeight;
+    });
+    await settleTextLayout(page);
+    const view = page.getByRole("combobox", { name: "View", exact: true });
+    assert.ok(await view.isVisible(), "View controls remain reachable while long results scroll");
+    const toolbarBox = await view.boundingBox();
+    const panelBox = await panel.boundingBox();
+    assert.ok(toolbarBox.y >= panelBox.y && toolbarBox.y + toolbarBox.height < panelBox.y + panelBox.height);
+    await page.getByRole("combobox", { name: "Bit width", exact: true }).selectOption("8");
+    await page.getByRole("button", { name: "Select HEX: 0xf0", exact: true }).tap();
+    assert.equal(await page.evaluate(() => window.getSelection().toString()), "0xf0", "Touch selects the value");
+
+    await page.setViewportSize({ width: 390, height: 400 });
+    await settleTextLayout(page);
+    assert.ok(await panel.isVisible(), "A visible source retains its inspector after a viewport resize");
+    const resized = await panel.boundingBox();
+    assert.ok(resized.x >= 0 && resized.x + resized.width <= 390);
+    assert.ok(resized.y >= 0 && resized.y + resized.height <= 400);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    console.log(`PASS ${browserName} touch: deferred load cancellation, value selection, scrolling, viewport resize`);
+  } finally {
+    gate.resolve();
+    await phone.close();
+  }
   assert.deepEqual(errors, [], "Browser exceptions");
 } finally {
   await browser.close();

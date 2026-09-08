@@ -92,6 +92,10 @@ export type EntropicConfig = {
     /** Display order follows this array. */
     readonly sections?: readonly HomeSection[];
   };
+  readonly philes?: {
+    /** Selection-based number and byte inspection in articles. Defaults to true. */
+    readonly inspect?: boolean;
+  };
   /** Keys are non-negative volume numbers, not titles or routes. */
   readonly volumes?: Readonly<Record<number, Partial<VolumeConfig>>>;
   readonly cves?: {
