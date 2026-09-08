@@ -54,24 +54,13 @@
   }
 
   .byte-inspector-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 4px 8px 4px 12px;
+    padding: 8px 12px;
     border-bottom: 1px solid color-mix(in srgb, var(--link) 22%, var(--bg));
     color: var(--link);
   }
 
   .byte-inspector-kind {
     color: color-mix(in srgb, var(--fg) 60%, var(--bg));
-  }
-
-  .byte-inspector-heading button {
-    padding: 4px;
-    border: 0;
-    background: transparent;
-    color: var(--link);
   }
 
   .byte-inspector-rows {
@@ -87,11 +76,12 @@
     border: 0;
     background: transparent;
     color: var(--fg);
+    /* Firefox ESR otherwise excludes button text from native selection and Copy. */
+    user-select: text;
   }
 
   .byte-inspector-row:hover,
-  .byte-inspector-row:focus-visible,
-  .byte-inspector-heading button:hover {
+  .byte-inspector-row:focus-visible {
     background: var(--link-hover-bg);
     color: var(--link-hover);
   }
@@ -109,11 +99,5 @@
     margin: 0;
     padding: 0 12px 8px;
     color: color-mix(in srgb, var(--fg) 65%, var(--bg));
-  }
-
-  .byte-inspector-footer {
-    padding: 6px 12px;
-    border-top: 1px solid color-mix(in srgb, var(--link) 22%, var(--bg));
-    color: var(--link);
   }
 }

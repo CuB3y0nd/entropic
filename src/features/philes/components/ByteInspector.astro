@@ -9,8 +9,6 @@ import "../inspection/styles.css";
     data-inspect-trigger
     aria-haspopup="dialog"
     aria-expanded="false"
-    aria-keyshortcuts="Alt+I"
-    title="Inspect selection (Alt+I)"
   >
     [inspect]
   </button>
@@ -24,12 +22,8 @@ import "../inspection/styles.css";
   >
     <header class="byte-inspector-heading">
       <span>INSPECT <span class="byte-inspector-kind" data-inspect-kind></span></span>
-      <button type="button" data-inspect-close aria-label="Close inspector">[x]</button>
     </header>
     <div class="byte-inspector-rows" data-inspect-rows></div>
     <p class="byte-inspector-note" data-inspect-note hidden></p>
-    <footer class="byte-inspector-footer" role="status" aria-live="polite" data-inspect-status>
-      click a value to copy
-    </footer>
   </section>
 </div>

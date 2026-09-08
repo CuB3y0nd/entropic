@@ -31,12 +31,10 @@ export function installByteInspector(): void {
   if (!root || root.dataset.installed) return;
   const trigger = root.querySelector<HTMLButtonElement>("[data-inspect-trigger]");
   const panel = root.querySelector<HTMLElement>("[data-inspect-panel]");
-  const close = root.querySelector<HTMLButtonElement>("[data-inspect-close]");
   const kind = root.querySelector<HTMLElement>("[data-inspect-kind]");
   const rows = root.querySelector<HTMLElement>("[data-inspect-rows]");
   const note = root.querySelector<HTMLElement>("[data-inspect-note]");
-  const status = root.querySelector<HTMLElement>("[data-inspect-status]");
-  if (!trigger || !panel || !close || !kind || !rows || !note || !status) return;
+  if (!trigger || !panel || !kind || !rows || !note) return;
   root.dataset.installed = "true";
 
   let candidate: Candidate | null = null;
@@ -98,25 +96,6 @@ export function installByteInspector(): void {
     selectionTimer = window.setTimeout(updateSelection, 160);
   };
 
-  const copyValue = async (button: HTMLButtonElement, value: string, label: string): Promise<void> => {
-    const activeCandidate = candidate;
-    try {
-      await navigator.clipboard.writeText(value);
-      if (candidate === activeCandidate && !panel.hidden) status.textContent = `${label} copied`;
-    } catch {
-      // Keep the result available for the browser's native Copy command.
-      const valueNode = button.querySelector(".byte-inspector-value");
-      if (!valueNode || candidate !== activeCandidate || panel.hidden) return;
-      valueNode.textContent = value;
-      const range = document.createRange();
-      range.selectNodeContents(valueNode);
-      const selection = window.getSelection();
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-      status.textContent = "copy unavailable; use native Copy";
-    }
-  };
-
   const open = (): void => {
     if (!candidate) return;
     kind.textContent = `/ ${candidate.inspection.title}`;
@@ -125,7 +104,7 @@ export function installByteInspector(): void {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "byte-inspector-row";
-      button.setAttribute("aria-label", `Copy ${result.label}: ${result.copyValue}`);
+      button.setAttribute("aria-label", `Select ${result.label}: ${result.value}`);
       const label = document.createElement("span");
       label.className = "byte-inspector-label";
       label.textContent = result.label;
@@ -133,12 +112,17 @@ export function installByteInspector(): void {
       value.className = "byte-inspector-value";
       value.textContent = result.value;
       button.append(label, value);
-      button.addEventListener("click", () => void copyValue(button, result.copyValue, result.label));
+      button.addEventListener("click", () => {
+        const range = document.createRange();
+        range.selectNodeContents(value);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      });
       rows.append(button);
     }
     note.textContent = candidate.inspection.note;
     note.hidden = !candidate.inspection.note;
-    status.textContent = "click a value to copy";
     trigger.hidden = true;
     trigger.setAttribute("aria-expanded", "true");
     panel.hidden = false;
@@ -163,7 +147,6 @@ export function installByteInspector(): void {
 
   trigger.addEventListener("pointerdown", (event) => event.preventDefault());
   trigger.addEventListener("click", open);
-  close.addEventListener("click", collapsePanel);
   document.addEventListener("selectionchange", scheduleSelection);
   document.addEventListener("pointerdown", (event) => {
     if (event.target instanceof Node && root.contains(event.target)) return;
@@ -179,15 +162,6 @@ export function installByteInspector(): void {
     selecting = false;
   });
   document.addEventListener("keydown", (event) => {
-    if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && event.code === "KeyI") {
-      const next = readSelection();
-      if (!next) return;
-      event.preventDefault();
-      candidate = next;
-      dismissedRange = null;
-      root.hidden = false;
-      open();
-    }
     if (event.key === "Escape" && !root.hidden) {
       event.preventDefault();
       if (panel.hidden) hide();

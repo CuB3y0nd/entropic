@@ -1,7 +1,6 @@
 export type InspectionRow = {
   label: string;
   value: string;
-  copyValue: string;
 };
 
 export type Inspection = {
@@ -15,8 +14,8 @@ const MAX_SELECTION_LENGTH = 512;
 const MAX_BYTES = 32;
 const MAX_INTEGER = (1n << 256n) - 1n;
 
-function row(label: string, value: string, copyValue = value): InspectionRow {
-  return { label, value, copyValue };
+function row(label: string, value: string): InspectionRow {
+  return { label, value };
 }
 
 function inspectInteger(source: string): Inspection | null {
@@ -26,14 +25,13 @@ function inspectInteger(source: string): Inspection | null {
 
   const sign = negative && magnitude !== 0n ? "-" : "";
   const binary = magnitude.toString(2);
-  const groupedBinary = binary.replace(/\B(?=(?:[01]{4})+$)/g, " ");
   return {
     kind: "integer",
     title: "INTEGER",
     rows: [
       row("DEC", `${sign}${magnitude}`),
       row("HEX", `${sign}0x${magnitude.toString(16)}`),
-      row("BIN", `${sign}0b${groupedBinary}`, `${sign}0b${binary}`)
+      row("BIN", `${sign}0b${binary}`)
     ],
     note: null
   };

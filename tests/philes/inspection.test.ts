@@ -5,7 +5,7 @@ import { inspectSelection } from "../../src/features/philes/inspection/inspect";
 function values(source: string): Record<string, string> {
   const inspection = inspectSelection(source);
   assert.ok(inspection, `Expected inspectable input: ${source}`);
-  return Object.fromEntries(inspection.rows.map((row) => [row.label, row.copyValue]));
+  return Object.fromEntries(inspection.rows.map((row) => [row.label, row.value]));
 }
 
 test("integer views preserve exact large addresses and normalize prefixes", () => {

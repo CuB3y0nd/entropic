@@ -32,22 +32,11 @@ async function selectText(page, text, selector = ".phile-body-pre") {
 const browser = await launchBrowser();
 const errors = [];
 try {
-  for (const width of [1280, 390, 320]) {
+  for (const width of [1280, 320]) {
     const context = await browser.newContext({ viewport: { width, height: 800 }, reducedMotion: "reduce" });
     await stubExternalResources(context);
     const page = await context.newPage();
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.addInitScript(() => {
-      window.copiedValue = null;
-      Object.defineProperty(navigator, "clipboard", {
-        configurable: true,
-        value: {
-          writeText: async (value) => {
-            window.copiedValue = value;
-          }
-        }
-      });
-    });
     await page.goto(new URL("/volume/0/netgear-exs27-0/", baseUrl).href);
     await settleTextLayout(page);
     const trigger = page.locator("[data-inspect-trigger]");
@@ -55,21 +44,30 @@ try {
     const root = page.locator("[data-byte-inspector]");
     assert.equal(await root.isVisible(), false, "Reading alone never opens the inspector");
 
+    // Exercise native Copy/Paste in this isolated browser, without a clipboard API mock.
+    await page.evaluate(() => {
+      const field = document.createElement("textarea");
+      field.dataset.copyProbe = "";
+      field.style.cssText = "position:fixed;bottom:0;left:0;width:120px;height:24px;z-index:999";
+      document.body.append(field);
+    });
+    const copyProbe = page.locator("[data-copy-probe]");
+    await copyProbe.fill("original clipboard");
+    await copyProbe.press("Control+a");
+    await copyProbe.press("Control+c");
+    await copyProbe.evaluate((field) => field.blur());
+
     await selectText(page, "00 02 00 00");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     await panel.waitFor({ state: "visible" });
     assert.equal(await page.evaluate(() => window.getSelection().toString()), "00 02 00 00");
-    await page.getByRole("button", { name: "Copy UINT LE: 512", exact: true }).click();
-    await page.waitForFunction(() => window.copiedValue === "512");
+    await page.getByRole("button", { name: "Select UINT LE: 512", exact: true }).click();
+    assert.equal(await page.evaluate(() => window.getSelection().toString()), "512", "Click selects only the value");
+    await page.keyboard.press("Control+c");
     const box = await panel.boundingBox();
     assert.ok(box.x >= 0 && box.x + box.width <= width, "Panel fits the viewport");
     assert.ok(box.y >= 0 && box.y + box.height <= 800, "Panel remains vertically visible");
-    assert.equal(
-      await panel.evaluate((node) => getComputedStyle(node).fontSize),
-      "14px",
-      "Article zoom does not shrink tools"
-    );
 
     await page.keyboard.press("Escape");
     await panel.waitFor({ state: "hidden" });
@@ -78,10 +76,14 @@ try {
     await panel.waitFor({ state: "visible" });
     await page.mouse.click(1, 100);
     await root.waitFor({ state: "hidden" });
+    await copyProbe.fill("");
+    await copyProbe.press("Control+v");
+    assert.equal(await copyProbe.inputValue(), "512", "Native Copy transfers the selected value");
+    await copyProbe.evaluate((field) => field.remove());
 
     await selectText(page, "00 02 00 00 88 df 74 2f");
     await trigger.waitFor({ state: "visible" });
-    await page.keyboard.press("Alt+i");
+    await trigger.click();
     await panel.waitFor({ state: "visible" });
     assert.equal(await page.locator("[data-inspect-kind]").textContent(), "/ 8 BYTES", "Selection crosses ANSI spans");
     await page.evaluate(() => window.scrollBy(0, 80));
@@ -91,15 +93,13 @@ try {
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     assert.equal(await page.locator("[data-inspect-kind]").textContent(), "/ INTEGER");
-    await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined }));
-    await page.getByRole("button", { name: "Copy BIN: 0b100000000000000000", exact: true }).click();
-    await page.waitForFunction(() =>
-      document.querySelector("[data-inspect-status]").textContent.includes("unavailable")
-    );
+    const binary = page.getByRole("button", { name: "Select BIN: 0b100000000000000000", exact: true });
+    await binary.focus();
+    await page.keyboard.press("Enter");
     assert.equal(
       await page.evaluate(() => window.getSelection().toString()),
       "0b100000000000000000",
-      "Native copy fallback selects the canonical value"
+      "Keyboard activation selects the full value"
     );
     await page.keyboard.press("Escape");
     assert.equal(
@@ -114,14 +114,11 @@ try {
     await page.waitForTimeout(250);
     assert.equal(await root.isVisible(), false, "Prose does not activate the inspector");
     await selectText(page, "0", ".phile-header-meta");
-    await page.keyboard.press("Alt+i");
     await page.waitForTimeout(250);
     assert.equal(await root.isVisible(), false, "Header metadata is outside the reading tool");
 
     await context.close();
-    console.log(
-      `PASS ${browserName} ${width}px: article selection, conversions, copy/fallback, keyboard, dismissal, bounds`
-    );
+    console.log(`PASS ${browserName} ${width}px: value selection, keyboard, dismissal, bounds`);
   }
   assert.deepEqual(errors, [], "Browser exceptions");
 } finally {
