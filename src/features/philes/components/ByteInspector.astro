@@ -23,7 +23,8 @@ import "../inspection/styles.css";
     <header class="byte-inspector-heading">
       <span>INSPECT <span class="byte-inspector-kind" data-inspect-kind></span></span>
     </header>
-    <div class="byte-inspector-rows" data-inspect-rows></div>
+    <div class="byte-inspector-controls" data-inspect-controls></div>
+    <div class="byte-inspector-rows" data-inspect-rows aria-live="polite" aria-atomic="true"></div>
     <p class="byte-inspector-note" data-inspect-note hidden></p>
   </section>
 </div>

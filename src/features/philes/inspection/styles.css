@@ -18,14 +18,16 @@
     display: none;
   }
 
-  .byte-inspector button {
+  .byte-inspector button,
+  .byte-inspector select {
     border-radius: 0;
     font: inherit;
     text-align: inherit;
     cursor: pointer;
   }
 
-  .byte-inspector button:focus-visible {
+  .byte-inspector button:focus-visible,
+  .byte-inspector select:focus-visible {
     outline: 1px solid var(--link);
     outline-offset: -3px;
   }
@@ -44,7 +46,7 @@
 
   .byte-inspector-panel {
     box-sizing: border-box;
-    width: 336px;
+    width: 392px;
     max-width: var(--inspector-width, calc(100vw - 24px));
     max-height: var(--inspector-height, calc(100dvh - 24px));
     overflow-y: auto;
@@ -65,6 +67,30 @@
 
   .byte-inspector-rows {
     padding: 6px 0;
+  }
+
+  .byte-inspector-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--link) 22%, var(--bg));
+  }
+
+  .byte-inspector-controls label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: color-mix(in srgb, var(--fg) 60%, var(--bg));
+  }
+
+  .byte-inspector-controls select {
+    min-height: 28px;
+    padding: 2px 4px;
+    border: 1px solid color-mix(in srgb, var(--link) 30%, var(--bg));
+    background: var(--bg);
+    color: var(--link);
+    color-scheme: dark;
   }
 
   .byte-inspector-row {

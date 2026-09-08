@@ -117,8 +117,59 @@ try {
     await page.waitForTimeout(250);
     assert.equal(await root.isVisible(), false, "Header metadata is outside the reading tool");
 
+    await page.goto(new URL("/volume/3/inspect-field-notes/", baseUrl).href);
+    await settleTextLayout(page);
+    await selectText(page, "-1");
+    await trigger.waitFor({ state: "visible" });
+    await trigger.click();
+    await page.getByRole("combobox", { name: "Bit width", exact: true }).selectOption("16");
+    await page.getByRole("button", { name: "Select HEX: 0xffff", exact: true }).click();
+    assert.equal(await page.evaluate(() => window.getSelection().toString()), "0xffff");
+    await page.getByRole("combobox", { name: "View", exact: true }).selectOption("bits");
+    assert.ok(await page.getByRole("button", { name: "Select POPCNT: 16", exact: true }).isVisible());
+    await page.keyboard.press("Escape");
+    assert.equal(
+      await page.evaluate(() => window.getSelection().toString()),
+      "-1",
+      "View changes retain the source range"
+    );
+    await page.mouse.click(1, 100);
+
+    await selectText(page, "-1 < 0U");
+    await trigger.waitFor({ state: "visible" });
+    await trigger.click();
+    assert.ok(await page.getByRole("button", { name: "Select LEFT: 4294967295", exact: true }).isVisible());
+    assert.ok(await page.getByRole("button", { name: "Select RESULT: false", exact: true }).isVisible());
+    const comparisonBox = await panel.boundingBox();
+    assert.ok(comparisonBox.x >= 0 && comparisonBox.x + comparisonBox.width <= width);
+    assert.ok(comparisonBox.y >= 0 && comparisonBox.y + comparisonBox.height <= 800);
+    await page.mouse.click(1, 100);
+
+    await selectText(page, "00 80 34 41");
+    await trigger.waitFor({ state: "visible" });
+    await trigger.click();
+    await page.getByRole("combobox", { name: "View", exact: true }).selectOption("float32");
+    assert.ok(await page.getByRole("button", { name: "Select VALUE: 11.28125", exact: true }).isVisible());
+    await page.getByRole("combobox", { name: "Byte order", exact: true }).selectOption("be");
+    assert.ok(await page.getByRole("button", { name: "Select HEX: 0x00803441", exact: true }).isVisible());
+    await page.mouse.click(1, 100);
+
+    await selectText(page, "0.1f");
+    await trigger.waitFor({ state: "visible" });
+    await trigger.click();
+    assert.ok(await page.getByRole("button", { name: "Select VALUE: 0.10000000149011612", exact: true }).isVisible());
+    await page.mouse.click(1, 100);
+
+    await selectText(page, "c3 a9");
+    await trigger.waitFor({ state: "visible" });
+    await trigger.click();
+    await page.getByRole("combobox", { name: "View", exact: true }).selectOption("text");
+    assert.ok(await page.getByRole("button", { name: 'Select UTF-8: "é"', exact: true }).isVisible());
+
     await context.close();
-    console.log(`PASS ${browserName} ${width}px: value selection, keyboard, dismissal, bounds`);
+    console.log(
+      `PASS ${browserName} ${width}px: native copy, width, comparison, endian, floats, text, dismissal, bounds`
+    );
   }
   assert.deepEqual(errors, [], "Browser exceptions");
 } finally {

@@ -1,6 +1,6 @@
-import { type Inspection, inspectSelection } from "./inspect";
+import { type Inspection, type InspectionOptions, inspectSelection } from "./inspect";
 
-type Candidate = { range: Range; inspection: Inspection };
+type Candidate = { range: Range; source: string; inspection: Inspection };
 
 function bodyFor(node: Node): Element | null {
   const element = node instanceof Element ? node : node.parentElement;
@@ -22,8 +22,9 @@ function readSelection(): Candidate | null {
   const range = selection.getRangeAt(0);
   const body = bodyFor(range.startContainer);
   if (!body || body !== bodyFor(range.endContainer)) return null;
-  const inspection = inspectSelection(selection.toString());
-  return inspection ? { range: range.cloneRange(), inspection } : null;
+  const source = selection.toString();
+  const inspection = inspectSelection(source);
+  return inspection ? { range: range.cloneRange(), source, inspection } : null;
 }
 
 export function installByteInspector(): void {
@@ -34,13 +35,15 @@ export function installByteInspector(): void {
   const kind = root.querySelector<HTMLElement>("[data-inspect-kind]");
   const rows = root.querySelector<HTMLElement>("[data-inspect-rows]");
   const note = root.querySelector<HTMLElement>("[data-inspect-note]");
-  if (!trigger || !panel || !kind || !rows || !note) return;
+  const controls = root.querySelector<HTMLElement>("[data-inspect-controls]");
+  if (!trigger || !panel || !kind || !rows || !note || !controls) return;
   root.dataset.installed = "true";
 
   let candidate: Candidate | null = null;
   let dismissedRange: Range | null = null;
   let selectionTimer = 0;
   let selecting = false;
+  let options: InspectionOptions = {};
 
   const hide = (): void => {
     if (candidate) dismissedRange = candidate.range;
@@ -86,6 +89,7 @@ export function installByteInspector(): void {
     if (candidate && sameRange(candidate.range, next.range)) return;
     hide();
     candidate = next;
+    options = {};
     dismissedRange = null;
     root.hidden = false;
     if (!place(next.range)) hide();
@@ -96,11 +100,45 @@ export function installByteInspector(): void {
     selectionTimer = window.setTimeout(updateSelection, 160);
   };
 
-  const open = (): void => {
-    if (!candidate) return;
-    kind.textContent = `/ ${candidate.inspection.title}`;
+  const render = (inspection: Inspection): void => {
+    kind.textContent = `/ ${inspection.title}`;
+    controls.replaceChildren();
+    controls.hidden = inspection.controls.length === 0;
+    for (const setting of inspection.controls) {
+      const label = document.createElement("label");
+      const caption = document.createElement("span");
+      caption.textContent = setting.label;
+      const select = document.createElement("select");
+      select.dataset.inspectControl = setting.key;
+      select.setAttribute(
+        "aria-label",
+        setting.label === "ORDER" ? "Byte order" : setting.label === "BITS" ? "Bit width" : "View"
+      );
+      for (const entry of setting.choices) {
+        const option = document.createElement("option");
+        option.value = entry.value;
+        option.textContent = entry.label;
+        select.append(option);
+      }
+      select.value = setting.value;
+      select.addEventListener("change", () => {
+        if (!candidate) return;
+        options[setting.key] = select.value;
+        const next = inspectSelection(candidate.source, options);
+        if (!next) return;
+        candidate.inspection = next;
+        render(next);
+        if (!place(candidate.range)) hide();
+        else
+          controls
+            .querySelector<HTMLSelectElement>(`[data-inspect-control="${setting.key}"]`)
+            ?.focus({ preventScroll: true });
+      });
+      label.append(caption, select);
+      controls.append(label);
+    }
     rows.replaceChildren();
-    for (const result of candidate.inspection.rows) {
+    for (const result of inspection.rows) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "byte-inspector-row";
@@ -121,8 +159,13 @@ export function installByteInspector(): void {
       });
       rows.append(button);
     }
-    note.textContent = candidate.inspection.note;
-    note.hidden = !candidate.inspection.note;
+    note.textContent = inspection.note;
+    note.hidden = !inspection.note;
+  };
+
+  const open = (): void => {
+    if (!candidate) return;
+    render(candidate.inspection);
     trigger.hidden = true;
     trigger.setAttribute("aria-expanded", "true");
     panel.hidden = false;
