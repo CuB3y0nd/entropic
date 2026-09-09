@@ -40,6 +40,7 @@ export function validateConfig(config: ResolvedConfig): void {
     integer(socialImage.width, "site.socialImage.width", 1);
     integer(socialImage.height, "site.socialImage.height", 1);
   }
+  if (typeof config.philes.inspect !== "boolean") fail("philes.inspect", "Use true or false.");
   singleLinePrefix(config.home.sectionPrefix, "home.sectionPrefix");
   singleLinePrefix(config.home.itemPrefix, "home.itemPrefix");
   nonEmpty(config.home.asciiArt, "home.asciiArt");

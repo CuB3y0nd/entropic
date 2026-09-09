@@ -1,0 +1,32 @@
+---
+import "../inspection/styles.css";
+---
+
+<div class="byte-inspector" data-byte-inspector hidden>
+  <button
+    type="button"
+    class="byte-inspector-trigger"
+    data-inspect-trigger
+    aria-haspopup="dialog"
+    aria-expanded="false"
+  >
+    [inspect]
+  </button>
+  <section
+    class="byte-inspector-panel"
+    data-inspect-panel
+    role="dialog"
+    aria-label="Byte inspector"
+    tabindex="-1"
+    hidden
+  >
+    <div class="byte-inspector-toolbar">
+      <header class="byte-inspector-heading">
+        <span>INSPECT <span class="byte-inspector-kind" data-inspect-kind></span></span>
+      </header>
+      <div class="byte-inspector-controls" data-inspect-controls></div>
+    </div>
+    <div class="byte-inspector-rows" data-inspect-rows aria-live="polite" aria-atomic="true"></div>
+    <p class="byte-inspector-note" data-inspect-note hidden></p>
+  </section>
+</div>

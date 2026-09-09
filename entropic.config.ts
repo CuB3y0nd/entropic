@@ -104,6 +104,12 @@ export default {
       }
     ]
   },
+  // Article features and reading behavior.
+  philes: {
+    // Inspect selected numbers and bytes. Defaults to true; false disables it.
+    inspect: true
+  },
+
   // 88x31 buttons. Each item has label, imageSrc, and exactly one action:
   // href: an HTTP(S), mailto:, or local URL; copyText: the text to copy when
   // clicked.

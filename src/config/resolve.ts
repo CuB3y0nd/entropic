@@ -17,6 +17,7 @@ export function resolveConfig(input: EntropicConfig) {
       asciiArt: input.home?.asciiArt ?? defaultHomeAsciiArt,
       sections: input.home?.sections ?? []
     },
+    philes: { inspect: input.philes?.inspect ?? true },
     volumes: input.volumes ?? {},
     cves: { enabled: input.cves?.enabled ?? false, records: input.cves?.records ?? [] },
     buttons: {
