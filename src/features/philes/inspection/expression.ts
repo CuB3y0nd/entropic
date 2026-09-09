@@ -55,8 +55,10 @@ function tokenize(source: string): string[] {
   while (rest.length) {
     rest = rest.trimStart();
     if (!rest) break;
+    // Scan quoted escapes as pairs; character() decodes hex/octal afterward.
+    // Disjoint branches avoid reinterpreting escape digits during backtracking.
     const match = rest.match(
-      /^(?:'(?:\\(?:x[\da-fA-F]+|[0-7]{1,3}|[^\n])|[^'\\\n])+'|(?:\d|\.\d)(?:[\w.]|(?<=[eEpP])[+-])*|[a-zA-Z_]\w*|<<|>>|<=|>=|==|!=|&&|\|\||[()+\-*/%~!&|^<>,?:])/
+      /^(?:'(?:\\[^\n]|[^'\\\n])+'|(?:\d|\.\d)(?:[\w.]|(?<=[eEpP])[+-])*|[a-zA-Z_]\w*|<<|>>|<=|>=|==|!=|&&|\|\||[()+\-*/%~!&|^<>,?:])/
     );
     if (!match || tokens.length >= INSPECTION_LIMITS.tokenCount)
       throw new InspectionError("invalid", "Invalid or oversized expression.");
