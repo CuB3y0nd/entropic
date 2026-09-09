@@ -104,9 +104,9 @@ export default {
       }
     ]
   },
-  // Article reading features. Omission/undefined keeps inspection enabled;
-  // false removes the [inspect] menu for selected numbers and bytes.
+  // Article features and reading behavior.
   philes: {
+    // Inspect selected numbers and bytes. Defaults to true; false disables it.
     inspect: true
   },
 
