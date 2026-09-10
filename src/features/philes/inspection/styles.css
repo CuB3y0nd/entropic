@@ -1,68 +1,6 @@
 @import "../../../styles/layers.css";
 
 @layer components.features {
-  .byte-inspector {
-    position: fixed;
-    z-index: 80;
-    width: max-content;
-    max-width: var(--inspector-width, calc(100vw - 24px));
-    color: var(--fg);
-    font-family: var(--text-font);
-    font-size: 14px;
-    line-height: 20px;
-    text-align: left;
-  }
-
-  .byte-inspector[hidden],
-  .byte-inspector [hidden] {
-    display: none;
-  }
-
-  .byte-inspector button,
-  .byte-inspector select {
-    border-radius: 0;
-    font: inherit;
-    text-align: inherit;
-    cursor: pointer;
-  }
-
-  .byte-inspector button:focus-visible,
-  .byte-inspector select:focus-visible {
-    outline: 1px solid var(--link);
-    outline-offset: -3px;
-  }
-
-  .byte-inspector-trigger {
-    padding: 4px 8px;
-    border: 1px solid color-mix(in srgb, var(--link) 55%, var(--bg));
-    background: var(--bg);
-    color: var(--link);
-  }
-
-  .byte-inspector-trigger:hover {
-    background: var(--link-hover-bg);
-    color: var(--link-hover);
-  }
-
-  .byte-inspector-panel {
-    box-sizing: border-box;
-    width: 392px;
-    max-width: var(--inspector-width, calc(100vw - 24px));
-    max-height: var(--inspector-height, calc(100dvh - 24px));
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    scrollbar-width: thin;
-    border: 1px solid color-mix(in srgb, var(--link) 55%, var(--bg));
-    background: var(--bg);
-    outline: none;
-  }
-
-  .byte-inspector-heading {
-    padding: 8px 12px;
-    border-bottom: 1px solid color-mix(in srgb, var(--link) 22%, var(--bg));
-    color: var(--link);
-  }
-
   .byte-inspector-toolbar {
     position: sticky;
     z-index: 1;
@@ -141,7 +79,6 @@
   }
 
   @media (pointer: coarse) {
-    .byte-inspector-trigger,
     .byte-inspector-row,
     .byte-inspector-controls select {
       min-height: 44px;

@@ -1,0 +1,71 @@
+@import "../../../styles/layers.css";
+
+@layer components.features {
+  .phile-selection {
+    position: fixed;
+    z-index: 80;
+    width: max-content;
+    max-width: var(--selection-width, calc(100vw - 24px));
+    color: var(--fg);
+    font-family: var(--text-font);
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+  }
+  .phile-selection[hidden],
+  .phile-selection [hidden] {
+    display: none;
+  }
+  .phile-selection button,
+  .phile-selection select,
+  .phile-selection textarea {
+    border-radius: 0;
+    font: inherit;
+    text-align: inherit;
+  }
+  .phile-selection button,
+  .phile-selection select {
+    cursor: pointer;
+  }
+  .phile-selection :is(button, select, textarea):focus-visible {
+    outline: 1px solid var(--link);
+    outline-offset: -3px;
+  }
+  .selection-actions {
+    display: flex;
+    border: 1px solid color-mix(in srgb, var(--link) 55%, var(--bg));
+    background: var(--bg);
+  }
+  .selection-trigger {
+    padding: 4px 8px;
+    border: 0;
+    background: transparent;
+    color: var(--link);
+  }
+  .selection-trigger:hover {
+    background: var(--link-hover-bg);
+    color: var(--link-hover);
+  }
+  .selection-panel {
+    box-sizing: border-box;
+    width: 392px;
+    max-width: var(--selection-width, calc(100vw - 24px));
+    max-height: var(--selection-height, calc(100dvh - 24px));
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    border: 1px solid color-mix(in srgb, var(--link) 55%, var(--bg));
+    background: var(--bg);
+    outline: none;
+  }
+  .selection-heading {
+    padding: 8px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--link) 22%, var(--bg));
+    color: var(--link);
+  }
+  @media (pointer: coarse) {
+    .selection-trigger {
+      min-height: 44px;
+    }
+  }
+}

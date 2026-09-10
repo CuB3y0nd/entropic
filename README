@@ -21,8 +21,12 @@ inherits the banner from `src/config/defaults.ts` unless overridden; WKD and
 the CVE page are explicitly enabled.
 Set `cves.enabled: false` to omit the CVE page, its homepage links, and its sitemap
 entry; the records can remain in `cves.records` for later use.
-Article number and byte inspection is enabled by default.
-Set `philes.inspect: false` to disable its selection menu across articles.
+Article inspection and fragment links are enabled by default. Select article
+text to inspect a value or prepare a link to that passage, then copy with your
+browser's native Copy action. Fragment links locate the quoted text and briefly
+highlight it; repeated passages need enough context to identify one match.
+Set `philes.inspect: false` or `philes.fragmentLinks: false` to disable either
+tool. Disabling fragment links also disables incoming passage navigation.
 
 The file is a plain TypeScript object with `as const satisfies EntropicConfig`.
 Your editor provides field descriptions and completion, including artwork

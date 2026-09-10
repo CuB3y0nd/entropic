@@ -2,7 +2,7 @@
 import { phileConfig } from "@/config/server";
 import type { Phile } from "../model";
 import { renderPhile } from "../rendering";
-import ByteInspector from "./ByteInspector.astro";
+import SelectionTools from "./SelectionTools.astro";
 import "@/shared/textmode/styles/life.css";
 import "@/shared/textmode/styles/ansi.css";
 import "../styles.css";
@@ -35,7 +35,7 @@ const { header, body, footerHtml } = renderPhile(Astro.props.phile);
   <pre class="textmode-pre phile-pre phile-footer-pre" set:html={footerHtml} />
 </article>
 
-{phileConfig.inspect && body.kind !== "redacted" && <ByteInspector />}
+{body.kind !== "redacted" && (phileConfig.inspect || phileConfig.fragmentLinks) && <SelectionTools />}
 
 <script>
   import { installPhileInteractions } from "../client";

@@ -1,33 +1,12 @@
 import assert from "node:assert/strict";
-import { baseUrl, browserName, launchBrowser, settleTextLayout, stubExternalResources } from "./support.mjs";
-
-async function selectText(page, text, selector = ".phile-body-pre") {
-  await page.evaluate(
-    async ({ text, selector }) => {
-      const element = [...document.querySelectorAll(selector)].find((node) => node.textContent.includes(text));
-      if (!element) throw new Error(`Missing article text: ${text}`);
-      const start = element.textContent.indexOf(text);
-      const end = start + text.length;
-      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-      const range = document.createRange();
-      let offset = 0;
-      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-        const next = offset + node.textContent.length;
-        if (start >= offset && start < next) range.setStart(node, start - offset);
-        if (end > offset && end <= next) {
-          range.setEnd(node, end - offset);
-          break;
-        }
-        offset = next;
-      }
-      window.getSelection().removeAllRanges();
-      window.scrollBy(0, range.getBoundingClientRect().top - window.innerHeight / 3);
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      window.getSelection().addRange(range);
-    },
-    { text, selector }
-  );
-}
+import {
+  baseUrl,
+  browserName,
+  launchBrowser,
+  selectArticleText,
+  settleTextLayout,
+  stubExternalResources
+} from "./support.mjs";
 
 const browser = await launchBrowser();
 const errors = [];
@@ -41,7 +20,7 @@ try {
     await settleTextLayout(page);
     const trigger = page.locator("[data-inspect-trigger]");
     const panel = page.getByRole("dialog", { name: "Byte inspector" });
-    const root = page.locator("[data-byte-inspector]");
+    const root = page.locator("[data-selection-tools]");
     assert.equal(await root.isVisible(), false, "Reading alone never opens the inspector");
 
     // Exercise native Copy/Paste in this isolated browser, without a clipboard API mock.
@@ -57,7 +36,7 @@ try {
     await copyProbe.press("Control+c");
     await copyProbe.evaluate((field) => field.blur());
 
-    await selectText(page, "00 02 00 00");
+    await selectArticleText(page, "00 02 00 00");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     await panel.waitFor({ state: "visible" });
@@ -81,7 +60,7 @@ try {
     assert.equal(await copyProbe.inputValue(), "512", "Native Copy transfers the selected value");
     await copyProbe.evaluate((field) => field.remove());
 
-    await selectText(page, "00 02 00 00 88 df 74 2f");
+    await selectArticleText(page, "00 02 00 00 88 df 74 2f");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     await panel.waitFor({ state: "visible" });
@@ -89,7 +68,7 @@ try {
     await page.evaluate(() => window.scrollBy(0, 80));
     await root.waitFor({ state: "hidden" });
 
-    await selectText(page, "0x20000");
+    await selectArticleText(page, "0x20000");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     assert.equal(await page.locator("[data-inspect-kind]").textContent(), "/ INTEGER");
@@ -109,17 +88,17 @@ try {
     );
 
     await page.mouse.click(1, 100);
-    await selectText(page, "AES-CBC");
+    await selectArticleText(page, "AES-CBC");
     // Selection handling is debounced until a drag/keyboard selection settles.
     await page.waitForTimeout(250);
-    assert.equal(await root.isVisible(), false, "Prose does not activate the inspector");
-    await selectText(page, "0", ".phile-header-meta");
+    assert.equal(await trigger.isVisible(), false, "Prose does not activate the inspector");
+    await selectArticleText(page, "0", ".phile-header-meta");
     await page.waitForTimeout(250);
     assert.equal(await root.isVisible(), false, "Header metadata is outside the reading tool");
 
     await page.goto(new URL("/volume/3/inspect-field-notes/", baseUrl).href);
     await settleTextLayout(page);
-    await selectText(page, "-1");
+    await selectArticleText(page, "-1");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     await page.getByRole("combobox", { name: "Bit width", exact: true }).selectOption("16");
@@ -135,7 +114,7 @@ try {
     );
     await page.mouse.click(1, 100);
 
-    await selectText(page, "-1 < 0U");
+    await selectArticleText(page, "-1 < 0U");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     assert.ok(await page.getByRole("button", { name: "Select LEFT: 4294967295", exact: true }).isVisible());
@@ -145,7 +124,7 @@ try {
     assert.ok(comparisonBox.y >= 0 && comparisonBox.y + comparisonBox.height <= 800);
     await page.mouse.click(1, 100);
 
-    await selectText(page, "00 80 34 41");
+    await selectArticleText(page, "00 80 34 41");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     await page.getByRole("combobox", { name: "View", exact: true }).selectOption("float32");
@@ -154,13 +133,13 @@ try {
     assert.ok(await page.getByRole("button", { name: "Select HEX: 0x00803441", exact: true }).isVisible());
     await page.mouse.click(1, 100);
 
-    await selectText(page, "0.1f");
+    await selectArticleText(page, "0.1f");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     assert.ok(await page.getByRole("button", { name: "Select VALUE: 0.10000000149011612", exact: true }).isVisible());
     await page.mouse.click(1, 100);
 
-    await selectText(page, "c3 a9");
+    await selectArticleText(page, "c3 a9");
     await trigger.waitFor({ state: "visible" });
     await trigger.click();
     await page.getByRole("combobox", { name: "View", exact: true }).selectOption("text");
@@ -190,15 +169,15 @@ try {
     await page.goto(new URL("/volume/3/inspect-field-notes/", baseUrl).href);
     await settleTextLayout(page);
     const loading = page.waitForRequest((request) => engineUrl(new URL(request.url())));
-    await selectText(page, "-1");
+    await selectArticleText(page, "-1");
     const request = await loading;
     await page.touchscreen.tap(1, 100);
     gate.resolve();
     await page.evaluate((url) => import(url).then(() => true), request.url());
-    const root = page.locator("[data-byte-inspector]");
+    const root = page.locator("[data-selection-tools]");
     assert.equal(await root.isVisible(), false, "Canceled selection stays closed after a delayed engine load");
 
-    await selectText(page, "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0");
+    await selectArticleText(page, "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0");
     const trigger = page.locator("[data-inspect-trigger]");
     await trigger.waitFor({ state: "visible" });
     await trigger.tap();

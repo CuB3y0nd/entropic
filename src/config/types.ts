@@ -95,6 +95,8 @@ export type EntropicConfig = {
   readonly philes?: {
     /** Selection-based number and byte inspection in articles. Defaults to true. */
     readonly inspect?: boolean;
+    /** Create and open links to selected article text. Defaults to true. */
+    readonly fragmentLinks?: boolean;
   };
   /** Keys are non-negative volume numbers, not titles or routes. */
   readonly volumes?: Readonly<Record<number, Partial<VolumeConfig>>>;

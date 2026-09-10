@@ -43,7 +43,7 @@ test("undefined optional settings inherit defaults, including nested theme field
   const config = resolveConfig({
     site,
     home: { asciiArt: undefined, sectionPrefix: undefined, itemPrefix: undefined },
-    philes: { inspect: undefined },
+    philes: { inspect: undefined, fragmentLinks: undefined },
     theme: {
       appearance: {
         colors: { background: undefined, link: undefined },
@@ -152,11 +152,17 @@ test("WKD can be disabled without deleting its email or public key path", () => 
   assert.deepEqual(resolveConfig({ site, wkd }).wkd, wkd);
 });
 
-test("article inspection defaults to enabled and accepts an explicit opt-out", () => {
-  assert.equal(resolveConfig({ site }).philes.inspect, true);
-  assert.equal(resolveConfig({ site, philes: { inspect: false } }).philes.inspect, false);
+test("article tools default to enabled and can be disabled independently", () => {
+  assert.deepEqual(resolveConfig({ site }).philes, { inspect: true, fragmentLinks: true });
+  assert.deepEqual(resolveConfig({ site, philes: { inspect: false } }).philes, { inspect: false, fragmentLinks: true });
+  assert.deepEqual(resolveConfig({ site, philes: { fragmentLinks: false } }).philes, {
+    inspect: true,
+    fragmentLinks: false
+  });
   // @ts-expect-error Check the runtime boundary for JavaScript configuration too.
   assert.throws(() => resolveConfig({ site, philes: { inspect: "false" } }), /philes.inspect/);
+  // @ts-expect-error Check the runtime boundary for JavaScript configuration too.
+  assert.throws(() => resolveConfig({ site, philes: { fragmentLinks: "false" } }), /philes.fragmentLinks/);
 });
 
 test("a minimal configuration creates a new site without inheriting the theme author's links or records", () => {

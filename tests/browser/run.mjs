@@ -5,3 +5,4 @@ await import("./site-badges.mjs");
 await import("./badge-copy.mjs");
 await import("./artwork-rotation.mjs");
 await import("./byte-inspector.mjs");
+await import("./fragment-citations.mjs");

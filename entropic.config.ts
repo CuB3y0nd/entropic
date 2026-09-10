@@ -107,7 +107,9 @@ export default {
   // Article features and reading behavior.
   philes: {
     // Inspect selected numbers and bytes. Defaults to true; false disables it.
-    inspect: true
+    inspect: true,
+    // Share and open links to selected article text. Defaults to true.
+    fragmentLinks: true
   },
 
   // 88x31 buttons. Each item has label, imageSrc, and exactly one action:
