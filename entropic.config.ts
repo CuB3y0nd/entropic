@@ -65,7 +65,7 @@ export default {
             label: "Cybersecurity enthusiast. Idealist. Purist."
           },
           {
-            label: "Offensive Researcher @RaptX",
+            label: "Offensive Security Researcher @RaptX",
             // Link only this part of label; omit to link the whole text.
             linkLabel: "@RaptX",
             href: "https://raptx.org/",
