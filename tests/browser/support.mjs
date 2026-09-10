@@ -31,3 +31,31 @@ export function stubExternalResources(context) {
     });
   });
 }
+
+export async function selectArticleText(page, text, selector = ".phile-body-pre") {
+  await page.evaluate(
+    async ({ text, selector }) => {
+      const element = [...document.querySelectorAll(selector)].find((node) => node.textContent.includes(text));
+      if (!element) throw new Error(`Missing article text: ${text}`);
+      const start = element.textContent.indexOf(text);
+      const end = start + text.length;
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      const range = document.createRange();
+      let offset = 0;
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const next = offset + node.textContent.length;
+        if (start >= offset && start < next) range.setStart(node, start - offset);
+        if (end > offset && end <= next) {
+          range.setEnd(node, end - offset);
+          break;
+        }
+        offset = next;
+      }
+      window.getSelection().removeAllRanges();
+      window.scrollBy(0, range.getBoundingClientRect().top - window.innerHeight / 3);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      window.getSelection().addRange(range);
+    },
+    { text, selector }
+  );
+}

@@ -1,0 +1,69 @@
+---
+import { phileConfig } from "@/config/server";
+import ByteInspector from "./ByteInspector.astro";
+import "../selection/styles.css";
+import "../citations/styles.css";
+---
+
+<div class="phile-selection" data-selection-tools hidden>
+  <div class="selection-actions" data-selection-actions role="group" aria-label="Selection actions">
+    {
+      phileConfig.inspect && (
+        <button
+          type="button"
+          class="selection-trigger"
+          data-inspect-trigger
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          hidden
+        >
+          [inspect]
+        </button>
+      )
+    }
+    {
+      phileConfig.fragmentLinks && (
+        <button
+          type="button"
+          class="selection-trigger"
+          data-fragment-trigger
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          hidden
+        >
+          [link]
+        </button>
+      )
+    }
+  </div>
+  {phileConfig.inspect && <ByteInspector />}
+  {
+    phileConfig.fragmentLinks && (
+      <section
+        class="selection-panel fragment-panel"
+        data-fragment-panel
+        role="dialog"
+        aria-label="Fragment link"
+        tabindex="-1"
+        hidden
+      >
+        <header class="selection-heading">
+          LINK <span class="fragment-kind">/ SELECTION</span>
+        </header>
+        <div class="fragment-field" data-fragment-field>
+          <span class="fragment-url fragment-url-size" data-fragment-url-size aria-hidden="true" />
+          <textarea
+            class="fragment-url"
+            data-fragment-url
+            aria-label="Link to selected text"
+            rows="1"
+            spellcheck="false"
+            readonly
+          />
+        </div>
+        <p class="fragment-message" data-fragment-message hidden />
+      </section>
+    )
+  }
+</div>
+{phileConfig.fragmentLinks && <p data-fragment-status role="status" aria-live="polite" hidden />}

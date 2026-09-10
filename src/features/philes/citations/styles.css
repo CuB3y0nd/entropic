@@ -1,0 +1,120 @@
+@import "../../../styles/layers.css";
+
+@layer components.features {
+  .fragment-marker {
+    --fragment-ink: #78ff96;
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    user-select: none;
+  }
+  /* Fade only the small line boxes, never a surface the height of the article. */
+  .fragment-marker-line {
+    position: absolute;
+    opacity: 0;
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--fragment-ink) 38%, transparent));
+    transition: opacity 550ms ease-out;
+  }
+  .phile-wrap.fragment-target .fragment-marker-line {
+    opacity: 1;
+  }
+  .fragment-marker-line::before {
+    content: "";
+    position: absolute;
+    inset: 24% -3px -5%;
+    background:
+      linear-gradient(transparent 60%, color-mix(in srgb, var(--fragment-ink) 8%, transparent)),
+      linear-gradient(
+        100deg,
+        color-mix(in srgb, var(--fragment-ink) 22%, transparent),
+        color-mix(in srgb, var(--fragment-ink) 58%, transparent) 4px,
+        color-mix(in srgb, var(--fragment-ink) 50%, transparent) 12%,
+        color-mix(in srgb, var(--fragment-ink) 42%, transparent) 86%,
+        color-mix(in srgb, var(--fragment-ink) 54%, transparent) calc(100% - 3px),
+        color-mix(in srgb, var(--fragment-ink) 20%, transparent)
+      );
+    /* A curved silhouette gives the ink rounded ends and a gently uneven edge. */
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M1 5C16 1 30 4 44 3S76 5 98.8 1Q100 .7 100 4L99.6 14Q99.4 17 98 17C78 20 66 16 48 18S17 17 1.2 20Q0 20 0 17L.4 8Q.5 6 1 5Z'/%3E%3C/svg%3E");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+  ::highlight(entropic-fragment) {
+    background-color: transparent;
+  }
+  .fragment-panel {
+    width: max-content;
+    max-width: min(392px, var(--selection-width, calc(100vw - 24px)));
+  }
+  .fragment-kind {
+    color: color-mix(in srgb, var(--fg) 60%, var(--bg));
+  }
+  .fragment-field {
+    position: relative;
+    max-height: min(240px, 40dvh);
+    overflow: hidden;
+  }
+  .fragment-url {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 12px;
+    border: 0;
+    background: transparent;
+    color: var(--link);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    resize: none;
+    scrollbar-width: thin;
+    user-select: text;
+  }
+  /* The same text and typography size the native field in Firefox too,
+     including after a viewport or font change, without resize measurements. */
+  .fragment-url-size {
+    visibility: hidden;
+    user-select: none;
+  }
+  textarea.fragment-url {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+  }
+  .fragment-message {
+    margin: 0;
+    padding: 12px;
+    color: var(--fg);
+  }
+  [data-fragment-status][hidden] {
+    display: none;
+  }
+  .fragment-notice {
+    position: fixed;
+    z-index: 80;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid color-mix(in srgb, var(--link) 40%, var(--bg));
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px / 20px var(--text-font);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fragment-marker-line {
+      transition: none;
+    }
+  }
+  @media (pointer: coarse) {
+    .phile-selection .fragment-url {
+      font-size: 16px;
+    }
+  }
+}
