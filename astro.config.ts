@@ -4,6 +4,7 @@ import { config } from "./src/config/server.ts";
 import { cvePagePath } from "./src/features/cves/index.ts";
 
 export default defineConfig({
+  output: "static",
   site: config.site.url,
   // Astro must reload its own site URL when the application config changes.
   integrations: [

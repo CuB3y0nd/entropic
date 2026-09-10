@@ -1,6 +1,8 @@
 import { textmodeConfig, volumeConfig } from "@/config/server";
+import type { PhileCredit } from "@/features/philes";
 import { cellWidth, escapeHtml, link, padCells, textHtml, truncateCells } from "@/shared/textmode";
 import { lifeFrameLineHtml, lifeFrameLines } from "@/shared/textmode/life";
+import { creditAuthorWidth } from "../credits/presentation";
 import type { Volume } from "../model";
 import { volumeTitle } from "./labels";
 
@@ -23,6 +25,10 @@ function renderToc(volume: Volume): string {
   const entryLabelWidth = Math.max(
     ...volume.philes.map((phile, index) => cellWidth(entryLabel(volume, index, phile.data.title, phile.data.date)))
   );
+  const badgeWidth = Math.max(
+    0,
+    ...volume.philes.map((phile) => (phile.credits.length > 1 ? String(phile.credits.length - 1).length + 4 : 0))
+  );
   const lines = [
     ...lifeLines.slice(0, 14).map((_, row) => `${" ".repeat(artIndent)}${lifeFrameLineHtml(row)}`),
     `┌${"─".repeat(artIndent - 1)}${lifeFrameLineHtml(14)}`,
@@ -36,8 +42,9 @@ function renderToc(volume: Volume): string {
         phile.data.title,
         phile.data.date,
         phile.route.href,
-        phile.data.author,
-        entryLabelWidth
+        phile.credits,
+        entryLabelWidth,
+        badgeWidth
       )
     ),
     frameLine(""),
@@ -53,21 +60,29 @@ function renderTocLine(
   title: string,
   date: Date,
   href: string,
-  author: string,
-  entryLabelWidth: number
+  credits: readonly PhileCredit[],
+  entryLabelWidth: number,
+  badgeWidth: number
 ): string {
   const config = volumeConfig(volume.number);
   const label = entryLabel(volume, index, title, date);
   const prefix = `${padCells(label, entryLabelWidth)}  `;
   const entryTitle = config.entryLabel === "year" ? title.replace(/^\d{4}\s+/, "") : title;
-  const tail = ` ${author}`;
+  const author = credits[0]?.name ?? "";
+  const displayAuthor = truncateCells(author, creditAuthorWidth);
+  const count = credits.length > 1 ? ` [+${credits.length - 1}]` : "";
+  const tail = ` ${displayAuthor}${padCells(count, badgeWidth)}`;
+  const trigger = (label: string) =>
+    `<button type="button" class="credits-trigger" data-credits-trigger popovertarget="phile-credits-${index}" aria-label="${escapeHtml(`Author and contributors: ${title}`)}">${textHtml(label)}</button>`;
+  const authorHtml = displayAuthor !== author ? trigger(displayAuthor) : textHtml(displayAuthor);
+  const tailHtml = ` ${authorHtml}${count ? ` ${trigger(count.trimStart())}` : ""}${" ".repeat(badgeWidth - cellWidth(count))}`;
   const titleWidth = Math.max(1, tocInnerWidth - cellWidth(prefix) - cellWidth(tail) - 6);
   const displayTitle = truncateCells(entryTitle, titleWidth);
   const titleLink = link(href, displayTitle);
   const visibleLeft = `${prefix}${displayTitle}`;
   const dots = ".".repeat(Math.max(3, tocInnerWidth - cellWidth(visibleLeft) - cellWidth(tail) - 3));
 
-  return `│ ${escapeHtml(prefix)}${titleLink} ${dots}${textHtml(tail)} │`;
+  return `│ ${escapeHtml(prefix)}${titleLink} ${dots}${tailHtml} │`;
 }
 
 function entryLabel(volume: Volume, index: number, title: string, date: Date): string {

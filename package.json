@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "pnpm check && astro build",
+    "build": "node scripts/content/prepare-history.mjs && pnpm check && astro build",
     "preview": "astro preview",
     "check": "pnpm check:config && pnpm check:types && biome check . && pnpm check:astro && pnpm check:boundaries",
     "format": "biome format --write . && prettier --write \"src/**/*.astro\"",

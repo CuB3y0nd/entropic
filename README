@@ -87,7 +87,6 @@ Required fields:
 
     title
     date
-    author
 
 Optional fields:
 
@@ -95,6 +94,18 @@ Optional fields:
     slug
     redacted
     lang
+
+Credits come from each file's Git history, including renames and
+Co-authored-by trailers.  The original author appears first, followed by
+contributors in order of first participation.  GitHub nicknames are preferred;
+accounts without a nickname use their login.  Unlinked identities keep their
+Git author name.  A new, uncommitted article has no credits yet.
+
+Names are resolved once per production build and embedded in the static pages.
+No GitHub requests run in the browser.  Builds restore shallow history before
+reading credits; Vercel checkouts without an origin use its Git system variables.
+An optional build-time GITHUB_TOKEN increases the API request allowance.  Cached
+profiles provide a fallback when GitHub is unavailable.
 
 The body is rendered as textmode content.  It preserves layout, wraps to the
 configured article width, renders images, accepts ANSI escape sequences, and
@@ -109,7 +120,6 @@ Example:
     ---
     title: "Example"
     date: 2026-05-31
-    author: "CuB3y0nd"
     ---
 
     --[ Summary ]-------------------------------------------------------------

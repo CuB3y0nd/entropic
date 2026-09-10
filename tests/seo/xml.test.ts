@@ -3,14 +3,14 @@ import { test } from "node:test";
 import type { Phile } from "../../src/features/philes";
 import { phileExcerpt, renderRss, renderSitemap } from "../../src/features/seo";
 
-function phile(body: string, overrides: Partial<Phile["data"]> = {}): Phile {
+function phile(body: string, overrides: Partial<Phile["data"]> = {}, author = "Author"): Phile {
   return {
     id: "volume-0/example.phile",
     collection: "philes",
     body,
+    credits: [{ name: author }],
     data: {
       title: "Example",
-      author: "Author",
       date: new Date("2026-01-01"),
       lang: "en",
       redacted: false,
@@ -30,7 +30,7 @@ const site = new URL("https://example.com");
 const feed = (philes: readonly Phile[]) => renderRss({ site, title: "A & B", description: "Notes", philes });
 
 test("RSS represents author names with Dublin Core and preserves chronological order", () => {
-  const older = phile("Older", { title: "Older", author: "A <B> & C" });
+  const older = phile("Older", { title: "Older" }, "A <B> & C");
   const newer = phile("Newer", { title: "Newer", date: new Date("2026-02-02") });
   const input = [older, newer];
   const xml = feed(input);

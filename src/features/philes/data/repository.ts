@@ -2,30 +2,32 @@ import { getCollection } from "astro:content";
 import { volumeConfig } from "@/config/server";
 import type { VolumePhileSort } from "@/config/types";
 import type { Phile } from "../model";
+import { getPhileCredits } from "./credits";
 import { routeForPhile } from "./routing";
 
-let productionPhileCache: readonly Phile[] | undefined;
+let buildPhiles: Promise<readonly Phile[]> | undefined;
 
-export async function getAllPhiles(): Promise<readonly Phile[]> {
-  if (import.meta.env.PROD && productionPhileCache) {
-    return productionPhileCache;
+export function getAllPhiles(): Promise<readonly Phile[]> {
+  // Static routes and feeds share one attribution snapshot for the whole build.
+  if (import.meta.env.PROD) {
+    buildPhiles ??= loadPhiles();
+    return buildPhiles;
   }
+  return loadPhiles();
+}
 
+async function loadPhiles(): Promise<readonly Phile[]> {
   const entries = await getCollection("philes");
+  const credits = await getPhileCredits(entries.flatMap((entry) => (entry.filePath ? [entry.filePath] : [])));
   const philes = entries.map((entry) => ({
     ...entry,
+    credits: credits.get(entry.filePath ?? "") ?? [],
     route: routeForPhile(entry)
   }));
 
   assertUniqueSlugs(philes);
 
-  const sorted = Object.freeze(philes.sort(comparePhiles));
-
-  if (import.meta.env.PROD) {
-    productionPhileCache = sorted;
-  }
-
-  return sorted;
+  return Object.freeze(philes.sort(comparePhiles));
 }
 
 function comparePhiles(left: Phile, right: Phile): number {

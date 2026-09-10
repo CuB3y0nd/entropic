@@ -1,7 +1,6 @@
 ---
 title: "GLIBC Ptmalloc2 Dynamic Allocator Source Code Analysis"
 date: 2025-09-02
-author: "CuB3y0nd"
 lang: zh
 order: 2
 ---

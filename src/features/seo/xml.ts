@@ -94,7 +94,7 @@ function renderRssItem(site: URL, phile: Phile): string {
       <link>${escapeXml(url)}</link>
       <guid isPermaLink="true">${escapeXml(url)}</guid>
       <pubDate>${formatRssDate(phile.data.date)}</pubDate>
-      <dc:creator>${escapeXml(phile.data.author)}</dc:creator>
+      ${phile.credits[0] ? `<dc:creator>${escapeXml(phile.credits[0].name)}</dc:creator>` : ""}
       <description>${escapeXml(phileExcerpt(phile))}</description>
     </item>`;
 }

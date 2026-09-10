@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm, Node.js, and dependencies
         uses: pnpm/setup@v2.1.0
@@ -78,6 +80,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm, Node.js, and dependencies
         uses: pnpm/setup@v2.1.0

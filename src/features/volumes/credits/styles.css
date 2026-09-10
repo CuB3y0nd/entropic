@@ -1,0 +1,84 @@
+.credits-trigger {
+  display: inline;
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--link);
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.credits-trigger:hover,
+.credits-trigger:focus-visible {
+  color: var(--link-hover);
+  background: var(--link-hover-bg);
+  outline: none;
+  text-decoration: underline;
+}
+
+.phile-credits {
+  --credits-max-height: min(440px, calc(100dvh - 24px));
+  position: fixed;
+  inset: auto;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 24px));
+  min-width: min(180px, calc(100vw - 24px));
+  max-height: var(--credits-max-height);
+  margin: 0;
+  padding: 12px 16px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--link) 45%, var(--bg));
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--text-font);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+  box-shadow: 0 8px 24px #0007;
+  overflow-wrap: anywhere;
+}
+
+.phile-credits:popover-open {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 0.75ch;
+}
+
+.phile-credits-label {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--fg) 65%, var(--bg));
+}
+
+.phile-credits ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 0.75ch;
+  min-width: 0;
+  max-width: 100%;
+  /* Keep the label and panel padding visible even in a short viewport. */
+  max-height: calc(var(--credits-max-height) - 26px - 1.5em - 8px);
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  list-style: none;
+}
+
+.phile-credits ol::-webkit-scrollbar {
+  display: none;
+}
+
+.phile-credits li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.phile-credits li > span {
+  color: var(--link);
+}

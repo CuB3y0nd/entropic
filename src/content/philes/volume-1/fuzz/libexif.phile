@@ -1,7 +1,6 @@
 ---
 title: "Fuzz two legacy CVEs in libexif"
 date: 2026-02-24
-author: "CuB3y0nd"
 lang: zh
 order: 11
 ---
