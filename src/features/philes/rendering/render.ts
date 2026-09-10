@@ -42,7 +42,8 @@ export function renderPhile(phile: Phile): PhileView {
 
 function renderPhileHeader(phile: Phile): PhileHeader {
   const titleLines = wrapWordsCells(phile.data.title, titleWidth);
-  const metaLines = [...titleLines, `~ ${phile.data.author}`];
+  const author = phile.credits[0];
+  const metaLines = [...titleLines, ...(author ? wrapWordsCells(`~ ${author.name}`, titleWidth) : [])];
 
   return {
     metaHtml: metaLines.map(textHtml).join("\n"),

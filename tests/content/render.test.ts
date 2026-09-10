@@ -10,9 +10,9 @@ function phile(body: string, redacted = false): Phile {
     id: "volume-0/example.phile",
     collection: "philes" as const,
     body,
-    data: { title: "Example", author: "Author", date: new Date("2026-01-01"), lang: "en" as const, redacted }
+    data: { title: "Example", date: new Date("2026-01-01"), lang: "en" as const, redacted }
   };
-  return { ...entry, route: routeForPhile(entry) };
+  return { ...entry, route: routeForPhile(entry), credits: [{ name: "Author" }] };
 }
 
 test("frontmatter accepts BOM, CRLF, and a closing delimiter at EOF", () => {

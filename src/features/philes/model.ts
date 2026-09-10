@@ -12,4 +12,12 @@ export type PhileRoute = {
 
 export type Phile = PhileEntry & {
   route: PhileRoute;
+  /** The original author comes first, followed by contributors in first-commit order. */
+  credits: readonly PhileCredit[];
+};
+
+export type PhileCredit = {
+  name: string;
+  login?: string;
+  href?: string;
 };

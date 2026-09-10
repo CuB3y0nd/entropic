@@ -1,1 +1,1 @@
-export type { Phile, PhileEntry, PhileRoute } from "./model";
+export type { Phile, PhileCredit, PhileEntry, PhileRoute } from "./model";

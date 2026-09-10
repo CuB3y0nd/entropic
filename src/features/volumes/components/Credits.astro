@@ -1,0 +1,53 @@
+---
+import type { Volume } from "../model";
+import { hasCreditDetails } from "../credits/presentation";
+import "../credits/styles.css";
+
+type Props = { volume: Volume };
+const { volume } = Astro.props;
+---
+
+{
+  volume.philes.map((phile, index) =>
+    hasCreditDetails(phile.credits) ? (
+      <div
+        id={`phile-credits-${index}`}
+        class="phile-credits"
+        popover="auto"
+        role="dialog"
+        aria-labelledby={`phile-credits-title-${index}`}
+        data-phile-credits
+      >
+        <span id={`phile-credits-title-${index}`} class="phile-credits-label">
+          Contributors ({phile.credits.length}):
+        </span>
+        <ol aria-label="Author, followed by contributors">
+          {phile.credits.map((person, personIndex) => (
+            <li>
+              {person.href ? (
+                <a
+                  href={person.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${personIndex === 0 ? "Author" : "Contributor"}${person.login ? ` · @${person.login}` : ""}`}
+                >
+                  {person.name}
+                </a>
+              ) : (
+                <span title={personIndex === 0 ? "Author" : "Contributor"}>{person.name}</span>
+              )}
+              {personIndex < phile.credits.length - 1 && ","}
+            </li>
+          ))}
+        </ol>
+      </div>
+    ) : null
+  )
+}
+
+<script>
+  import { installCredits } from "../credits/client";
+  import { afterPageLoad } from "@/shared/browser/ready";
+
+  afterPageLoad(installCredits);
+</script>

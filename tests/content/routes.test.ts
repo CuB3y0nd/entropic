@@ -7,7 +7,7 @@ function entry(slug?: string, id = "volume-0/example.phile"): PhileEntry {
   return {
     id,
     collection: "philes",
-    data: { title: "Example", author: "Author", date: new Date("2026-01-01"), lang: "en", redacted: false, slug }
+    data: { title: "Example", date: new Date("2026-01-01"), lang: "en", redacted: false, slug }
   };
 }
 
