@@ -61,10 +61,18 @@
 
 .volume-decoration .archive-scan {
   shape-rendering: geometricPrecision;
+  /* Move dashes along the tape's own SVG paths, without a CSS pixel translation. */
+  stroke-dasharray: 6 500;
   animation: volume-archive-scan var(--decoration-cycle) linear calc(var(--decoration-cycle) / -6) infinite;
 }
 
+.volume-decoration .archive-scan-line {
+  stroke-width: 22;
+  stroke-dasharray: var(--decoration-stroke, 1px) 500;
+}
+
 .volume-decoration .archive-stamp {
+  opacity: 0.45;
   animation: volume-archive-stamp var(--decoration-cycle) linear calc(var(--decoration-cycle) / -6) infinite;
 }
 
@@ -130,27 +138,30 @@
 
 @keyframes volume-archive-scan {
   0% {
-    transform: translateX(0);
+    stroke-dashoffset: 0;
     opacity: 0;
   }
-  6%,
-  75% {
+  6% {
+    opacity: 1;
+  }
+  78% {
+    stroke-dashoffset: calc(-1 * var(--archive-scan-distance));
     opacity: 1;
   }
   82%,
   100% {
-    transform: translateX(204px);
+    stroke-dashoffset: calc(-1 * var(--archive-scan-distance));
     opacity: 0;
   }
 }
 
 @keyframes volume-archive-stamp {
   0%,
-  72%,
+  84%,
   100% {
     opacity: 0.45;
   }
-  84%,
+  90%,
   92% {
     opacity: 1;
   }
