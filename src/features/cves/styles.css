@@ -1,7 +1,227 @@
 @import "../../styles/layers.css";
 
 @layer components.features {
-  .cve-wrap {
-    width: calc(var(--text-cell) * var(--cve-columns));
+  .cve-register {
+    --cve-accent: color-mix(in srgb, var(--link) 20%, #54fff0);
+    --cve-muted: color-mix(in srgb, var(--fg) 68%, var(--bg));
+    --cve-width: round(down, min(var(--text-cell) * 105, 100% - var(--text-cell) * 4), 2px);
+    --cve-line: var(--text-size);
+    width: var(--cve-width);
+    margin: 16px 0;
+    margin-left: round(nearest, (100% - var(--cve-width)) / 2, 1px);
+    text-align: left;
+    font-family: var(--text-font);
+    font-size: var(--text-size);
+    line-height: 1;
+  }
+  .cve-masthead {
+    position: relative;
+    margin-bottom: 2px;
+    overflow: hidden;
+  }
+  .cve-circuit {
+    color: var(--fg);
+    position: relative;
+    display: block;
+    width: calc(var(--text-cell) * 105);
+    height: round(up, calc(var(--text-cell) * 105 * 286 / 2048), 1px);
+    max-width: none;
+    left: round(down, (100% - var(--text-cell) * 105) / 2, 1px);
+  }
+  .cve-count {
+    position: absolute;
+    right: 0;
+    bottom: var(--cve-line);
+    color: var(--cve-muted);
+    width: round(up, var(--cve-count-columns) * 1ch, 1px);
+    white-space: nowrap;
+  }
+  .cve-timeline {
+    position: relative;
+    padding-bottom: 50px;
+  }
+  .cve-timeline-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+    color: var(--fg);
+    filter: drop-shadow(0 0 1px color-mix(in srgb, var(--fg) 18%, transparent));
+  }
+  .cve-timeline:not([data-cve-drawn])::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 50%;
+    border-left: 1px solid var(--cve-muted);
+  }
+  .cve-timeline-group h2 {
+    position: relative;
+    width: round(up, var(--cve-year-columns) * 1ch, 2px);
+    white-space: nowrap;
+    margin: 0 auto 8px;
+    padding: 0 6px;
+    background: var(--bg);
+    font: inherit;
+    color: var(--cve-accent);
+  }
+  .cve-timeline-group h2 small {
+    font: inherit;
+    color: var(--fg);
+  }
+  .cve-entries {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    column-gap: calc(var(--text-cell) * 21 + 2px);
+    grid-auto-rows: minmax(calc(var(--cve-line) * 3), auto);
+    row-gap: 27px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .cve-entries:has(> :only-child) {
+    grid-auto-rows: minmax(44px, auto);
+    padding-bottom: 13px;
+  }
+  .cve-timeline-entry {
+    position: relative;
+    min-width: 0;
+  }
+  .cve-right {
+    margin-top: 4px;
+  }
+  .cve-timeline-entry:not(:last-child) {
+    min-height: calc(var(--cve-line) * 3);
+  }
+  .cve-first-right {
+    grid-column: 2;
+    margin-top: 0;
+  }
+  .cve-timeline-entry p {
+    margin: 0;
+    width: calc(100% + var(--text-cell) * 3 + 2px);
+    overflow-wrap: anywhere;
+  }
+  .cve-right p {
+    width: calc(100% + var(--text-cell) + 2px);
+  }
+  .cve-timeline-entry a {
+    color: var(--cve-accent);
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .cve-timeline-entry a:hover,
+  .cve-timeline-entry a:focus-visible {
+    background: transparent;
+    color: var(--cve-accent);
+    text-decoration: underline;
+  }
+  .cve-recognition-entry {
+    padding-left: calc(var(--text-cell) * 10.5);
+    scroll-margin-top: calc(var(--cve-line) * 2);
+  }
+  .cve-recognition-entry .cve-recognition-period {
+    color: var(--cve-muted);
+    margin-top: round(nearest, calc(var(--cve-line) * var(--cve-recognition-period-gap)), 1px);
+  }
+  .cve-external-icon {
+    display: inline-block;
+    margin-left: 1ch;
+    vertical-align: baseline;
+  }
+  .cve-circuit-signals {
+    opacity: 0;
+    pointer-events: none;
+  }
+  [data-cve-active] .cve-circuit-signals {
+    opacity: 1;
+  }
+  .cve-signal[hidden] {
+    display: none;
+  }
+  .cve-signal-head,
+  .cve-signal-tail,
+  .cve-signal-node {
+    opacity: 0;
+    animation: cve-signal-travel var(--cve-signal-cycle) steps(36, end) infinite;
+    animation-delay: var(--cve-signal-delay);
+    animation-play-state: paused;
+  }
+  .cve-signal-node {
+    animation-name: cve-signal-arrive;
+    animation-timing-function: steps(1, end);
+  }
+  [data-cve-active] :is(.cve-signal-head, .cve-signal-tail, .cve-signal-node) {
+    animation-play-state: running;
+  }
+  @keyframes cve-signal-travel {
+    0% {
+      opacity: 0;
+      stroke-dashoffset: 6;
+    }
+    2% {
+      opacity: 1;
+      stroke-dashoffset: 6;
+    }
+    18% {
+      opacity: 1;
+      stroke-dashoffset: -100;
+    }
+    20%,
+    100% {
+      opacity: 0;
+      stroke-dashoffset: -100;
+    }
+  }
+  @keyframes cve-signal-arrive {
+    0%,
+    18%,
+    23%,
+    100% {
+      opacity: 0;
+    }
+    19%,
+    22% {
+      opacity: 0.85;
+    }
+    20% {
+      opacity: 0.25;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cve-circuit-signals {
+      display: none;
+    }
+  }
+  @media (max-width: 700px) {
+    .cve-count {
+      bottom: 0;
+    }
+    .cve-timeline:not([data-cve-drawn])::before {
+      left: 32px;
+    }
+    .cve-timeline-group h2 {
+      margin-left: 0;
+      padding: 0 2px;
+    }
+    .cve-entries {
+      display: block;
+      padding-left: 80px;
+    }
+    .cve-timeline-entry {
+      margin: 0 0 24px;
+    }
+    .cve-timeline-entry p {
+      width: 100%;
+    }
+    .cve-recognition-entry {
+      padding-left: 0;
+    }
+    .cve-entries:has(> :only-child) {
+      padding-bottom: 0;
+    }
   }
 }

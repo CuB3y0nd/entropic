@@ -8,6 +8,7 @@ export function resolveConfig(input: EntropicConfig) {
   const appearance = input.theme?.appearance;
   const particles = input.theme?.effects?.particles;
   const glitch = input.theme?.effects?.homeAsciiGlitch;
+  const circuit = input.theme?.effects?.cveCircuit;
   const { pages: pageOverrides, ...particleOverrides } = particles || {};
   const config = {
     site: input.site,
@@ -22,7 +23,12 @@ export function resolveConfig(input: EntropicConfig) {
       fragmentLinks: input.philes?.fragmentLinks ?? true
     },
     volumes: input.volumes ?? {},
-    cves: { enabled: input.cves?.enabled ?? false, records: input.cves?.records ?? [] },
+    cves: {
+      enabled: input.cves?.enabled ?? false,
+      records: input.cves?.records ?? [],
+      recognitions: input.cves?.recognitions ?? [],
+      recognitionPeriodGapLines: input.cves?.recognitionPeriodGapLines ?? 0.5
+    },
     buttons: {
       shuffleOnBuild: input.buttons?.shuffleOnBuild ?? true,
       items: input.buttons?.items ?? [],
@@ -48,6 +54,10 @@ export function resolveConfig(input: EntropicConfig) {
         homeAsciiGlitch: {
           ...mergeDefined(defaultEffects.homeAsciiGlitch, glitch || undefined),
           enabled: glitch !== false
+        },
+        cveCircuit: {
+          ...mergeDefined(defaultEffects.cveCircuit, circuit || undefined),
+          enabled: circuit !== false
         }
       }
     },

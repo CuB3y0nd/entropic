@@ -1,9 +1,13 @@
 ---
-import { siteConfig } from "@/config/server";
+import { cveConfig, siteConfig } from "@/config/server";
 import TextmodeLayout from "@/layouts/TextmodeLayout.astro";
 import CveScreen from "./CveScreen.astro";
 ---
 
-<TextmodeLayout title="CVEs" tabTitle={`${siteConfig.name} Work`} description="Personal CVE register.">
-  <CveScreen />
+<TextmodeLayout
+  title="CVEs"
+  tabTitle={`${siteConfig.name} Work`}
+  description="Personal CVE register and security research recognition."
+>
+  <CveScreen content={cveConfig} />
 </TextmodeLayout>

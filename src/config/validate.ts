@@ -67,14 +67,24 @@ export function validateConfig(config: ResolvedConfig): void {
     const field = `cves.records[${index}]`;
     if (!/^CVE-\d{4}-\d{4,}$/.test(record.id) || cveIds.has(record.id)) fail(`${field}.id`, "Use a unique CVE ID.");
     cveIds.add(record.id);
-    const date = new Date(`${record.date}T00:00:00Z`);
-    if (
-      !/^\d{4}-\d{2}-\d{2}$/.test(record.date) ||
-      !Number.isFinite(date.getTime()) ||
-      date.toISOString().slice(0, 10) !== record.date
-    ) {
-      fail(`${field}.date`, "Use a real calendar date in YYYY-MM-DD format.");
+  });
+  const recognitionIds = new Set<string>();
+  bounded(config.cves.recognitionPeriodGapLines, "cves.recognitionPeriodGapLines", 0, 2);
+  config.cves.recognitions.forEach((recognition, index) => {
+    const field = `cves.recognitions[${index}]`;
+    if (recognition.enabled !== undefined && typeof recognition.enabled !== "boolean") {
+      fail(`${field}.enabled`, "Use true or false.");
     }
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(recognition.id) || recognitionIds.has(recognition.id)) {
+      fail(`${field}.id`, "Use a unique lowercase slug, such as msrc-2027.");
+    }
+    recognitionIds.add(recognition.id);
+    integer(recognition.year, `${field}.year`, 1000, 9999);
+    for (const key of ["organization", "title", "recipient", "period"] as const) {
+      nonEmpty(recognition[key], `${field}.${key}`);
+    }
+    singleLinePrefix(recognition.organization, `${field}.organization`);
+    at(`${field}.href`, () => safeUrl(recognition.href));
   });
   config.buttons.items.forEach((badge, index) => {
     const field = `buttons.items[${index}]`;
@@ -125,6 +135,9 @@ export function validateConfig(config: ResolvedConfig): void {
   integer(glitch.burstFrameMax, `${glitchField}.burstFrameMax`, 1, 1000);
   range([glitch.mutationRatioMin, glitch.mutationRatioMax], `${glitchField}.mutationRatioMin/mutationRatioMax`, 0, 1);
   bounded(glitch.lineShiftChance, `${glitchField}.lineShiftChance`, 0, 1);
+  const circuit = config.theme.effects.cveCircuit;
+  integer(circuit.cycleMs, "theme.effects.cveCircuit.cycleMs", 1000, 120000);
+  integer(circuit.signalSize, "theme.effects.cveCircuit.signalSize", 1, 6);
   if (config.wkd.enabled) {
     nonEmpty(config.wkd.email, "wkd.email");
     nonEmpty(config.wkd.publicKeyPath, "wkd.publicKeyPath");

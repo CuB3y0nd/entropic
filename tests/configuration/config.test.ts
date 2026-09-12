@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { defaultAppearance, defaultEffects } from "../../src/config/defaults";
 import { resolveConfig, resolveVolumeConfig } from "../../src/config/resolve";
-import type { EntropicConfig } from "../../src/config/types";
+import type { CveCircuitConfig, EntropicConfig } from "../../src/config/types";
 import { sitemapEntries } from "../../src/features/seo/xml";
 
 const site = { url: "https://example.org/", name: "My Philes", description: "A personal textmode site" };
@@ -39,6 +39,27 @@ test("an explicit ASCII banner is used verbatim, including leading spaces and em
   assert.equal(resolveConfig({ site, home: { asciiArt } }).home.asciiArt, asciiArt);
 });
 
+test("CVE circuit settings inherit independently and can disable motion without disabling the page", () => {
+  const defaultsBefore = { ...defaultEffects.cveCircuit };
+  const resolveCircuit = (cveCircuit?: false | Partial<Omit<CveCircuitConfig, "enabled">>) =>
+    resolveConfig({ site, cves: { enabled: true }, theme: { effects: { cveCircuit } } });
+  assert.deepEqual(resolveCircuit().theme.effects.cveCircuit, { enabled: true, cycleMs: 14000, signalSize: 3 });
+  assert.deepEqual(resolveCircuit({ signalSize: 5 }).theme.effects.cveCircuit, {
+    enabled: true,
+    cycleMs: 14000,
+    signalSize: 5
+  });
+  assert.deepEqual(resolveCircuit({ cycleMs: 24000, signalSize: undefined }).theme.effects.cveCircuit, {
+    enabled: true,
+    cycleMs: 24000,
+    signalSize: 3
+  });
+  const disabled = resolveCircuit(false);
+  assert.equal(disabled.cves.enabled, true);
+  assert.deepEqual(disabled.theme.effects.cveCircuit, { enabled: false, cycleMs: 14000, signalSize: 3 });
+  assert.deepEqual(defaultEffects.cveCircuit, defaultsBefore);
+});
+
 test("undefined optional settings inherit defaults, including nested theme fields", () => {
   const config = resolveConfig({
     site,
@@ -57,7 +78,8 @@ test("undefined optional settings inherit defaults, including nested theme field
           driftX: undefined,
           pages: { home: { opacity: undefined }, volume: undefined, article: { mobileCount: undefined } }
         },
-        homeAsciiGlitch: { minIntervalMs: undefined }
+        homeAsciiGlitch: { minIntervalMs: undefined },
+        cveCircuit: { cycleMs: undefined, signalSize: undefined }
       }
     }
   });
@@ -123,7 +145,7 @@ test("disabling CVEs removes internal home links and empty sections while preser
         }
       ]
     },
-    cves: { enabled: false, records: [{ id: "CVE-2026-1234", title: "Research", date: "2026-09-07" }] }
+    cves: { enabled: false, records: [{ id: "CVE-2026-1234", title: "Research" }] }
   } as const satisfies EntropicConfig;
   const disabled = resolveConfig(input);
   assert.deepEqual(disabled.cves.records, input.cves.records);
@@ -170,7 +192,7 @@ test("a minimal configuration creates a new site without inheriting the theme au
   assert.deepEqual(config.site, site);
   assert.deepEqual(config.home.sections, []);
   assert.deepEqual(config.buttons, { shuffleOnBuild: true, items: [], artwork: false });
-  assert.deepEqual(config.cves, { enabled: false, records: [] });
+  assert.deepEqual(config.cves, { enabled: false, records: [], recognitions: [], recognitionPeriodGapLines: 0.5 });
   assert.deepEqual(config.volumes, {});
   assert.deepEqual(config.wkd, { enabled: false });
   assert.equal(config.analytics, false);
@@ -284,6 +306,12 @@ test("invalid configuration reports the editable root file and the responsible f
       /theme.effects.particles.pages.home.mobileCount/
     ],
     [{ theme: { effects: { particles: { driftX: [1, -1] } } } }, /theme.effects.particles.driftX/],
+    [{ theme: { effects: { cveCircuit: { cycleMs: 0 } } } }, /theme.effects.cveCircuit.cycleMs/],
+    [{ theme: { effects: { cveCircuit: { cycleMs: 120001 } } } }, /theme.effects.cveCircuit.cycleMs/],
+    [{ theme: { effects: { cveCircuit: { cycleMs: Number.NaN } } } }, /theme.effects.cveCircuit.cycleMs/],
+    [{ theme: { effects: { cveCircuit: { signalSize: 0 } } } }, /theme.effects.cveCircuit.signalSize/],
+    [{ theme: { effects: { cveCircuit: { signalSize: 1.5 } } } }, /theme.effects.cveCircuit.signalSize/],
+    [{ theme: { effects: { cveCircuit: { signalSize: 7 } } } }, /theme.effects.cveCircuit.signalSize/],
     [
       { theme: { effects: { homeAsciiGlitch: { mutationRatioMax: 2 } } } },
       /theme.effects.homeAsciiGlitch.mutationRatio/
@@ -304,10 +332,6 @@ test("invalid configuration reports the editable root file and the responsible f
     [
       { buttons: { items: [{ label: "Unsafe link", imageSrc: "/link.gif", href: "javascript:alert(1)" }] } },
       /buttons.items\[0\].href/
-    ],
-    [
-      { cves: { enabled: true, records: [{ id: "CVE-2026-1234", title: "Date", date: "2026-02-31" }] } },
-      /cves.records\[0\].date/
     ],
     [{ wkd: { enabled: true, email: "", publicKeyPath: "public/key.asc" } }, /wkd.email/],
     [{ wkd: { enabled: true, email: "a@example.org", publicKeyPath: "../key.asc" } }, /wkd.publicKeyPath/]

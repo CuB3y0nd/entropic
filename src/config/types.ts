@@ -1,7 +1,8 @@
 import type { BadgeArtwork, BadgeArtworkPresetId, SiteBadge } from "../features/site-badges/index.ts";
-import type { CveRecord, HomeSection, VolumeConfig } from "./types/content.ts";
+import type { CveRecord, HomeSection, ResearchRecognition, VolumeConfig } from "./types/content.ts";
 import type {
   AppearanceConfig,
+  CveCircuitConfig,
   HomeAsciiGlitchConfig,
   ParticleConfig,
   ParticlePageConfig,
@@ -9,9 +10,17 @@ import type {
   TextmodeConfig
 } from "./types/theme.ts";
 
-export type { CveRecord, HomeItem, HomeSection, VolumeConfig, VolumePhileSort } from "./types/content.ts";
+export type {
+  CveRecord,
+  HomeItem,
+  HomeSection,
+  ResearchRecognition,
+  VolumeConfig,
+  VolumePhileSort
+} from "./types/content.ts";
 export type {
   AppearanceConfig,
+  CveCircuitConfig,
   EffectsConfig,
   HomeAsciiGlitchConfig,
   ParticleConfig,
@@ -105,6 +114,10 @@ export type EntropicConfig = {
     readonly enabled: boolean;
     /** Records can be retained while the page is disabled. */
     readonly records?: readonly CveRecord[];
+    /** Research recognition is shown on the timeline and counted separately from CVEs. */
+    readonly recognitions?: readonly ResearchRecognition[];
+    /** Space above recognition periods, in text lines (0..2). Defaults to 0.5. */
+    readonly recognitionPeriodGapLines?: number;
   };
   readonly buttons?: {
     /** Shuffle once per production build. Defaults to true; development keeps items order. */
@@ -123,6 +136,8 @@ export type EntropicConfig = {
       readonly particles?: false | ParticleOverrides;
       /** false disables; an object overrides only the supplied glitch settings. */
       readonly homeAsciiGlitch?: false | Partial<Omit<HomeAsciiGlitchConfig, "enabled">>;
+      /** false makes the CVE banner and timeline static; an object overrides their shared signal settings. */
+      readonly cveCircuit?: false | Partial<Omit<CveCircuitConfig, "enabled">>;
     };
   };
   /** Vercel Web Analytics. Defaults to false for new sites. */

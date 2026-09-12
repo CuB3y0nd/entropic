@@ -71,6 +71,11 @@ export const defaultEffects: EffectsConfig = {
     mutationRatioMax: 0.11,
     lineShiftChance: 0.52,
     enabled: true
+  },
+  cveCircuit: {
+    enabled: true,
+    cycleMs: 14000,
+    signalSize: 3
   }
 };
 

@@ -1,12 +1,104 @@
 ---
-import PreBlock from "@/shared/textmode/PreBlock.astro";
-import { cveRecords } from "@/config/server";
-import { cveRegisterColumns, renderCveRegister } from "../rendering/render";
+import type { ResolvedConfig } from "@/config/resolve";
+import { safeUrl } from "@/shared/urls";
+import { buildCveTimeline } from "../model";
+import CveCircuit from "./CveCircuit.astro";
+import CveSignals from "./CveSignals.astro";
 import "../styles.css";
 
-const cveHtml = renderCveRegister(cveRecords);
+type Props = { content: Pick<ResolvedConfig["cves"], "records" | "recognitions" | "recognitionPeriodGapLines"> };
+const { content } = Astro.props;
+const { groups, summary } = buildCveTimeline(content);
 ---
 
-<section class="textmode-wrap cve-wrap mt-line" style={`--cve-columns: ${cveRegisterColumns}`}>
-  <PreBlock class="cve-pre relative z-2" html={cveHtml} />
+<section
+  class="cve-register"
+  aria-label="CVE register"
+  style={`--cve-recognition-period-gap: ${content.recognitionPeriodGapLines}`}
+>
+  <header class="cve-masthead" style={`--cve-count-columns: ${summary.length}`}>
+    <h1 class="sr-only">CVE register</h1>
+    <CveCircuit />
+    <span class="cve-count">{summary}</span>
+  </header>
+  <div class="cve-timeline">
+    <svg class="cve-timeline-art" fill="none" aria-hidden="true" focusable="false">
+      <g data-cve-timeline-traces stroke="currentColor" stroke-width="1.15" stroke-linejoin="miter"></g>
+      <g data-cve-timeline-accents stroke="var(--cve-accent)" stroke-width="1.15"></g>
+      <g data-cve-timeline-dots fill="currentColor" opacity="0.55"></g>
+      <CveSignals />
+    </svg>
+    {
+      groups.map((group) => (
+        <section
+          class:list={["cve-timeline-group", group.kind === "cve" ? "cve-year" : "cve-recognition"]}
+          aria-labelledby={group.headingId}
+        >
+          <h2 id={group.headingId} style={`--cve-year-columns: ${group.year.length + 3 + group.label.length}`}>
+            <>
+              <span>{group.year}</span>
+              <small> / {group.label}</small>
+            </>
+          </h2>
+          <ol class="cve-entries">
+            {group.entries.map((entry, index) => (
+              <li
+                id={entry.id}
+                data-entry-id={entry.id}
+                class:list={[
+                  "cve-timeline-entry",
+                  group.kind === "cve" ? "cve-entry" : "cve-recognition-entry",
+                  { "cve-right": entry.right, "cve-first-right": index === 0 && entry.right }
+                ]}
+              >
+                <a
+                  href={safeUrl(entry.href)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-describedby={entry.period ? `${entry.id}-period` : undefined}
+                >
+                  {entry.title}
+                  {entry.period && (
+                    <svg
+                      class="cve-external-icon"
+                      aria-hidden="true"
+                      width="8"
+                      height="8"
+                      viewBox="0 0 8 8"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M3.5.5H7.5V4.5M7.5.5L2.5 5.5M.5 1.5V7.5H6.5" />
+                    </svg>
+                  )}
+                </a>
+                <p>{entry.description}</p>
+                {entry.period && (
+                  <p id={`${entry.id}-period`} class="cve-recognition-period">
+                    {entry.period}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </div>
 </section>
+
+<script>
+  import { observeAnimationActivity } from "@/shared/browser/animation-activity";
+  import { installCveTimeline } from "../timeline";
+
+  const cleanups = [
+    ...[...document.querySelectorAll<HTMLElement>(".cve-timeline")].map(installCveTimeline),
+    ...[...document.querySelectorAll<SVGGElement>(".cve-circuit-signals")].flatMap((signals) => {
+      const circuit = signals.ownerSVGElement;
+      return circuit
+        ? [observeAnimationActivity((active) => circuit.toggleAttribute("data-cve-active", active), circuit)]
+        : [];
+    })
+  ];
+  import.meta.hot?.dispose(() => cleanups.forEach((cleanup) => cleanup()));
+</script>
