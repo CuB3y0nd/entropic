@@ -16,9 +16,10 @@ try {
   const page = await context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));
   const markup = await context.request.get(baseUrl.href).then((response) => response.text());
+  const configuredCount = [...markup.matchAll(/class="badge-action"/g)].length;
   assert.equal(
-    [...markup.matchAll(/class="badge-action"/g)].length,
-    17,
+    [...markup.matchAll(/class="badge-actions"/g)].length,
+    1,
     "The response contains one set of controls, independent of the artwork catalog"
   );
   const presetIds = [...markup.matchAll(/<template data-artwork-id="([^"]+)"/g)].map((match) => match[1]);
@@ -26,7 +27,8 @@ try {
   const selectedId = () => page.locator(".artwork-rotation").getAttribute("data-active-artwork");
   const artworkRequests = new Set();
   page.on("request", (request) => {
-    if (request.resourceType() === "image" && new URL(request.url()).pathname.startsWith("/_astro/")) {
+    const path = new URL(request.url()).pathname;
+    if (request.resourceType() === "image" && (path.startsWith("/_astro/") || path === "/_image")) {
       artworkRequests.add(request.url());
     }
   });
@@ -38,6 +40,7 @@ try {
   const buttonOrder = () =>
     page.locator(".badge-action > img").evaluateAll((images) => images.map((image) => image.src));
   const deployedOrder = await buttonOrder();
+  assert.equal(deployedOrder.length, configuredCount, "Artwork selection preserves all configured controls");
   assert.ok(presetIds.includes(today));
   for (const time of ["2026-09-06T16:00:00Z", "2026-09-07T15:59:59.999Z"]) {
     await page.clock.setFixedTime(new Date(time));
@@ -52,6 +55,7 @@ try {
   const cycleStart = Math.floor(todayNumber / presetIds.length) * presetIds.length;
   const seen = [];
   for (let offset = 0; offset <= presetIds.length; offset += 1) {
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.clock.setFixedTime(new Date((cycleStart + offset) * dayMs - shanghaiOffsetMs + 12 * 3_600_000));
     artworkRequests.clear();
     await page.reload();
@@ -72,6 +76,40 @@ try {
       [...artworkRequests].every((url) => selectedSources.has(url)),
       "Inert templates and noscript fallback must not download unselected artwork"
     );
+    if (offset < presetIds.length) {
+      for (const width of [320, 390, 760]) {
+        await page.setViewportSize({ width, height: 800 });
+        await settleTextLayout(page);
+        if (!(await page.locator(".badge-dialog").evaluate((element) => element.open))) {
+          assert.ok(
+            await page.locator(".badge-artwork").isVisible(),
+            `${id} remains visible while buttons are collapsed`
+          );
+          await page.locator(".badge-toggle").click();
+        }
+        const layout = await page.locator(".badge-panel").evaluate((panel) => {
+          const images = [...panel.querySelectorAll(".badge-artwork, .badge-companion img")].map((image) =>
+            image.getBoundingClientRect().toJSON()
+          );
+          return {
+            images,
+            entryTop: panel.querySelector(".badge-toggle").getBoundingClientRect().top,
+            height: panel.getBoundingClientRect().height,
+            overflows: document.documentElement.scrollWidth > innerWidth
+          };
+        });
+        assert.equal(layout.overflows, false, `${id} fits a ${width}px viewport`);
+        assert.ok(layout.height <= 108.1, `${id} keeps the footer compact`);
+        for (const image of layout.images) {
+          assert.ok(image.height > 0 && image.height <= 64.1, `${id} stays compact at ${width}px`);
+          assert.ok(image.left >= 0 && image.right <= width, `${id} stays inside the viewport`);
+          assert.ok(image.bottom <= layout.entryTop + 0.1, `${id} stays above the buttons entry`);
+        }
+        if (layout.images.length > 1) {
+          assert.ok(layout.images[0].right <= layout.images[1].left, `${id} keeps companion art beside the main art`);
+        }
+      }
+    }
   }
   assert.equal(
     new Set(seen.slice(0, presetIds.length)).size,
@@ -79,13 +117,16 @@ try {
     "Every preset appears exactly once in a cycle"
   );
   console.log(
-    `PASS ${browserName}: stable Shanghai dates, midnight rollover, all 25 presets, no boundary repeat, selected images only`
+    `PASS ${browserName}: stable Shanghai dates, midnight rollover, all 25 presets at 320/390/760px, no boundary repeat, selected images only`
   );
 
   // A tab/history restore on a later date rechecks the schedule and preserves
   // a keyboard user's position among the actual controls.
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.locator(".badge-toggle").click();
   const copyButton = page.getByRole("button", { name: "Copy Discord", exact: true });
   await copyButton.focus();
+  await settleTextLayout(page);
   await copyButton.evaluate((button) => {
     window.originalCopyButton = button;
   });
@@ -98,6 +139,11 @@ try {
   assert.deepEqual(await buttonOrder(), deployedOrder, "History restoration keeps the deployment's button order");
   assert.equal(await copyButton.evaluate((action) => document.activeElement === action), true);
   assert.equal(await copyButton.evaluate((action) => action === window.originalCopyButton), true);
+  assert.equal(
+    await page.locator(".badge-dialog").evaluate((element) => element.open),
+    true,
+    "Artwork rotation preserves the visitor's open gallery"
+  );
   const focusId = await selectedId();
   await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
   assert.equal(await selectedId(), focusId, "Same-period restoration does not redraw the panel");
@@ -168,12 +214,12 @@ try {
   );
   await otherZone.close();
 
-  const noScript = await browser.newContext({ javaScriptEnabled: false });
+  const noScript = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 800 } });
   await stubExternalResources(noScript);
   const fallback = await noScript.newPage();
   await fallback.goto(baseUrl.href);
   assert.equal(await fallback.locator(".site-badges").count(), 1);
-  assert.equal(await fallback.locator(".badge-action").count(), 17);
+  assert.equal(await fallback.locator(".badge-action").count(), configuredCount);
   assert.deepEqual(
     await fallback.locator(".badge-action > img").evaluateAll((images) => images.map((image) => image.src)),
     deployedOrder,

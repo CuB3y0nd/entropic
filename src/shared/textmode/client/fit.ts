@@ -37,7 +37,8 @@ export function installTextmodeFit(mobile: MediaQueryList): void {
       const viewportWidth = document.documentElement.clientWidth;
       for (const { element, width } of widths) {
         const scale = Math.min(1, viewportWidth / Math.max(1, width));
-        element.style.setProperty("--fit-scale", scale.toFixed(4));
+        const scope = element.closest<HTMLElement>("[data-textmode-fit-scope]") ?? element;
+        scope.style.setProperty("--fit-scale", scale.toFixed(4));
       }
     });
   };

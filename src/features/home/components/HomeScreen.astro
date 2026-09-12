@@ -10,7 +10,7 @@ type Props = { volumes: readonly Volume[] };
 const { asciiText, asciiHtml, homeText } = renderHome(Astro.props.volumes);
 ---
 
-<div class="home-page inline-grid grid-cols-[min-content]">
+<div class="home-page inline-grid grid-cols-[min-content]" data-textmode-fit-scope>
   <section class="home-shell inline-block text-left">
     <div
       class="ascii-hero relative inline-block mb-line"
