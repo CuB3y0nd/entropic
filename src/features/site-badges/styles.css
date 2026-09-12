@@ -114,14 +114,11 @@
     }
 
     .badge-panel:is([data-placement="left"], [data-placement="right"]) .badge-actions {
-      align-self: end;
       justify-content: start;
     }
   }
 
   .badge-actions {
-    /* Each badge reveal must paint above the decoration. */
-    grid-area: actions;
     display: grid;
     grid-template-columns: repeat(auto-fit, var(--badge-width));
     justify-content: center;
@@ -129,6 +126,79 @@
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  .badge-browser {
+    grid-area: actions;
+    align-self: end;
+    min-width: 0;
+  }
+
+  .badge-toggle {
+    display: none;
+  }
+
+  .badge-dialog {
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    width: min(296px, calc(100vw - 24px));
+    max-height: min(70dvh, 440px);
+    margin: auto;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--link) 65%, transparent);
+    background: var(--home-bg, var(--bg));
+    color: var(--fg);
+    font: inherit;
+  }
+
+  .badge-dialog[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .badge-dialog::backdrop {
+    background: color-mix(in srgb, var(--home-bg, var(--bg)) 80%, transparent);
+  }
+
+  .badge-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 10px;
+  }
+
+  .badge-dialog-header h2 {
+    margin: 0;
+    font: inherit;
+  }
+
+  .badge-dialog-close {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--link);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .badge-dialog-close:focus-visible {
+    outline: 1px solid var(--link);
+    outline-offset: -4px;
+  }
+
+  .badge-dialog-body {
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding: 0 4px 8px;
+  }
+
+  .badge-count {
+    color: color-mix(in srgb, var(--fg) 60%, transparent);
   }
 
   .badge-item,
@@ -235,6 +305,14 @@
     color: var(--link);
   }
 
+  .badge-dialog .badge-copy-status:not(:empty) {
+    inset: 6px 0;
+    translate: none;
+    display: grid;
+    place-items: center;
+    padding: 0;
+  }
+
   .badge-copy-dialog {
     box-sizing: border-box;
     width: min(320px, calc(100% - 32px));
@@ -288,5 +366,131 @@
   .badge-copy-dialog :is(textarea, button):focus-visible {
     outline: 1px solid var(--link);
     outline-offset: 2px;
+  }
+}
+
+@layer responsive {
+  @media (max-width: 760px) {
+    html:has(.badge-dialog:modal) {
+      overflow: hidden;
+    }
+
+    .site-badges {
+      margin-top: 16px;
+      padding-inline: 0;
+    }
+
+    .badge-panel {
+      --badge-artwork-overlap: 0px;
+      width: 100%;
+      margin-inline: auto;
+    }
+
+    .badge-composition {
+      grid-template-areas: "art" "actions";
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .badge-composition:has(.badge-browser[data-modal]) {
+      gap: 0;
+    }
+
+    .badge-decoration {
+      grid-area: art;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .badge-artwork {
+      width: auto;
+      height: auto;
+      max-width: min(100%, var(--badge-artwork-width));
+      max-height: 64px;
+      margin: 0;
+      object-fit: contain;
+    }
+
+    .badge-decoration:has(.badge-companion) .badge-artwork {
+      max-width: min(var(--badge-artwork-width), (100% - 12px) / 2);
+    }
+
+    .badge-companion {
+      max-width: calc((100% - 12px) / 2);
+      margin: 0;
+    }
+
+    .badge-companion img {
+      max-height: 64px;
+      object-fit: contain;
+    }
+
+    .badge-browser[data-modal] .badge-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      width: fit-content;
+      margin-inline: auto;
+      padding-inline: 8px;
+      border: 0;
+      background: transparent;
+      color: var(--link);
+      font: inherit;
+      cursor: pointer;
+      outline: 1px solid transparent;
+      outline-offset: -1px;
+    }
+
+    .badge-toggle-text {
+      white-space: nowrap;
+      zoom: min(var(--mobile-scale), var(--fit-scale));
+    }
+
+    .badge-toggle:is(:focus-visible, :active) {
+      outline-color: var(--link);
+    }
+
+    .badge-actions {
+      justify-content: center;
+      column-gap: 4px;
+      row-gap: 0;
+    }
+
+    .badge-browser[data-modal] > .badge-actions {
+      display: none;
+    }
+
+    .badge-item,
+    .badge-action {
+      height: 44px;
+    }
+
+    .badge-action {
+      display: grid;
+      place-items: center;
+      outline-offset: -1px;
+    }
+
+    .badge-reveal {
+      display: none;
+    }
+
+    .badge-action:is(:focus-visible, :active) {
+      outline-color: var(--link);
+    }
+
+    @media (hover: hover) {
+      .badge-toggle:hover,
+      .badge-dialog-close:hover {
+        background: var(--link-hover-bg);
+      }
+
+      .badge-action:hover {
+        outline-color: var(--link);
+      }
+    }
   }
 }

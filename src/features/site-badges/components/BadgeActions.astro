@@ -1,11 +1,35 @@
 ---
 import type { SiteBadge } from "../model";
+import galleryScript from "../client/gallery.js?raw";
 import BadgeAction from "./BadgeAction.astro";
 
 type Props = { badges: readonly SiteBadge[]; hasOverlap: boolean };
 const { badges, hasOverlap } = Astro.props;
+const dialogId = `site-buttons-${crypto.randomUUID()}`;
 ---
 
-<ul class="badge-actions">
-  {badges.map((badge) => <BadgeAction badge={badge} hasOverlap={hasOverlap} />)}
-</ul>
+<div class="badge-browser">
+  <button
+    class="badge-toggle"
+    type="button"
+    aria-haspopup="dialog"
+    aria-controls={dialogId}
+    aria-expanded="false"
+    hidden
+  >
+    <span class="badge-toggle-text"
+      ><span aria-hidden="true">[+] </span>Buttons <span class="badge-count">({badges.length})</span></span
+    >
+  </button>
+  <ul class="badge-actions">
+    {badges.map((badge) => <BadgeAction badge={badge} hasOverlap={hasOverlap} />)}
+  </ul>
+  <dialog id={dialogId} class="badge-dialog" aria-labelledby={`${dialogId}-title`}>
+    <header class="badge-dialog-header">
+      <h2 id={`${dialogId}-title`}>Buttons <span class="badge-count">({badges.length})</span></h2>
+      <button class="badge-dialog-close" type="button" aria-label="Close buttons" autofocus>[x]</button>
+    </header>
+    <div class="badge-dialog-body"></div>
+  </dialog>
+</div>
+<script is:inline set:html={galleryScript} />

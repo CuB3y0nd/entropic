@@ -47,7 +47,6 @@
   }
   .fragment-panel {
     width: max-content;
-    max-width: min(392px, var(--selection-width, calc(100vw - 24px)));
   }
   .fragment-kind {
     color: color-mix(in srgb, var(--fg) 60%, var(--bg));
@@ -115,6 +114,19 @@
   @media (pointer: coarse) {
     .phile-selection .fragment-url {
       font-size: 16px;
+    }
+  }
+}
+
+@layer responsive {
+  @media (max-width: 760px) {
+    .fragment-field {
+      max-height: min(200px, 40dvh);
+    }
+
+    .fragment-url,
+    .fragment-message {
+      padding: 8px;
     }
   }
 }

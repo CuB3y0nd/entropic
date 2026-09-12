@@ -180,6 +180,8 @@ try {
     await selectArticleText(page, "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0");
     const trigger = page.locator("[data-inspect-trigger]");
     await trigger.waitFor({ state: "visible" });
+    const entryBox = await trigger.boundingBox();
+    assert.ok(entryBox.height >= 28 && entryBox.height <= 32, "The phone entry stays compact and tappable");
     await trigger.tap();
     const panel = page.getByRole("dialog", { name: "Byte inspector" });
     await page.getByRole("combobox", { name: "View", exact: true }).selectOption("bits");
@@ -191,6 +193,8 @@ try {
     assert.ok(await view.isVisible(), "View controls remain reachable while long results scroll");
     const toolbarBox = await view.boundingBox();
     const panelBox = await panel.boundingBox();
+    assert.ok(panelBox.width <= 300, "The phone inspector leaves room beside the article");
+    assert.ok(panelBox.height <= 360.1, "Long results scroll inside a compact panel");
     assert.ok(toolbarBox.y >= panelBox.y && toolbarBox.y + toolbarBox.height < panelBox.y + panelBox.height);
     await page.getByRole("combobox", { name: "Bit width", exact: true }).selectOption("8");
     await page.getByRole("button", { name: "Select HEX: 0xf0", exact: true }).tap();

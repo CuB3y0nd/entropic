@@ -29,13 +29,15 @@ async function createContext({ holdFont = Promise.resolve(), width = 390 } = {})
 async function readFit(page) {
   return page.evaluate(() => ({
     segments: window.fitSegmentCalls,
-    scale: Number(document.querySelector(".home-shell, .textmode-wrap")?.style.getPropertyValue("--fit-scale"))
+    scale: Number(
+      document.querySelector("[data-textmode-fit-scope], .textmode-wrap")?.style.getPropertyValue("--fit-scale")
+    )
   }));
 }
 
 async function waitForFit(page) {
   await page.waitForFunction(() =>
-    document.querySelector(".home-shell, .textmode-wrap")?.style.getPropertyValue("--fit-scale")
+    document.querySelector("[data-textmode-fit-scope], .textmode-wrap")?.style.getPropertyValue("--fit-scale")
   );
   await settle(page);
 }
@@ -87,7 +89,9 @@ try {
     const delayed = await delayedContext.newPage();
     delayed.on("pageerror", (error) => errors.push(error.message));
     await delayed.goto(baseUrl.href, { waitUntil: "domcontentloaded" });
-    await delayed.waitForFunction(() => document.querySelector(".home-shell")?.style.getPropertyValue("--fit-scale"));
+    await delayed.waitForFunction(() =>
+      document.querySelector("[data-textmode-fit-scope]")?.style.getPropertyValue("--fit-scale")
+    );
     await delayed.waitForTimeout(1500);
     assert.equal(await delayed.evaluate(() => document.fonts.check("14px gohu")), false);
     const fallback = await readFit(delayed);
@@ -95,7 +99,8 @@ try {
     font.resolve();
     await settle(delayed);
     await delayed.waitForFunction(
-      (expected) => Number(document.querySelector(".home-shell")?.style.getPropertyValue("--fit-scale")) === expected,
+      (expected) =>
+        Number(document.querySelector("[data-textmode-fit-scope]")?.style.getPropertyValue("--fit-scale")) === expected,
       homeScale
     );
     assert.ok((await readFit(delayed)).segments > fallback.segments, "Font completion invalidates prepared widths");

@@ -18,21 +18,35 @@ export function installCredits(): void {
   }
   let anchor: HTMLElement | undefined;
   let panel: HTMLElement | undefined;
+  let positionQueued = false;
 
   const position = () => {
     if (!anchor || !panel?.matches(":popover-open")) return;
     const target = anchor.getBoundingClientRect();
     const bounds = panel.getBoundingClientRect();
+    const scale = Number.parseFloat(getComputedStyle(panel).zoom);
     const viewport = window.visualViewport;
     const leftEdge = (viewport?.offsetLeft ?? 0) + 12;
     const topEdge = (viewport?.offsetTop ?? 0) + 12;
     const rightEdge = leftEdge + (viewport?.width ?? innerWidth) - 24;
     const bottomEdge = topEdge + (viewport?.height ?? innerHeight) - 24;
-    panel.style.left = `${Math.max(leftEdge, Math.min(target.right - bounds.width, rightEdge - bounds.width))}px`;
-    panel.style.top = `${Math.max(topEdge, Math.min(target.bottom + 8, bottomEdge - bounds.height))}px`;
+    // DOM bounds are in viewport pixels; inset lengths follow the panel's zoom.
+    panel.style.left = `${Math.max(leftEdge, Math.min(target.right - bounds.width, rightEdge - bounds.width)) / scale}px`;
+    panel.style.top = `${Math.max(topEdge, Math.min(target.bottom + 8, bottomEdge - bounds.height)) / scale}px`;
   };
   const close = () => {
     if (panel?.matches(":popover-open")) panel.hidePopover();
+  };
+  const schedulePosition = () => {
+    if (positionQueued || !panel?.matches(":popover-open")) return;
+    positionQueued = true;
+    // Article fitting settles on the first animation frame after resizing.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        positionQueued = false;
+        position();
+      })
+    );
   };
 
   document.addEventListener("click", (event) => {
@@ -48,7 +62,7 @@ export function installCredits(): void {
     panel.togglePopover();
     position();
   });
-  window.addEventListener("resize", position, { passive: true });
+  window.addEventListener("resize", schedulePosition, { passive: true });
   window.addEventListener("scroll", close, { passive: true });
-  window.visualViewport?.addEventListener("resize", position, { passive: true });
+  window.visualViewport?.addEventListener("resize", schedulePosition, { passive: true });
 }

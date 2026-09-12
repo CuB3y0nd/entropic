@@ -19,33 +19,36 @@
 }
 
 .phile-credits {
+  --credits-padding: 12px;
+  --credits-gap: 8px;
   --credits-max-height: min(440px, calc(100dvh - 24px));
   position: fixed;
   inset: auto;
   box-sizing: border-box;
   width: max-content;
-  max-width: min(360px, calc(100vw - 24px));
-  min-width: min(180px, calc(100vw - 24px));
+  max-width: min(360px, calc((100vw - 24px) / var(--reading-tool-scale)));
+  min-width: min(180px, calc((100vw - 24px) / var(--reading-tool-scale)));
   max-height: var(--credits-max-height);
   margin: 0;
-  padding: 12px 16px;
+  padding: var(--credits-padding) 16px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--link) 45%, var(--bg));
   background: var(--bg);
   color: var(--fg);
   font-family: var(--text-font);
-  font-size: 14px;
+  font-size: var(--text-size);
   line-height: 1.5;
   text-align: left;
   box-shadow: 0 8px 24px #0007;
   overflow-wrap: anywhere;
+  zoom: var(--reading-tool-scale);
 }
 
 .phile-credits:popover-open {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px 0.75ch;
+  gap: var(--credits-gap) 0.75ch;
 }
 
 .phile-credits-label {
@@ -61,7 +64,7 @@
   min-width: 0;
   max-width: 100%;
   /* Keep the label and panel padding visible even in a short viewport. */
-  max-height: calc(var(--credits-max-height) - 26px - 1.5em - 8px);
+  max-height: calc(var(--credits-max-height) - 2 * var(--credits-padding) - 2px - 1lh - var(--credits-gap));
   margin: 0;
   padding: 0;
   overflow: auto;
@@ -81,4 +84,18 @@
 
 .phile-credits li > span {
   color: var(--link);
+}
+
+@media (max-width: 760px) {
+  .phile-credits {
+    --credits-padding: 8px;
+    --credits-gap: 4px;
+    --credits-max-height: calc(min(360px, 60dvh, 100dvh - 24px) / var(--reading-tool-scale));
+    padding-inline: 8px;
+    line-height: 18px;
+  }
+
+  .phile-credits ol {
+    gap: 4px 0.75ch;
+  }
 }

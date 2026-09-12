@@ -2,13 +2,17 @@
 
 @layer components.features {
   .phile-selection {
+    --selection-control-size: 28px;
+    --selection-row-size: 0px;
+    --selection-panel-width: 392px;
+    --selection-panel-height: 100dvh;
     position: fixed;
     z-index: 80;
     width: max-content;
     max-width: var(--selection-width, calc(100vw - 24px));
     color: var(--fg);
     font-family: var(--text-font);
-    font-size: 14px;
+    font-size: var(--text-size);
     line-height: 20px;
     text-align: left;
   }
@@ -31,12 +35,18 @@
     outline: 1px solid var(--link);
     outline-offset: -3px;
   }
+  .selection-actions,
+  .selection-panel {
+    /* The outer wrapper keeps placement in viewport pixels. */
+    zoom: var(--reading-tool-scale);
+  }
   .selection-actions {
     display: flex;
     border: 1px solid color-mix(in srgb, var(--link) 55%, var(--bg));
     background: var(--bg);
   }
   .selection-trigger {
+    min-height: var(--selection-control-size);
     padding: 4px 8px;
     border: 0;
     background: transparent;
@@ -48,9 +58,15 @@
   }
   .selection-panel {
     box-sizing: border-box;
-    width: 392px;
-    max-width: var(--selection-width, calc(100vw - 24px));
-    max-height: var(--selection-height, calc(100dvh - 24px));
+    width: var(--selection-panel-width);
+    max-width: min(
+      var(--selection-panel-width),
+      calc(var(--selection-width, calc(100vw - 24px)) / var(--reading-tool-scale))
+    );
+    max-height: calc(
+      min(var(--selection-panel-height), var(--selection-height, calc(100dvh - 24px))) /
+      var(--reading-tool-scale)
+    );
     overflow-y: auto;
     overscroll-behavior-y: contain;
     scrollbar-width: thin;
@@ -64,8 +80,28 @@
     color: var(--link);
   }
   @media (pointer: coarse) {
+    .phile-selection {
+      --selection-control-size: 44px;
+      --selection-row-size: 44px;
+    }
+  }
+}
+
+@layer responsive {
+  @media (max-width: 760px) {
+    .phile-selection {
+      --selection-control-size: 40px;
+      --selection-row-size: 32px;
+      --selection-panel-height: min(360px, 60dvh);
+      line-height: 18px;
+    }
+
     .selection-trigger {
-      min-height: 44px;
+      padding: 2px 6px;
+    }
+
+    .selection-heading {
+      padding: 6px 8px;
     }
   }
 }

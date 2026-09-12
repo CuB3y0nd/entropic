@@ -6,6 +6,7 @@ await import("./badge-copy.mjs");
 await import("./artwork-rotation.mjs");
 await import("./byte-inspector.mjs");
 await import("./fragment-citations.mjs");
+await import("./credits.mjs");
 await import("./cve-typography.mjs");
 await import("./cve-mobile-layout.mjs");
 await import("./cve-records.mjs");

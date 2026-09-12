@@ -30,6 +30,7 @@ try {
       });
     }
     await page.goto(baseUrl.href);
+    if (touch) await page.locator(".badge-toggle").tap();
     const copy = page.getByRole("button", { name: "Copy Discord", exact: true });
     assert.equal(await copy.getAttribute("data-copy-text"), expectedText);
     assert.equal(await copy.getAttribute("href"), null);
@@ -48,7 +49,7 @@ try {
     }
     await page.waitForFunction(() => document.querySelector(".badge-copy-status")?.textContent === "");
 
-    // Rotation replaces the controls; delegation must also read the newly configured value.
+    // Delegation must also read the value of a replacement control.
     const replacementText = "Another user <&>\nsecond line";
     await copy.evaluate((button, text) => {
       const item = button.closest(".badge-item");
@@ -101,6 +102,13 @@ try {
         await dialog.getByRole("button", { name: "Close" }).click();
       }
       await dialog.waitFor({ state: "hidden" });
+      if (touch) {
+        assert.equal(
+          await page.locator(".badge-dialog").evaluate((element) => element.open),
+          true,
+          "Closing the copy fallback leaves the gallery open"
+        );
+      }
     }
     await context.close();
     console.log(
