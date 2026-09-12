@@ -1,0 +1,90 @@
+---
+import CveSignals from "./CveSignals.astro";
+
+// Coordinates follow the 2048 × 286 circuit strip in the concept artwork.
+// The letter contours and the traces share paths where they meet in the drawing.
+const dotFields = [
+  { x: 263, y: 4, columns: 4, rows: 5, dx: 11, dy: 8 },
+  { x: 139, y: 77, columns: 7, rows: 9, dx: 12, dy: 8.2 },
+  { x: 529, y: 4, columns: 7, rows: 10, dx: 11.8, dy: 7.7 },
+  { x: 1023, y: 22, columns: 4, rows: 6, dx: 9.2, dy: 8 },
+  { x: 1573, y: 4, columns: 4, rows: 10, dx: 11, dy: 7.7 }
+];
+const signals = [
+  { path: "M453 55H493V126H595V197H655", x: 655, y: 197 },
+  { path: "M1762 19H1824V55H1989V90H1906V126H1845", x: 1845, y: 126 },
+  { path: "M1195 177H1205V159H1291V126H1352V197H1263V159", x: 1263, y: 159 }
+];
+---
+
+<svg class="cve-circuit" viewBox="0 0 2048 286" fill="none" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="cve-v-left-trace" x1="979" y1="83" x2="1016" y2="154" gradientUnits="userSpaceOnUse">
+      <stop stop-color="currentColor"></stop><stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+    </linearGradient>
+    <linearGradient id="cve-v-right-trace" x1="1059" y1="91" x2="1025" y2="154" gradientUnits="userSpaceOnUse">
+      <stop stop-color="currentColor" stop-opacity="0.8"></stop><stop
+        offset="1"
+        stop-color="currentColor"
+        stop-opacity="0"></stop>
+    </linearGradient>
+  </defs>
+  <g class="cve-circuit-ink" stroke="currentColor" stroke-width="2.56" stroke-linejoin="miter">
+    <!-- Snap rectilinear strokes to pixels after scaling; V keeps smooth diagonals. -->
+    <g class="cve-circuit-traces" shape-rendering="crispEdges">
+      <path d="M0 90H82V162H62V55H370V162H636V19H758"></path>
+      <path d="M21 54V90M123 18V55M41 90V126H123V90"></path>
+      <path d="M62 162H205V197H246V161H349V197H472V126"></path>
+      <path d="M246 18V90H349M287 90V161"></path>
+      <path d="M309 19H431V197H448M453 55H493V198M453 90H676"></path>
+      <path d="M308 126H595V197H655V126H778V19H850V83H876"></path>
+      <path d="M493 162H615V126H655M615 162V197M695 162V55H739"></path>
+      <path d="M809 91V201H1024V283M778 171H905V201M791 110H876"></path>
+      <path d="M778 57L959 55V1M850 35H959M959 55H990V75H1065V52H1148"></path>
+      <path d="M1105 0V25H1181M1148 25V67M1139 42H1257V18"></path>
+      <path d="M1172 57H1205V128M1182 116H1205M1223 57L1352 55"></path>
+      <path d="M1283 19H1392M1352 19V197H1263V159"></path>
+      <path d="M1102 91L1434 90V162H1599"></path>
+      <path d="M1352 126H1291V159H1205V198H1104M1205 198H1236"></path>
+      <path d="M1074 159V219M998 201V283M1050 220V283M1413 197V19H1474V90H1619"></path>
+      <path d="M1558 90V162M1455 126H1599V91M1413 197H1640V126M1640 18V90"></path>
+      <path d="M1660 162H1762V126H1682M1742 162V198H1825"></path>
+      <path d="M1722 55H1989V162M1762 91V19H1824V55M1845 55V126"></path>
+      <path d="M1803 90V162H1866M1885 198V126M1762 126H1928M1906 126V90H2042"></path>
+    </g>
+
+    <g class="cve-circuit-letter-c" shape-rendering="crispEdges">
+      <path d="M948 91V76H876V156H942V150"></path>
+      <path d="M941 84H884V149H948V144"></path>
+      <path d="M948 91H892V143H958V177H1205"></path>
+    </g>
+    <path class="cve-circuit-letter-v" d="M968 77H984L1020 147L1053 84H1067L1028 159H1012Z"></path>
+    <path d="M979 83L1016 154" stroke="url(#cve-v-left-trace)" stroke-width="1.4"></path>
+    <path d="M1059 91L1025 154" stroke="url(#cve-v-right-trace)" stroke-width="1.3"></path>
+    <g class="cve-circuit-letter-e" shape-rendering="crispEdges">
+      <path d="M1158 91V76H1086V159H1158V143H1102V126H1142V112H1102V91Z"></path>
+      <path d="M1151 91V84H1094V151H1151M1102 119H1133"></path>
+    </g>
+
+    <g class="cve-circuit-accents" stroke="var(--cve-accent)" shape-rendering="crispEdges">
+      <path d="M41 91V126H61M205 162V197H246V161H287V143"></path>
+      <path d="M431 19V197H447M424 126H438M453 55H493V116M485 90H503"></path>
+      <path d="M778 126V19H788M779 57H788M792 110H817M858 110H876M797 171H819"></path>
+      <path d="M1102 91H1151V84H1115M1172 57H1205V128M1182 116H1205M1223 57H1242"></path>
+      <path d="M1195 177H1205V159H1231M1263 159V197H1352V20M1291 159V126H1352M1344 90H1360"></path>
+      <path d="M1640 18V90M1640 126V197H1629M1660 162H1762V142M1730 162H1742"></path>
+      <path d="M1762 55V19H1824V55H1830M1989 75V162M1981 90H1999"></path>
+    </g>
+    <g class="cve-circuit-dots" fill="currentColor" stroke="none">
+      {
+        dotFields.map(({ x, y, columns, rows, dx, dy }) =>
+          Array.from({ length: columns * rows }, (_, index) => (
+            <circle cx={x + (index % columns) * dx} cy={y + Math.floor(index / columns) * dy} r="1" />
+          ))
+        )
+      }
+      <circle cx="1061" cy="22" r="0.8"></circle><circle cx="1071" cy="20" r="0.6"></circle>
+    </g>
+  </g>
+  <CveSignals signals={signals} unit={2.56} />
+</svg>

@@ -61,9 +61,18 @@ export type HomeAsciiGlitchConfig = {
   readonly lineShiftChance: number;
 };
 
+export type CveCircuitConfig = {
+  readonly enabled: boolean;
+  /** Each route's repeat cycle in milliseconds (1000..120000); routes are staggered evenly. */
+  readonly cycleMs: number;
+  /** Signal and arrival-node size at the default text sizing, in whole pixels (1..6). */
+  readonly signalSize: number;
+};
+
 export type EffectsConfig = {
   readonly particles: ParticleConfig;
   readonly homeAsciiGlitch: HomeAsciiGlitchConfig;
+  readonly cveCircuit: CveCircuitConfig;
 };
 
 export type TextmodeConfig = {

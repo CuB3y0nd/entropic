@@ -39,5 +39,18 @@ export type VolumeConfig = {
 export type CveRecord = {
   readonly id: `CVE-${number}-${number}`;
   readonly title: string;
-  readonly date: string;
+};
+
+export type ResearchRecognition = {
+  /** Hide this recognition without removing its content. Defaults to true. */
+  readonly enabled?: boolean;
+  /** Stable slug for the local recognition anchor. */
+  readonly id: string;
+  /** The program's year label; a recognition cycle can span calendar years. */
+  readonly year: number;
+  readonly organization: string;
+  readonly title: string;
+  readonly recipient: string;
+  readonly period: string;
+  readonly href: string;
 };

@@ -1,0 +1,52 @@
+---
+import { effectsConfig } from "@/config/server";
+
+interface Props {
+  signals?: { path: string; x: number; y: number }[];
+  unit?: number;
+}
+
+const { signals = Array.from({ length: 3 }, () => ({ path: "", x: 0, y: 0 })), unit = 1 } = Astro.props;
+const animation = effectsConfig.cveCircuit;
+const signalWidth = animation.signalSize * unit;
+---
+
+{
+  animation.enabled && (
+    <g
+      class="cve-circuit-signals"
+      stroke="var(--cve-accent)"
+      shape-rendering="crispEdges"
+      style={`--cve-signal-cycle: ${animation.cycleMs}ms`}
+    >
+      {signals.map(({ path, x, y }, index) => (
+        <g class="cve-signal" style={`--cve-signal-delay: ${(-index * animation.cycleMs) / signals.length}ms`}>
+          <path
+            class="cve-signal-tail"
+            d={path}
+            pathLength="100"
+            stroke-width={unit}
+            stroke-dasharray="6 194"
+            stroke-opacity="0.45"
+          />
+          <path
+            class="cve-signal-head"
+            d={path}
+            pathLength="100"
+            stroke-width={signalWidth}
+            stroke-dasharray={`0 ${6 - animation.signalSize} ${animation.signalSize} 194`}
+          />
+          <rect
+            class="cve-signal-node"
+            x={x - signalWidth / 2}
+            y={y - signalWidth / 2}
+            width={signalWidth}
+            height={signalWidth}
+            fill="var(--cve-accent)"
+            stroke="none"
+          />
+        </g>
+      ))}
+    </g>
+  )
+}

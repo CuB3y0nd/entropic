@@ -340,7 +340,13 @@ export default {
       // mutationRatioMin/mutationRatioMax: character-mutation intensity (0..1);
       // larger values change more characters.
       // lineShiftChance: base chance of horizontal line distortion (0..1).
-      homeAsciiGlitch: undefined
+      homeAsciiGlitch: undefined,
+      // CVE circuit signals: undefined keeps the defaults; false makes the banner and timeline static.
+      // cycleMs: each route's repeat cycle in milliseconds (1000..120000).
+      // Three routes in each circuit run at evenly spaced phases; a larger value slows the motion
+      // and increases the pause between signals.
+      // signalSize: signal and arrival-node size at default text sizing (integer, 1..6).
+      cveCircuit: { cycleMs: 14000, signalSize: 3 }
     }
   },
   // Vercel Web Analytics.
@@ -429,73 +435,83 @@ export default {
   },
   cves: {
     enabled: true,
-    // id: unique CVE-YYYY-NNNN; title: description; date: a real YYYY-MM-DD
-    // calendar date.
+    // Space between each recipient and period, measured in the shared text line height.
+    // 0 = no extra gap; 0.5 = half a line (7px at the default Gohu 14px); 1 = a full line.
+    // Defaults to 0.5. Accepts numbers from 0 to 2, including fractions.
+    recognitionPeriodGapLines: 0.5,
+    // Add or remove recognition records here; [] shows CVEs alone.
+    // enabled: false hides one record without deleting it or affecting CVE counts.
+    // title, organization, recipient, period, and href control the displayed text and link.
+    // year uses the program's year label; id creates /cves/#recognition-<id>.
+    recognitions: [
+      {
+        enabled: true,
+        id: "msrc-2027",
+        year: 2027,
+        organization: "MSRC",
+        title: "MSRC Special Mention",
+        recipient: "Jiaqi Miao (@CuB3y0nd)",
+        period: "Jul '26 – Jun '27",
+        href: "https://msrc.microsoft.com/special-mention"
+      }
+    ],
+    // id: unique CVE-YYYY-NNNN; title: description. The timeline year comes from id.
     records: [
       {
         id: "CVE-2024-25817",
-        title: "eza Heap Buffer Overflow via .git Metadata",
-        date: "2024-03-05"
+        title: "eza Heap Buffer Overflow via .git Metadata"
       },
       {
         id: "CVE-2025-60939",
-        title: "Spotify Client Denial of Service",
-        date: "2025-10-23"
+        title: "Spotify Client Denial of Service"
       },
       {
         id: "CVE-2026-56113",
-        title: "dhcpcd Heap Use-After-Free in dhcp6_deprecateaddrs via DHCPv6 RENEW",
-        date: "2026-06-23"
+        title: "dhcpcd Heap Use-After-Free in dhcp6_deprecateaddrs via DHCPv6 RENEW"
       },
       {
         id: "CVE-2026-56114",
-        title: "dhcpcd Stack Out-of-Bounds Write in dhcp6_makemessage()",
-        date: "2026-06-23"
+        title: "dhcpcd Stack Out-of-Bounds Write in dhcp6_makemessage()"
       },
       {
         id: "CVE-2026-56116",
-        title: "dhcpcd Memory Leak DoS via IPv6 Router Advertisement Handling",
-        date: "2026-06-23"
+        title: "dhcpcd Memory Leak DoS via IPv6 Router Advertisement Handling"
       },
       {
         id: "CVE-2026-56117",
-        title: "dhcpcd Heap Use-After-Free via Control Socket Handling",
-        date: "2026-06-23"
+        title: "dhcpcd Heap Use-After-Free via Control Socket Handling"
       },
       {
         id: "CVE-2026-58458",
-        title: "Don't Starve Together Public Lobby world_gen_data Client DoS",
-        date: "2026-06-27"
+        title: "Don't Starve Together Public Lobby world_gen_data Client DoS"
       },
       {
         id: "CVE-2026-58459",
-        title: "GPSd gpsprof gnuplot Command Injection via GPS Metadata",
-        date: "2026-06-27"
+        title: "GPSd gpsprof gnuplot Command Injection via GPS Metadata"
       },
       {
         id: "CVE-2026-61702",
-        title: "cups Root-side Banner File Disclosure",
-        date: "2026-06-27"
+        title: "cups Root-side Banner File Disclosure"
       },
       {
         id: "CVE-2026-60122",
-        title: "GPSd gpsprof Code Injection via SKY.satellites used Field",
-        date: "2026-07-23"
+        title: "GPSd gpsprof Code Injection via SKY.satellites used Field"
       },
       {
         id: "CVE-2026-65601",
-        title: "Traefik before 3.7.7 Namespace Confusion via HTTPRoute ExtensionRef",
-        date: "2026-07-22"
+        title: "Traefik before 3.7.7 Namespace Confusion via HTTPRoute ExtensionRef"
       },
       {
         id: "CVE-2026-65602",
-        title: "Traefik before 3.6.23 IngressRouteTCP ServersTransport Namespace Bypass",
-        date: "2026-07-22"
+        title: "Traefik before 3.6.23 IngressRouteTCP ServersTransport Namespace Bypass"
       },
       {
         id: "CVE-2026-77395",
-        title: "stargz remote snapshots RCE via image cache poisoning",
-        date: "2026-06-27"
+        title: "stargz remote snapshots RCE via image cache poisoning"
+      },
+      {
+        id: "CVE-2023-39536",
+        title: "IEI PUZZLE BIOS - AMI Ofbd SWSMI span validation"
       }
     ]
   }
