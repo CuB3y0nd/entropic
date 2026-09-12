@@ -58,8 +58,8 @@ a:focus-visible {
   top: var(--pixel-align-y, 0px);
 }
 
-body:has(.home-shell),
-html:has(.home-shell) {
+body:has(.home-shell, .cve-register),
+html:has(.home-shell, .cve-register) {
   background-color: var(--home-bg);
 }
 

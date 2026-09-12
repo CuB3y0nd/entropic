@@ -22,7 +22,8 @@
     zoom: min(var(--mobile-scale), var(--fit-scale));
   }
 
-  .home-shell {
+  .home-shell,
+  .cve-register {
     zoom: min(var(--mobile-scale), var(--fit-scale));
   }
 
