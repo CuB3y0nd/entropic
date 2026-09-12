@@ -1,5 +1,7 @@
 await import("./textmode-fit.mjs");
 await import("./animations.mjs");
+await import("./volume-decorations.mjs");
+await import("./volume-rendering.mjs");
 await import("./particle-activity.mjs");
 await import("./site-badges.mjs");
 await import("./badge-copy.mjs");

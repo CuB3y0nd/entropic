@@ -1,0 +1,41 @@
+---
+const beams = [
+  { color: "prism-red", path: "M 437 77 L 617 43" },
+  { color: "prism-yellow", path: "M 444 83 L 627 65" },
+  { color: "decoration-accent", path: "M 451 90 H 637" },
+  { color: "prism-cyan", path: "M 457 97 L 629 116" },
+  { color: "prism-magenta", path: "M 464 104 L 618 139" }
+];
+const incident = "M 190 92 H 379 L 437 77";
+---
+
+<svg viewBox="16 10 672 168" fill="none" stroke="currentColor" stroke-width="1" focusable="false">
+  <g class="decoration-muted">
+    <path d="M 239 146 H 651 M 429 14 V 22 M 429 158 V 170 M 251 102 H 267 M 259 94 V 110 M 644 20 H 656 M 650 14 V 26"
+    ></path>
+    <path stroke-dasharray="2 6" d="M 339 158 H 557 M 605 77 V 143"></path>
+    <path d="M 349 143 L 421 161 L 496 147"></path>
+    <path stroke-dasharray="1 5" d="M 561 152 H 591 M 565 158 H 595 M 569 164 H 599"></path>
+  </g>
+  <g class="prism-beams">
+    {beams.map(({ color, path }) => <path d={path} class={color} />)}
+  </g>
+  <path d={incident}></path>
+  <path class="decoration-muted" d="M 211 100 H 376"></path>
+  <g>
+    <path d="M 415 27 L 351 140 H 479 Z"></path>
+    <path
+      class="decoration-muted"
+      d="M 415 27 L 449 43 L 513 140 H 479 M 351 140 L 385 153 H 513 V 140 M 449 43 L 385 153"></path>
+    <path class="decoration-muted" stroke-dasharray="3 4" d="M 415 27 L 385 153 M 449 43 L 479 140"></path>
+    <path class="decoration-accent" d="M 405 45 L 363 120 M 491 125 L 459 69"></path>
+  </g>
+  <path class="prism-signal" pathLength="100" d={incident}></path>
+  {
+    beams.map(({ color, path }) => (
+      <path class:list={["prism-signal", "prism-signal--split", color]} pathLength="100" d={path} />
+    ))
+  }
+  <text class="decoration-muted" x="271" y="83" stroke="none">*</text>
+  <text class="decoration-muted" x="560" y="36" stroke="none">r / g / b</text>
+</svg>

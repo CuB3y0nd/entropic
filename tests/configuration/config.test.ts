@@ -234,6 +234,58 @@ test("new volumes use this site's name and partial volume metadata inherits a co
   assert.deepEqual(volume.postscript, []);
 });
 
+test("volume decorations inherit Life, accept a fixed theme or opt out, and reject unknown names", () => {
+  assert.equal(resolveVolumeConfig(4, site.name).decoration.kind, "life");
+  assert.equal(resolveVolumeConfig(4, site.name, { decoration: undefined }).decoration.kind, "life");
+  for (const decoration of ["circuit", "archive", "study", "prism", "life", false] as const) {
+    const config = resolveConfig({ site, volumes: { 4: { decoration } } });
+    assert.equal(resolveVolumeConfig(4, site.name, config.volumes[4]).decoration.kind, decoration);
+  }
+  // @ts-expect-error Also reject misspelled names in JavaScript configurations.
+  assert.throws(() => resolveConfig({ site, volumes: { 4: { decoration: "circut" } } }), /volumes.4.decoration/);
+});
+
+test("illustration options preserve defaults and accept static, slower, and calendar overrides", () => {
+  const decoration = { kind: "study", animated: false, speed: 0.5, calendar: { month: 2, day: 29 } } as const;
+  const config = resolveConfig({ site, volumes: { 4: { decoration } } });
+  assert.deepEqual(resolveVolumeConfig(4, site.name, config.volumes[4]).decoration, decoration);
+  assert.deepEqual(
+    resolveVolumeConfig(4, site.name, {
+      decoration: { kind: "prism", animated: undefined, speed: undefined }
+    }).decoration,
+    { kind: "prism", animated: true, speed: 1, calendar: { month: 12, day: 31 } }
+  );
+  for (const speed of [0.25, 4]) {
+    assert.doesNotThrow(() => resolveConfig({ site, volumes: { 4: { decoration: { kind: "circuit", speed } } } }));
+  }
+});
+
+test("invalid illustration options report the editable field", () => {
+  const invalid = (decoration: unknown) =>
+    // @ts-expect-error JavaScript configurations can bypass the public types.
+    resolveConfig({ site, volumes: { 4: { decoration } } });
+  const cases: readonly [unknown, RegExp][] = [
+    [null, /volumes.4.decoration/],
+    [[], /volumes.4.decoration/],
+    [{}, /volumes.4.decoration.kind/],
+    [{ kind: "life" }, /volumes.4.decoration.kind/],
+    [{ kind: "study", animated: "false" }, /volumes.4.decoration.animated/],
+    ...[0, 0.1, 4.1, NaN, Infinity, "slow"].map((speed): [unknown, RegExp] => [
+      { kind: "circuit", speed },
+      /volumes.4.decoration.speed/
+    ]),
+    [{ kind: "prism", calendar: { month: 12, day: 31 } }, /volumes.4.decoration.calendar/],
+    [{ kind: "study", calendar: null }, /volumes.4.decoration.calendar/],
+    [{ kind: "study", calendar: { month: 0, day: 1 } }, /volumes.4.decoration.calendar.month/],
+    [{ kind: "study", calendar: { month: 13, day: 1 } }, /volumes.4.decoration.calendar.month/],
+    [{ kind: "study", calendar: { month: 2, day: 30 } }, /volumes.4.decoration.calendar.day/],
+    [{ kind: "study", calendar: { month: 4, day: 31 } }, /volumes.4.decoration.calendar.day/],
+    [{ kind: "study", calendar: { month: 12, day: 0 } }, /volumes.4.decoration.calendar.day/],
+    [{ kind: "study", calendar: { month: 12, day: 1.5 } }, /volumes.4.decoration.calendar.day/]
+  ];
+  for (const [decoration, field] of cases) assert.throws(() => invalid(decoration), field);
+});
+
 test("undefined volume fields inherit defaults without losing optional metadata or empty lists", () => {
   const overrides = { title: undefined, listLabel: undefined, phileSort: undefined, postscript: undefined };
   assert.deepEqual(resolveVolumeConfig(4, site.name, overrides), resolveVolumeConfig(4, site.name));

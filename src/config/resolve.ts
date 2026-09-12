@@ -1,6 +1,6 @@
 import { cvePagePath } from "../features/cves/index.ts";
 import { defaultAppearance, defaultEffects, defaultHomeAsciiArt, defaultTextmode } from "./defaults.ts";
-import type { EntropicConfig, HomeSection, VolumeConfig } from "./types.ts";
+import type { EntropicConfig, HomeSection, ResolvedVolumeConfig, VolumeConfig } from "./types.ts";
 import { validateConfig } from "./validate.ts";
 
 /** Resolve nested groups explicitly; undefined inherits and arrays replace whole lists. */
@@ -108,14 +108,25 @@ export function resolveVolumeConfig(
   number: number,
   siteName: string,
   override: Partial<VolumeConfig> = {}
-): VolumeConfig {
-  return mergeDefined<VolumeConfig>(
+): ResolvedVolumeConfig {
+  const config = mergeDefined<VolumeConfig>(
     {
       title: `${siteName} Volume ${number}`,
       listLabel: `Volume ${number}`,
+      decoration: "life",
       phileSort: { by: "date", direction: "desc" },
       postscript: ["  ──[ EOF ]──────────────────────────────────────────────────────────────────//───"]
     },
     override
   );
+  const options = typeof config.decoration === "object" ? config.decoration : undefined;
+  return {
+    ...config,
+    decoration: {
+      kind: typeof config.decoration === "object" ? config.decoration.kind : config.decoration,
+      animated: options?.animated ?? true,
+      speed: options?.speed ?? 1,
+      calendar: (options?.kind === "study" ? options.calendar : undefined) ?? { month: 12, day: 31 }
+    }
+  };
 }

@@ -15,7 +15,11 @@ export type {
   HomeItem,
   HomeSection,
   ResearchRecognition,
+  ResolvedVolumeConfig,
+  VolumeCalendar,
   VolumeConfig,
+  VolumeDecoration,
+  VolumeDecorationOptions,
   VolumePhileSort
 } from "./types/content.ts";
 export type {

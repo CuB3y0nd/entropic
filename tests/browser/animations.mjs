@@ -57,7 +57,7 @@ try {
   );
   console.log(`PASS ${browserName}: live motion preferences, responsive particle counts, page hide/show`);
 
-  await page.goto(new URL("/volume/0/", baseUrl).href);
+  await page.goto(new URL("/volume/3/ansi-ink-phile/", baseUrl).href);
   await page.locator(".life-grid").waitFor();
   await settleTextLayout(page);
   const readLifeOffset = () =>

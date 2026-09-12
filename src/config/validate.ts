@@ -2,7 +2,7 @@ import { badgeArtworkPresetIds, calculateBadgeLayout, validateArtworkRotation } 
 import { appearanceCssVariables } from "../shared/textmode/core/css-vars.ts";
 import { safeUrl } from "../shared/urls.ts";
 import type { ResolvedConfig } from "./resolve.ts";
-import type { ArtworkSelection } from "./types.ts";
+import type { ArtworkSelection, VolumeConfig } from "./types.ts";
 
 /** TypeScript checks shapes; this boundary checks values and relationships. */
 export function validateConfig(config: ResolvedConfig): void {
@@ -61,6 +61,7 @@ export function validateConfig(config: ResolvedConfig): void {
   for (const number of Object.keys(config.volumes)) {
     if (!/^(0|[1-9]\d*)$/.test(number)) fail(`volumes.${number}`, "Use a non-negative volume number as the key.");
     integer(Number(number), `volumes.${number}`, 0);
+    validateVolumeDecoration(config.volumes[Number(number)]?.decoration, `volumes.${number}.decoration`);
   }
   const cveIds = new Set<string>();
   config.cves.records.forEach((record, index) => {
@@ -174,6 +175,29 @@ function validateArtwork(selection: ArtworkSelection): void {
     if (selection.presets.length === 0 || new Set(selection.presets).size !== selection.presets.length)
       fail(`${field}.presets`, "Provide a non-empty list of unique presets, or omit it to use all presets.");
     for (const id of selection.presets) preset(id, `${field}.presets`);
+  }
+}
+
+function validateVolumeDecoration(value: VolumeConfig["decoration"] | undefined, field: string): void {
+  if (value === undefined || value === false) return;
+  if (typeof value === "string") {
+    if (["circuit", "archive", "study", "prism", "life"].includes(value)) return;
+    fail(field, "Use circuit, archive, study, prism, life, false, or an illustration options object.");
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(field, "Use an illustration options object.");
+  if (!["circuit", "archive", "study", "prism"].includes(value.kind))
+    fail(`${field}.kind`, "Use circuit, archive, study, or prism. The original Life frame uses the string life.");
+  if (value.animated !== undefined && typeof value.animated !== "boolean")
+    fail(`${field}.animated`, "Use true or false.");
+  if (value.speed !== undefined) bounded(value.speed, `${field}.speed`, 0.25, 4);
+  if ("calendar" in value && value.calendar !== undefined) {
+    if (value.kind !== "study") fail(`${field}.calendar`, "Only the study illustration has a calendar.");
+    const calendar = value.calendar;
+    if (!calendar || typeof calendar !== "object" || Array.isArray(calendar))
+      fail(`${field}.calendar`, "Provide a month and day.");
+    integer(calendar.month, `${field}.calendar.month`, 1, 12);
+    const monthDays = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    integer(calendar.day, `${field}.calendar.day`, 1, monthDays[calendar.month - 1]);
   }
 }
 

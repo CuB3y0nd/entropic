@@ -1,0 +1,55 @@
+---
+import type { VolumeCalendar, VolumeDecoration } from "@/config/types";
+import Archive from "./art/Archive.astro";
+import Circuit from "./art/Circuit.astro";
+import Prism from "./art/Prism.astro";
+import Study from "./art/Study.astro";
+import "./styles.css";
+
+type Props = {
+  kind: Exclude<VolumeDecoration, "life">;
+  animated: boolean;
+  speed: number;
+  calendar: VolumeCalendar;
+  number: number;
+  columns: number;
+};
+
+const { kind, animated, speed, calendar, number, columns } = Astro.props;
+const Artwork = { circuit: Circuit, archive: Archive, study: Study, prism: Prism }[kind];
+---
+
+<div
+  class:list={["volume-decoration", `volume-decoration--${kind}`]}
+  style={`--decoration-columns: ${columns}; --decoration-speed: ${speed}`}
+  data-volume-decoration={kind}
+  data-static={!animated || undefined}
+  aria-hidden="true"
+>
+  <Artwork number={number} calendar={calendar} />
+</div>
+
+<script>
+  import { observeAnimationActivity } from "@/shared/browser/animation-activity";
+
+  for (const artwork of document.querySelectorAll<HTMLElement>("[data-volume-decoration]")) {
+    const svg = artwork.querySelector("svg");
+    if (!svg) continue;
+
+    const fitStroke = () => {
+      const scale = (svg.getBoundingClientRect().width / svg.viewBox.baseVal.width) * window.devicePixelRatio;
+      if (scale <= 0) return;
+      // Subpixel strokes can disappear in Firefox's crisp rasterizer after CSS zoom.
+      svg.style.setProperty("--decoration-stroke", `${scale < 1 ? 1.02 / scale : 1}px`);
+    };
+    new ResizeObserver(fitStroke).observe(svg);
+    window.addEventListener("resize", fitStroke, { passive: true });
+    fitStroke();
+
+    if (!artwork.hasAttribute("data-static")) {
+      observeAnimationActivity((active) => {
+        artwork.toggleAttribute("data-active", active);
+      }, artwork);
+    }
+  }
+</script>

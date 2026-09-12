@@ -1,0 +1,50 @@
+---
+type Props = { number: number };
+const serial = Astro.props.number.toString().padStart(2, "0");
+// A repeating five-bit punched pattern keeps the tape editable and deterministic.
+const punches = [19, 7, 22, 3, 14, 25, 6, 21, 11, 28, 17, 26, 13, 5, 30, 9, 18, 27];
+---
+
+<svg viewBox="16 0 672 154" fill="none" stroke="currentColor" stroke-width="1" focusable="false">
+  <g class="decoration-muted">
+    <path d="M 123 139 H 139 M 131 131 V 147 M 617 20 H 629 M 623 14 V 26"></path>
+    <path d="M 558 36 H 597 V 119 H 564 M 566 44 H 605 V 127 H 565"></path>
+    <path d="M 167 148 H 211 M 176 144 V 152 M 192 144 V 152 M 208 144 V 152"></path>
+  </g>
+  <g transform="translate(364 4)">
+    <path class="decoration-paper" d="M 0 10 H 161 L 184 33 V 116 H 0 Z"></path>
+    <path d="M 161 10 V 33 H 184 M 16 28 H 122 M 16 42 H 81"></path>
+    <text x="16" y="69" stroke="none">PHILES / {serial}</text>
+    <path class="decoration-muted" stroke-dasharray="2 3" d="M 16 80 H 150 M 16 90 H 102"></path>
+    <g class="archive-stamp decoration-accent" transform="translate(108 72)">
+      <path d="M 0 0 H 76 V 28 H 0 Z M 3 3 H 73 V 25 H 3 Z"></path>
+      <text x="14" y="19" stroke="none">FILED</text>
+    </g>
+  </g>
+  <g transform="translate(155 83)">
+    <path
+      class="decoration-paper"
+      d="M 0 4 L 8 0 H 222 L 232 8 L 228 16 L 240 24 L 236 32 L 244 40 H 12 L 4 32 L 8 24 L -4 16 L 0 8 Z"></path>
+    <path class="decoration-muted" stroke-dasharray="1 11" stroke-width="3" d="M 11 6 H 219 M 15 34 H 235"></path>
+    {
+      punches.map((bits, column) => (
+        <g class:list={{ "decoration-accent": column % 5 === 2 }}>
+          {Array.from({ length: 5 }, (_, row) =>
+            bits & (1 << row) ? (
+              <rect
+                x={12 + column * 12 + row * 2}
+                y={11 + row * 4}
+                width="2"
+                height="2"
+                fill="currentColor"
+                stroke="none"
+              />
+            ) : null
+          )}
+        </g>
+      ))
+    }
+    <path class="archive-scan decoration-accent" d="M 10 7 H 16 M 13 9 V 31 M 10 33 H 16"></path>
+  </g>
+  <path class="decoration-muted" d="M 472 137 H 552 M 564 137 H 588 M 599 137 H 607"></path>
+</svg>
