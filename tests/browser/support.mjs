@@ -32,9 +32,9 @@ export function stubExternalResources(context) {
   });
 }
 
-export async function selectArticleText(page, text, selector = ".phile-body-pre") {
+export async function selectArticleText(page, text, selector = ".phile-body-pre", targetY) {
   await page.evaluate(
-    async ({ text, selector }) => {
+    async ({ text, selector, targetY }) => {
       const element = [...document.querySelectorAll(selector)].find((node) => node.textContent.includes(text));
       if (!element) throw new Error(`Missing article text: ${text}`);
       const start = element.textContent.indexOf(text);
@@ -52,10 +52,10 @@ export async function selectArticleText(page, text, selector = ".phile-body-pre"
         offset = next;
       }
       window.getSelection().removeAllRanges();
-      window.scrollBy(0, range.getBoundingClientRect().top - window.innerHeight / 3);
+      window.scrollBy(0, range.getBoundingClientRect().top - (targetY ?? window.innerHeight / 3));
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       window.getSelection().addRange(range);
     },
-    { text, selector }
+    { text, selector, targetY }
   );
 }
