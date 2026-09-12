@@ -15,7 +15,7 @@ const signalWidth = animation.signalSize * unit;
   animation.enabled && (
     <g
       class="cve-circuit-signals"
-      stroke="var(--cve-accent)"
+      stroke="var(--link)"
       shape-rendering="crispEdges"
       style={`--cve-signal-cycle: ${animation.cycleMs}ms`}
     >
@@ -42,7 +42,7 @@ const signalWidth = animation.signalSize * unit;
             y={y - signalWidth / 2}
             width={signalWidth}
             height={signalWidth}
-            fill="var(--cve-accent)"
+            fill="var(--link)"
             stroke="none"
           />
         </g>

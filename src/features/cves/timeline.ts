@@ -38,25 +38,30 @@ export function installCveTimeline(timeline: HTMLElement): () => void {
   const draw = () => {
     frame = 0;
     const bounds = timeline.getBoundingClientRect();
+    const width = timeline.clientWidth;
+    const height = timeline.clientHeight;
+    if (!width || !height) return;
+    // DOM rectangles include mobile zoom; circuit coordinates use local CSS pixels.
+    const localX = (screenX: number) => ((screenX - bounds.left) * width) / bounds.width;
+    const localY = (screenY: number) => ((screenY - bounds.top) * height) / bounds.height;
     const compact = window.matchMedia("(max-width: 700px)").matches;
     const scale = Number.parseFloat(getComputedStyle(timeline).fontSize) / 14;
-    const center = compact ? 32 * scale : bounds.width / 2;
+    const center = compact ? 32 * scale : width / 2;
     const x = (offset: number) => Math.round(center + offset * scale * (compact ? 0.65 : 1)) + 0.5;
     const traces: SVGElement[] = [];
     const accents: SVGElement[] = [];
     const dots: SVGElement[] = [];
     const routes: { path: string; x: number; y: number }[] = [];
     const groups = [...timeline.querySelectorAll<HTMLElement>(".cve-timeline-group")];
-    art.setAttribute("viewBox", `0 0 ${bounds.width} ${bounds.height}`);
+    art.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
     groups.forEach((group, groupIndex) => {
       const heading = group.querySelector("h2")?.getBoundingClientRect();
       if (!heading) return;
       const nextHeading = groups[groupIndex + 1]?.querySelector("h2")?.getBoundingClientRect();
-      const start = Math.round(heading.bottom - bounds.top + 5 * scale);
-      const end = Math.round(nextHeading ? nextHeading.top - bounds.top - 7 * scale : bounds.height - 2);
-      const height = end - start;
-      const y = (fraction: number) => Math.round(start + height * fraction) + 0.5;
+      const start = Math.round(localY(heading.bottom) + 5 * scale);
+      const end = Math.round(nextHeading ? localY(nextHeading.top) - 7 * scale : height - 2);
+      const y = (fraction: number) => Math.round(start + (end - start) * fraction) + 0.5;
       const entries = [...group.querySelectorAll<HTMLElement>(".cve-timeline-entry")];
       const long = entries.length > 2;
 
@@ -137,19 +142,18 @@ export function installCveTimeline(timeline: HTMLElement): () => void {
         const rect = entry.getBoundingClientRect();
         const lineHeight = Number.parseFloat(getComputedStyle(entry).lineHeight);
         const right = compact || entry.classList.contains("cve-right");
-        const branchY = Math.round(rect.top - bounds.top + lineHeight * (long && index === 1 ? 2.2 : 1.45));
+        const branchY = Math.round(localY(rect.top) + lineHeight * (long && index === 1 ? 2.2 : 1.45));
         const row = (index >> 1) % 6;
         const reach = !long && !right ? 97 : row === 1 ? 57 : row === 2 || row === 3 ? 83 : 71;
-        let edge = compact ? rect.left - bounds.left - 12 * scale : center + (right ? 74 : -reach) * scale;
+        let edge = compact ? localX(rect.left) - 12 * scale : center + (right ? 74 : -reach) * scale;
         for (const text of entry.querySelectorAll("a, p")) {
           const range = document.createRange();
           range.selectNodeContents(text);
-          const screenY = bounds.top + branchY + 0.5;
           for (const line of range.getClientRects()) {
-            if (screenY < line.top || screenY > line.bottom) continue;
+            if (branchY + 0.5 < localY(line.top) || branchY + 0.5 > localY(line.bottom)) continue;
             edge = right
-              ? Math.min(edge, line.left - bounds.left - 12 * scale)
-              : Math.max(edge, line.right - bounds.left + 12 * scale);
+              ? Math.min(edge, localX(line.left) - 12 * scale)
+              : Math.max(edge, localX(line.right) + 12 * scale);
           }
         }
         const conductor = conductors[right ? 2 : 0];

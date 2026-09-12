@@ -2,8 +2,7 @@
 
 @layer components.features {
   .cve-register {
-    --cve-accent: color-mix(in srgb, var(--link) 20%, #54fff0);
-    --cve-muted: color-mix(in srgb, var(--fg) 68%, var(--bg));
+    --cve-muted: color-mix(in srgb, var(--fg) 68%, var(--home-bg));
     --cve-width: round(down, min(var(--text-cell) * 105, 100% - var(--text-cell) * 4), 2px);
     --cve-line: var(--text-size);
     width: var(--cve-width);
@@ -15,18 +14,16 @@
     line-height: 1;
   }
   .cve-masthead {
+    container-type: inline-size;
     position: relative;
     margin-bottom: 2px;
     overflow: hidden;
   }
   .cve-circuit {
     color: var(--fg);
-    position: relative;
     display: block;
-    width: calc(var(--text-cell) * 105);
-    height: round(up, calc(var(--text-cell) * 105 * 286 / 2048), 1px);
-    max-width: none;
-    left: round(down, (100% - var(--text-cell) * 105) / 2, 1px);
+    width: 100%;
+    height: round(up, calc(100cqw * 286 / 2048), 1px);
   }
   .cve-count {
     position: absolute;
@@ -38,6 +35,7 @@
   }
   .cve-timeline {
     position: relative;
+    margin-inline: calc(var(--text-cell) * 3);
     padding-bottom: 50px;
   }
   .cve-timeline-art {
@@ -62,9 +60,9 @@
     white-space: nowrap;
     margin: 0 auto 8px;
     padding: 0 6px;
-    background: var(--bg);
+    background: var(--home-bg);
     font: inherit;
-    color: var(--cve-accent);
+    color: var(--link);
   }
   .cve-timeline-group h2 small {
     font: inherit;
@@ -108,16 +106,9 @@
     width: calc(100% + var(--text-cell) + 2px);
   }
   .cve-timeline-entry a {
-    color: var(--cve-accent);
     display: inline-block;
     max-width: 100%;
     overflow-wrap: anywhere;
-  }
-  .cve-timeline-entry a:hover,
-  .cve-timeline-entry a:focus-visible {
-    background: transparent;
-    color: var(--cve-accent);
-    text-decoration: underline;
   }
   .cve-recognition-entry {
     padding-left: calc(var(--text-cell) * 10.5);
@@ -196,9 +187,17 @@
       display: none;
     }
   }
-  @media (max-width: 700px) {
+  @media (max-width: 760px) {
     .cve-count {
-      bottom: 0;
+      position: static;
+      display: block;
+      margin-left: auto;
+      margin-top: calc(var(--cve-line) / 2);
+    }
+  }
+  @media (max-width: 700px) {
+    .cve-timeline {
+      margin-inline: var(--text-cell);
     }
     .cve-timeline:not([data-cve-drawn])::before {
       left: 32px;
