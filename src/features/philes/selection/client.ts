@@ -27,6 +27,7 @@ export function installSelectionTools(): void {
   const root = document.querySelector<HTMLElement>("[data-selection-tools]");
   const actions = root?.querySelector<HTMLElement>("[data-selection-actions]");
   if (!root || !actions || root.dataset.installed) return;
+  const touch = window.matchMedia("(pointer: coarse)");
   let candidate: Candidate | null = null;
   let active: SelectionTool | null = null;
   let dismissedRange: Range | null = null;
@@ -78,11 +79,17 @@ export function installSelectionTools(): void {
     root.style.setProperty("--selection-height", `${bottomEdge - topEdge}px`);
     const width = root.offsetWidth;
     const height = root.offsetHeight;
-    const below = rect.bottom + 8;
-    const above = rect.top - height - 8;
-    const top = below + height <= bottomEdge ? below : Math.max(topEdge, above);
+    // Native handles extend below touch selections. Near the top edge, the
+    // system action menu can also move below the text. These are viewport
+    // pixels, independent of the article and tool font scales.
+    const touchEntry = touch.matches && !actions.hidden;
+    const handleGap = touchEntry ? 32 : 8;
+    const menuGap = touchEntry ? 80 : 8;
+    const below = rect.bottom + (rect.top - topEdge < menuGap ? menuGap : handleGap);
+    const above = rect.top - height - menuGap;
+    const top = below + height <= bottomEdge ? below : above;
     root.style.left = `${Math.max(leftEdge, Math.min(rect.left, rightEdge - width))}px`;
-    root.style.top = `${Math.min(top, Math.max(topEdge, bottomEdge - height))}px`;
+    root.style.top = `${Math.max(topEdge, Math.min(top, bottomEdge - height))}px`;
     return true;
   };
 
