@@ -150,6 +150,11 @@ export default {
         imageSrc: "/assets/88x31/myanimelist.png"
       },
       {
+        label: "Last.fm",
+        href: "https://www.last.fm/user/CuB3y0nd",
+        imageSrc: "/assets/88x31/lastfm.png"
+      },
+      {
         label: "Discord",
         copyText: "CuB3y0nd#6307",
         imageSrc: "/assets/88x31/discord.gif"
