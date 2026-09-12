@@ -1,6 +1,7 @@
 @media (max-width: 760px) {
   :root {
     --mobile-scale: 0.95;
+    --reading-tool-scale: max(0.75, var(--mobile-scale));
   }
 
   body {

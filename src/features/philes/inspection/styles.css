@@ -36,7 +36,7 @@
   .byte-inspector-controls select {
     min-width: 0;
     max-width: 100%;
-    min-height: 28px;
+    min-height: var(--selection-control-size);
     padding: 2px 4px;
     border: 1px solid color-mix(in srgb, var(--link) 30%, var(--bg));
     background: var(--bg);
@@ -49,6 +49,7 @@
     grid-template-columns: 64px minmax(0, 1fr);
     gap: 8px;
     width: 100%;
+    min-height: var(--selection-row-size);
     padding: 5px 12px;
     border: 0;
     background: transparent;
@@ -79,11 +80,6 @@
   }
 
   @media (pointer: coarse) {
-    .byte-inspector-row,
-    .byte-inspector-controls select {
-      min-height: 44px;
-    }
-
     .byte-inspector-row {
       align-items: center;
     }
@@ -91,6 +87,31 @@
     .byte-inspector-controls select {
       /* Avoid the automatic form-control zoom on mobile Safari. */
       font-size: 16px;
+    }
+  }
+}
+
+@layer responsive {
+  @media (max-width: 760px) {
+    .byte-inspector-rows {
+      padding: 4px 0;
+    }
+
+    .byte-inspector-controls {
+      gap: 6px 8px;
+      padding: 6px 8px;
+    }
+
+    .byte-inspector-controls label {
+      gap: 4px;
+    }
+
+    .byte-inspector-row {
+      padding: 2px 8px;
+    }
+
+    .byte-inspector-note {
+      padding: 0 8px 6px;
     }
   }
 }

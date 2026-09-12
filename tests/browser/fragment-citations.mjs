@@ -154,9 +154,14 @@ try {
   const cjk = "不开心，不想说话";
   await selectArticleText(page, cjk);
   const trigger = page.locator("[data-fragment-trigger]");
+  await trigger.waitFor({ state: "visible" });
+  const triggerBox = await trigger.boundingBox();
+  assert.ok(triggerBox.height >= 28 && triggerBox.height <= 32, "The phone link entry is compact and tappable");
   await trigger.tap();
   const field = page.getByRole("textbox", { name: "Link to selected text" });
   await field.waitFor({ state: "visible" });
+  const linkBox = await page.getByRole("dialog", { name: "Fragment link", exact: true }).boundingBox();
+  assert.ok(linkBox.width <= 300 && linkBox.height <= 200, "The phone link panel stays compact");
   const cjkUrl = await field.inputValue();
   await field.tap();
   assert.deepEqual(await field.evaluate((node) => [node.selectionStart, node.selectionEnd]), [0, cjkUrl.length]);
