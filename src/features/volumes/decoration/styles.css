@@ -1,0 +1,207 @@
+.volume-decoration {
+  --decoration-cycle: calc(6s / var(--decoration-speed, 1));
+  /* ch follows the bitmap font's rounded advance under mobile CSS zoom. */
+  width: calc(var(--decoration-columns) * 1ch);
+  color: var(--fg);
+  font-family: var(--text-font);
+  font-size: var(--text-size);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.volume-decoration svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  shape-rendering: crispEdges;
+  stroke-width: var(--decoration-stroke, 1px);
+}
+
+.volume-decoration text {
+  fill: currentColor;
+  /* ViewBox coordinates use the default 8 x 14 text grid. */
+  font-size: 14px;
+  text-rendering: optimizeSpeed;
+}
+
+.volume-decoration--circuit {
+  --decoration-cycle: calc(2.4s / var(--decoration-speed, 1));
+  margin-bottom: calc(var(--text-size) * -0.5);
+}
+
+.volume-decoration .decoration-muted {
+  opacity: 0.45;
+}
+
+.volume-decoration .decoration-accent {
+  color: var(--link);
+}
+
+.volume-decoration .decoration-paper {
+  fill: var(--bg);
+}
+
+.volume-decoration .circuit-signal,
+.volume-decoration .prism-signal {
+  stroke-dasharray: 4 104;
+  animation: volume-transfer var(--decoration-cycle) linear infinite;
+}
+
+.volume-decoration .circuit-signal--return,
+.volume-decoration .prism-signal--split {
+  opacity: 0;
+  animation-delay: calc(var(--decoration-cycle) / 2);
+}
+
+.volume-decoration .circuit-core {
+  animation: volume-circuit-latch var(--decoration-cycle) linear infinite;
+}
+
+.volume-decoration .archive-scan {
+  shape-rendering: geometricPrecision;
+  animation: volume-archive-scan var(--decoration-cycle) linear calc(var(--decoration-cycle) / -6) infinite;
+}
+
+.volume-decoration .archive-stamp {
+  animation: volume-archive-stamp var(--decoration-cycle) linear calc(var(--decoration-cycle) / -6) infinite;
+}
+
+.volume-decoration .study-steam {
+  /* Moving strokes interpolate between pixels; the stationary artwork stays crisp. */
+  shape-rendering: geometricPrecision;
+  animation: volume-steam calc(5s / var(--decoration-speed, 1)) linear calc(-1s / var(--decoration-speed, 1)) infinite;
+}
+
+.volume-decoration .study-steam--late {
+  animation-delay: calc(-3.5s / var(--decoration-speed, 1));
+}
+
+.volume-decoration .study-dream {
+  opacity: 0.35;
+  animation: volume-dream var(--decoration-cycle) ease-in-out infinite;
+}
+
+.volume-decoration .study-dream--late {
+  animation-delay: calc(var(--decoration-cycle) / -2);
+}
+
+.volume-decoration .prism-beams {
+  opacity: 0.65;
+}
+
+.volume-decoration .prism-red {
+  color: var(--ansi-red);
+}
+
+.volume-decoration .prism-yellow {
+  color: var(--ansi-yellow);
+}
+
+.volume-decoration .prism-cyan {
+  color: var(--ansi-cyan);
+}
+
+.volume-decoration .prism-magenta {
+  color: var(--ansi-magenta);
+}
+
+/* A complete static illustration is also the no-JS and reduced-motion state. */
+.volume-decoration:not([data-active]) * {
+  animation-play-state: paused;
+}
+
+@keyframes volume-transfer {
+  0% {
+    stroke-dashoffset: 4;
+    opacity: 1;
+  }
+  48% {
+    stroke-dashoffset: -100;
+    opacity: 1;
+  }
+  50%,
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+
+@keyframes volume-archive-scan {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  6%,
+  75% {
+    opacity: 1;
+  }
+  82%,
+  100% {
+    transform: translateX(204px);
+    opacity: 0;
+  }
+}
+
+@keyframes volume-archive-stamp {
+  0%,
+  72%,
+  100% {
+    opacity: 0.45;
+  }
+  84%,
+  92% {
+    opacity: 1;
+  }
+}
+
+@keyframes volume-circuit-latch {
+  0%,
+  42%,
+  100% {
+    opacity: 0.4;
+  }
+  50%,
+  60% {
+    opacity: 1;
+  }
+}
+
+@keyframes volume-steam {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+}
+
+@keyframes volume-dream {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+@media (max-width: 760px) {
+  .volume-decoration svg {
+    /* No-JS fallback; the client refines this to a physical pixel for the actual display. */
+    stroke-width: var(--decoration-stroke, max(1px, calc(1.02px / min(var(--mobile-scale), var(--fit-scale)))));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .volume-decoration[data-active] * {
+    animation-play-state: paused;
+  }
+}

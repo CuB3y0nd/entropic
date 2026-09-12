@@ -1,4 +1,6 @@
 ---
+import { textmodeConfig, volumeConfig } from "@/config/server";
+import VolumeDecoration from "../decoration/VolumeDecoration.astro";
 import type { Volume } from "../model";
 import { renderVolumePre } from "../rendering/render";
 import Credits from "./Credits.astro";
@@ -9,14 +11,39 @@ type Props = {
 };
 
 const volume = Astro.props.volume;
-const volumeHtml = renderVolumePre(volume);
+const settings = volumeConfig(volume.number);
+const volumeHtml = renderVolumePre(volume, settings);
+const decoration = settings.decoration;
 ---
 
 <section class="textmode-wrap volume-wrap mt-line">
-  <pre class="textmode-pre volume-pre life-art" data-life-root set:html={volumeHtml} />
+  {
+    decoration.kind && decoration.kind !== "life" && (
+      <VolumeDecoration
+        {...decoration}
+        kind={decoration.kind}
+        number={volume.number}
+        columns={textmodeConfig.volumeRightColumn + 1}
+      />
+    )
+  }
+  <pre
+    class:list={["textmode-pre volume-pre", { "life-art": decoration.kind === "life" }]}
+    data-life-root={decoration.kind === "life" || undefined}
+    set:html={volumeHtml}
+  />
 </section>
 
 <Credits volume={volume} />
+
+<style>
+  @media (max-width: 760px) {
+    .volume-wrap {
+      /* Preserve fractional glyph advances so mobile zoom keeps the entire frame in view. */
+      text-rendering: geometricPrecision;
+    }
+  }
+</style>
 
 <script>
   import { initLifeArt } from "@/shared/textmode/life/client";

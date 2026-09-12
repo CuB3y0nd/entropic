@@ -363,11 +363,15 @@ export default {
   // Keys match src/content/philes/volume-<n>/; override only needed fields.
   // Optional: subtitle, listLabel, entryPrefix, entryLabel ("index"/"year"),
   // reverseEntryNumbers.
+  // decoration: "circuit" / "archive" / "study" / "prism" / "life" (default),
+  // or false to hide the header artwork. The four illustrations also accept
+  // { kind, animated?: boolean, speed?: 0.25..4 }; study adds calendar: { month, day }.
   // phileSort.by: "date"/"order"; direction: "asc"/"desc". postscript: text
   // lines, or [] to hide it.
   volumes: {
     "0": {
       title: "Security Research",
+      decoration: "circuit",
       listLabel: "Volume 0 - Security Research",
       phileSort: {
         by: "order",
@@ -383,6 +387,7 @@ export default {
     },
     "1": {
       title: "Historical Philes",
+      decoration: "archive",
       listLabel: "Volume 1 - Historical Philes",
       postscript: [
         "  ──[ EOF ]──────────────────────────────────────────────────────────────────//───",
@@ -400,6 +405,7 @@ export default {
     },
     "2": {
       title: "Year-End Wrap-ups",
+      decoration: { kind: "study", calendar: { month: 12, day: 31 } },
       listLabel: "Volume 2 - Year-End Wrap-ups",
       postscript: [
         "  ──[ 0x146 ]────────────────────────────────────────────────────────────────//───",
@@ -417,6 +423,7 @@ export default {
     },
     "3": {
       title: "Chromatic Philes",
+      decoration: "prism",
       listLabel: "Volume 3 - Chromatic Philes",
       postscript: [
         "  ──[ SGR ]──────────────────────────────────────────────────────────────────//───",

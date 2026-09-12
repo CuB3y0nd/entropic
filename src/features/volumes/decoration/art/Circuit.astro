@@ -1,0 +1,73 @@
+---
+const traces = [
+  "M 19 168 V 148 H 242 L 278 112 H 434",
+  "M 195 168 V 154 H 306 L 340 120 H 434",
+  "M 283 64 H 350 L 382 96 H 434",
+  "M 331 40 H 394 L 434 80",
+  "M 478 54 V 24 H 566 V 10",
+  "M 542 78 H 590 L 618 50 H 658",
+  "M 542 102 H 614 L 642 130 V 168",
+  "M 506 134 V 148 H 578 L 598 168"
+];
+---
+
+<svg data-circuit viewBox="16 0 672 168" fill="none" stroke="currentColor" stroke-width="1" focusable="false">
+  <g class="decoration-muted">
+    <path
+      d="M 227 168 V 160 H 286 L 326 120 M 295 56 H 356 L 388 88 H 426 M 486 46 V 32 H 574 V 16 M 550 86 H 594 L 622 58 H 664 M 622 110 L 650 138 V 160"
+    ></path>
+    <path d="M 404 42 H 412 M 408 38 V 46 M 628 22 H 636 M 632 18 V 26 M 365 142 H 373 M 369 138 V 146"></path>
+    {
+      Array.from({ length: 5 }, (_, row) => (
+        <path stroke-dasharray="1 5" d={`M 363 ${60 + row * 6} h 24 M 554 ${118 + row * 6} h 18`} />
+      ))
+    }
+  </g>
+  <g>{traces.map((d) => <path d={d} />)}</g>
+  <g class="decoration-accent">
+    <path class="circuit-signal circuit-signal--input" pathLength="100" d={traces[0]}></path>
+    <path class="circuit-signal circuit-signal--return" pathLength="100" d={traces[6]}></path>
+    <path class="circuit-core" d="M 462 70 H 510 V 118 H 462 Z M 470 78 H 502 V 110 H 470 Z"></path>
+  </g>
+  <path class="circuit-package" d="M 442 62 H 534 V 126 H 442 Z M 434 54 H 542 V 134 H 434 Z"></path>
+  {Array.from({ length: 7 }, (_, i) => <path d={`M ${450 + i * 12} 46 v 8 m 0 80 v 8`} />)}
+  {Array.from({ length: 5 }, (_, i) => <path d={`M 426 ${70 + i * 12} h 8 m 108 0 h 8`} />)}
+  <g class="decoration-paper">
+    <circle cx="283" cy="64" r="3"></circle><circle cx="331" cy="40" r="3"></circle>
+    <circle cx="566" cy="10" r="3"></circle><circle cx="658" cy="50" r="3"></circle>
+  </g>
+  <text data-circuit-register x="478" y="100" stroke="none">00</text>
+  <text data-circuit-bus class="decoration-muted" x="220" y="122" stroke="none">0x00</text>
+</svg>
+
+<script>
+  const randomByte = () =>
+    Math.floor(Math.random() * 256)
+      .toString(16)
+      .toUpperCase()
+      .padStart(2, "0");
+
+  for (const circuit of document.querySelectorAll("[data-circuit]")) {
+    const register = circuit.querySelector("[data-circuit-register]");
+    const bus = circuit.querySelector("[data-circuit-bus]");
+    const input = circuit.querySelector(".circuit-signal--input");
+    const output = circuit.querySelector(".circuit-signal--return");
+    if (!register || !bus || !input || !output) continue;
+
+    let byte = "";
+    const transmit = () => {
+      byte = randomByte();
+      bus.textContent = `0x${byte}`;
+    };
+    const receive = () => {
+      register.textContent = byte;
+    };
+
+    // CSS is the shared clock: pausing the signals also freezes the readouts.
+    register.textContent = randomByte();
+    transmit();
+    input.addEventListener("animationiteration", transmit);
+    output.addEventListener("animationstart", receive);
+    output.addEventListener("animationiteration", receive);
+  }
+</script>

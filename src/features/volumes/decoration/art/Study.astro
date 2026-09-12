@@ -1,0 +1,64 @@
+---
+import type { VolumeCalendar } from "@/config/types";
+type Props = { calendar: VolumeCalendar };
+const { month, day } = Astro.props.calendar;
+const monthLabel = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][month - 1];
+---
+
+<svg viewBox="16 16 672 124" fill="none" stroke="currentColor" stroke-width="1" focusable="false">
+  <g class="decoration-muted">
+    <path d="M 233 120 H 669 M 247 126 H 310 M 493 126 H 659"></path>
+    <path stroke-dasharray="1 5" d="M 255 132 H 286 M 577 132 H 608"></path>
+  </g>
+  <g>
+    <path
+      class="decoration-paper"
+      d="M 257 103 H 392 V 119 H 257 Z M 264 85 H 378 V 103 H 264 Z M 278 71 H 385 V 85 H 278 Z"></path>
+    <path
+      d="M 263 108 H 383 M 263 114 H 379 M 273 90 H 369 M 273 97 H 365 M 285 76 H 377 M 285 81 H 366"
+      class="decoration-muted"></path>
+    <path d="M 257 103 H 392 M 264 85 H 378 M 278 71 H 385" class="decoration-accent"></path>
+    <path d="M 337 86 V 103 L 344 97 L 351 103 V 86" class="decoration-paper decoration-accent"></path>
+  </g>
+  <g class="study-steam decoration-muted">
+    <path d="M 421 64 C 411 56 432 52 423 42"></path>
+  </g>
+  <g class="study-steam study-steam--late decoration-muted">
+    <path d="M 441 62 C 432 55 451 49 444 36"></path>
+  </g>
+  <g>
+    <ellipse class="decoration-muted" cx="434" cy="114" rx="37" ry="5"></ellipse>
+    <path class="decoration-muted" d="M 416 115 Q 434 119 452 115"></path>
+    <path class="decoration-paper" d="M 453 83 H 460 C 478 83 478 103 460 105 H 451 Z"></path>
+    <path class="decoration-muted" d="M 453 88 H 460 C 471 88 471 98 460 100 H 452"></path>
+    <path class="decoration-paper" d="M 410 77 L 411 100 Q 412 113 432 113 Q 452 113 453 100 L 454 77 Z"></path>
+    <ellipse class="decoration-paper" cx="432" cy="77" rx="22" ry="4"></ellipse>
+    <path class="decoration-muted" d="M 417 78 Q 432 75 447 78 M 416 87 L 417 99 Q 417 103 421 105"></path>
+  </g>
+  <g>
+    <path
+      class="decoration-paper"
+      d="M 533 106 C 528 90 540 78 558 77 C 579 75 596 85 598 99 C 600 111 589 118 572 118 H 529 Q 521 118 521 112 Z"
+    ></path>
+    <path class="decoration-muted" d="M 559 81 Q 563 84 563 88 M 573 84 Q 577 87 576 91"></path>
+    <path class="decoration-paper" d="M 510 109 Q 499 108 498 114 Q 497 118 505 118 H 531 Q 539 118 537 112 Z"></path>
+    <path
+      class="decoration-paper"
+      d="M 503 96 L 501 80 L 514 87 Q 523 84 533 89 L 545 83 L 543 100 C 540 110 530 114 518 111 C 507 111 502 105 503 96 Z"
+    ></path>
+    <path class="decoration-muted" d="M 507 88 L 508 94 M 539 90 L 537 95 M 505 115 H 511"></path>
+    <path d="M 510 99 Q 514 103 519 100 M 527 101 Q 531 105 536 101 M 521 104 L 524 105 L 522 107"></path>
+    <path class="decoration-muted" d="M 505 102 L 497 100 M 505 106 L 497 107"></path>
+    <path d="M 586 94 C 599 96 599 111 583 114 H 562 C 549 114 546 107 552 102 C 558 97 567 102 562 107"></path>
+    <text x="518" y="69" stroke="none" class="study-dream">z</text>
+    <text x="538" y="55" stroke="none" class="study-dream study-dream--late">z</text>
+  </g>
+  <g transform="translate(610 66)">
+    <path class="decoration-muted" d="M 42 6 L 53 54 H -2"></path>
+    <path class="decoration-paper" d="M 4 6 H 42 L 36 52 H -2 Z"></path>
+    <path class="decoration-muted" d="M 1 26 H 39"></path>
+    <path class="decoration-accent" d="M 10 5 V 1 H 14 V 11 M 30 5 V 1 H 34 V 11"></path>
+    <text class="decoration-muted" x="9" y="23" stroke="none">{monthLabel}</text>
+    <text x="12" y="44" stroke="none">{String(day).padStart(2, "0")}</text>
+  </g>
+</svg>

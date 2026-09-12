@@ -25,15 +25,43 @@ export type VolumePhileSort = {
   readonly direction: "asc" | "desc";
 };
 
+export type VolumeDecoration = "circuit" | "archive" | "study" | "prism" | "life";
+
+export type VolumeCalendar = {
+  readonly month: number;
+  readonly day: number;
+};
+
+export type VolumeDecorationOptions = {
+  /** Keep the illustration visible while pausing its animation. Defaults to true. */
+  readonly animated?: boolean;
+  /** Playback multiplier, 0.25..4. Defaults to 1. */
+  readonly speed?: number;
+} & (
+  | { readonly kind: "study"; readonly calendar?: VolumeCalendar }
+  | { readonly kind: Exclude<VolumeDecoration, "study" | "life"> }
+);
+
 export type VolumeConfig = {
   readonly title: string;
   readonly subtitle?: string;
   readonly listLabel: string;
+  /** Header artwork. Defaults to life; false hides it. */
+  readonly decoration: VolumeDecoration | VolumeDecorationOptions | false;
   readonly postscript?: readonly string[];
   readonly entryPrefix?: string;
   readonly entryLabel?: "index" | "year";
   readonly reverseEntryNumbers?: boolean;
   readonly phileSort?: VolumePhileSort;
+};
+
+export type ResolvedVolumeConfig = Omit<VolumeConfig, "decoration"> & {
+  readonly decoration: {
+    readonly kind: VolumeDecoration | false;
+    readonly animated: boolean;
+    readonly speed: number;
+    readonly calendar: VolumeCalendar;
+  };
 };
 
 export type CveRecord = {
