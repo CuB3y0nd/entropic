@@ -135,6 +135,11 @@ export default {
         imageSrc: "https://nikolan.net/resources/88x31s/button.png"
       },
       {
+        label: "0xStrawHat",
+        href: "https://0xstrawhat.tech/",
+        imageSrc: "https://0xstrawhat.tech/images/buttons/strawhat.gif"
+      },
+      {
         label: "GitHub",
         href: "https://github.com/CuB3y0nd",
         imageSrc: "/assets/88x31/github.png"
