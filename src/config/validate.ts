@@ -1,4 +1,5 @@
 import { badgeArtworkPresetIds, calculateBadgeLayout, validateArtworkRotation } from "../features/site-badges/index.ts";
+import { algorithmKinds } from "../shared/textmode/algorithm-art/model.ts";
 import { appearanceCssVariables } from "../shared/textmode/core/css-vars.ts";
 import { safeUrl } from "../shared/urls.ts";
 import type { ResolvedConfig } from "./resolve.ts";
@@ -40,8 +41,8 @@ export function validateConfig(config: ResolvedConfig): void {
     integer(socialImage.width, "site.socialImage.width", 1);
     integer(socialImage.height, "site.socialImage.height", 1);
   }
-  for (const [key, value] of Object.entries(config.philes)) {
-    if (typeof value !== "boolean") fail(`philes.${key}`, "Use true or false.");
+  for (const key of ["inspect", "fragmentLinks"] as const) {
+    if (typeof config.philes[key] !== "boolean") fail(`philes.${key}`, "Use true or false.");
   }
   singleLinePrefix(config.home.sectionPrefix, "home.sectionPrefix");
   singleLinePrefix(config.home.itemPrefix, "home.itemPrefix");
@@ -145,6 +146,30 @@ export function validateConfig(config: ResolvedConfig): void {
     if (/^(?:[a-z]:|\/|\\)/i.test(config.wkd.publicKeyPath) || config.wkd.publicKeyPath.split(/[\\/]/).includes("..")) {
       fail("wkd.publicKeyPath", "Use a repository-relative public key path.");
     }
+  }
+}
+
+export function validateArticleDecoration(value: unknown): void {
+  if (value === undefined || value === false) return;
+  const field = "philes.decoration";
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(field, "Use false or an options object.");
+  if ("effects" in value && value.effects !== undefined) {
+    const effects = value.effects;
+    if (
+      !Array.isArray(effects) ||
+      !effects.length ||
+      new Set(effects).size !== effects.length ||
+      effects.some((kind) => !algorithmKinds.some((known) => known === kind))
+    ) {
+      fail(`${field}.effects`, `Use a non-empty list of unique algorithms: ${algorithmKinds.join(", ")}.`);
+    }
+  }
+  if ("animated" in value && value.animated !== undefined && typeof value.animated !== "boolean") {
+    fail(`${field}.animated`, "Use true or false.");
+  }
+  if ("speed" in value && value.speed !== undefined) {
+    if (typeof value.speed !== "number") fail(`${field}.speed`, "Use a number between 0.25 and 4.");
+    bounded(value.speed, `${field}.speed`, 0.25, 4);
   }
 }
 

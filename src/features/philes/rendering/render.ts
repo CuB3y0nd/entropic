@@ -1,8 +1,9 @@
 import { decodeHTMLAttribute } from "entities/decode";
-import { textmodeConfig } from "@/config/server";
+import { phileConfig, textmodeConfig } from "@/config/server";
 import { escapeHtml, link, textHtml, trimBlankLines, wrapWordsCells } from "@/shared/textmode";
+import { type AlgorithmKind, selectAlgorithm } from "@/shared/textmode/algorithm-art/model";
 import { renderAnsiText } from "@/shared/textmode/ansi";
-import { lifeFrameHeight, lifeFrameHtml } from "@/shared/textmode/life";
+import { lifeFrameHeight } from "@/shared/textmode/life";
 import { safeUrl } from "@/shared/urls";
 import type { Phile } from "../model";
 import { renderRedactedBody } from "./redacted";
@@ -11,7 +12,7 @@ const titleWidth = textmodeConfig.articleArtIndent - textmodeConfig.textIndent;
 
 export type PhileHeader = {
   metaHtml: string;
-  sideHtml: string;
+  decoration: AlgorithmKind | false;
   lineCount: number;
   metaLineCount: number;
   titleLineCount: number;
@@ -44,11 +45,15 @@ function renderPhileHeader(phile: Phile): PhileHeader {
   const titleLines = wrapWordsCells(phile.data.title, titleWidth);
   const author = phile.credits[0];
   const metaLines = [...titleLines, ...(author ? wrapWordsCells(`~ ${author.name}`, titleWidth) : [])];
+  const decoration =
+    phileConfig.decoration === false
+      ? false
+      : (phile.data.decoration ?? selectAlgorithm(phile.route.href, phileConfig.decoration.effects));
 
   return {
     metaHtml: metaLines.map(textHtml).join("\n"),
-    sideHtml: lifeFrameHtml(),
-    lineCount: lifeFrameHeight,
+    decoration,
+    lineCount: decoration ? lifeFrameHeight : 0,
     metaLineCount: metaLines.length,
     titleLineCount: titleLines.length
   };

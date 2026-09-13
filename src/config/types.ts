@@ -1,4 +1,5 @@
 import type { BadgeArtwork, BadgeArtworkPresetId, SiteBadge } from "../features/site-badges/index.ts";
+import type { AlgorithmOptions } from "../shared/textmode/algorithm-art/model.ts";
 import type { CveRecord, HomeSection, ResearchRecognition, VolumeConfig } from "./types/content.ts";
 import type {
   AppearanceConfig,
@@ -110,6 +111,8 @@ export type EntropicConfig = {
     readonly inspect?: boolean;
     /** Create and open links to selected article text. Defaults to true. */
     readonly fragmentLinks?: boolean;
+    /** Stable per-article artwork. Omit for all algorithms; false hides it site-wide. */
+    readonly decoration?: false | Partial<AlgorithmOptions>;
   };
   /** Keys are non-negative volume numbers, not titles or routes. */
   readonly volumes?: Readonly<Record<number, Partial<VolumeConfig>>>;

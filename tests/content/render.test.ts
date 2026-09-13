@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Phile } from "../../src/features/philes";
 import { parsePhile } from "../../src/features/philes/content/frontmatter";
+import { phileSchema } from "../../src/features/philes/content/schema";
 import { routeForPhile } from "../../src/features/philes/data/routing";
 import { renderPhile } from "../../src/features/philes/rendering";
+import { algorithmKinds } from "../../src/shared/textmode/algorithm-art/model";
 
 function phile(body: string, redacted = false): Phile {
   const entry = {
@@ -19,6 +21,18 @@ test("frontmatter accepts BOM, CRLF, and a closing delimiter at EOF", () => {
   const result = parsePhile('\uFEFF---\r\ntitle: Example\r\n"redacted": TRUE\r\n---');
   assert.equal(result.data.redacted, true);
   assert.equal(result.body, "");
+});
+
+test("frontmatter can pin any article algorithm or remove the artwork and its reserved space", () => {
+  const article = phile("Readable body");
+  for (const decoration of [...algorithmKinds, false] as const) {
+    const data = phileSchema.parse({ ...article.data, decoration });
+    const result = renderPhile({ ...article, data });
+    assert.equal(result.header.decoration, decoration);
+    assert.equal(result.header.lineCount, decoration === false ? 0 : 17);
+    assert.equal(result.body.kind, "content");
+  }
+  assert.equal(phileSchema.safeParse({ ...article.data, decoration: "missing" }).success, false);
 });
 
 test("the rendering interface never includes redacted source or media", () => {

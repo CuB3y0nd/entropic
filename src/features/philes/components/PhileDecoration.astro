@@ -1,0 +1,139 @@
+---
+import { createAlgorithm } from "@/shared/textmode/algorithm-art/engine";
+import type { AlgorithmKind, AlgorithmOptions } from "@/shared/textmode/algorithm-art/model";
+import { lifeFrameHtml } from "@/shared/textmode/life";
+import "@/shared/textmode/styles/life.css";
+
+type Props = { kind: AlgorithmKind; articleKey: string; options: AlgorithmOptions };
+const { kind, articleKey, options } = Astro.props;
+const frame = kind === "life" ? undefined : createAlgorithm(kind, articleKey).next();
+---
+
+{
+  kind === "life" ? (
+    <pre
+      class="textmode-pre phile-pre phile-header-side life-art"
+      data-life-root
+      data-algorithm-art="life"
+      aria-hidden="true"
+      set:html={lifeFrameHtml()}
+    />
+  ) : (
+    frame && (
+      <div
+        class="phile-header-side phile-decoration"
+        data-algorithm-art={kind}
+        data-key={articleKey}
+        data-animated={options.animated || undefined}
+        data-speed={options.speed}
+        aria-hidden="true"
+      >
+        <pre class="textmode-pre phile-pre" set:html={lifeFrameHtml()} />
+        {frame.labels ? (
+          <div class="algorithm-labels" data-algorithm-labels>
+            {frame.labels.map((label) => (
+              <span
+                class={`algorithm-label algorithm-label-${label.tone}`}
+                style={`left:${label.column}ch;top:${label.row}lh`}
+              >
+                {label.text}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <svg viewBox="0 0 184 210" preserveAspectRatio="none" focusable="false">
+            <g data-algorithm-field>
+              <path class="algorithm-ink" data-algorithm-ink d={frame.ink} />
+              <path class="algorithm-trail" data-algorithm-trail d={frame.trail} />
+              <path class="algorithm-accent" data-algorithm-accent d={frame.accent} />
+            </g>
+            <g data-algorithm-motion>
+              {frame.motion?.map((shape) => (
+                <rect
+                  class={shape.accent ? "algorithm-accent" : "algorithm-ink"}
+                  x={shape.fromX}
+                  y={shape.fromY}
+                  width={shape.width}
+                  height={shape.height}
+                />
+              ))}
+            </g>
+          </svg>
+        )}
+      </div>
+    )
+  )
+}
+
+<style>
+  .phile-decoration {
+    /* Match the bitmap font's rounded advance under mobile CSS zoom. */
+    left: auto;
+    right: 0;
+    width: 25ch;
+    height: 17lh;
+    font-family: var(--text-font);
+    font-size: var(--text-size);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .phile-decoration pre {
+    position: relative;
+    z-index: 1;
+  }
+
+  svg {
+    position: absolute;
+    /* Gohu's box strokes run through the middle of the outer character cells. */
+    top: 0.5lh;
+    left: 0.5ch;
+    width: 24ch;
+    height: 16lh;
+    overflow: hidden;
+    shape-rendering: crispEdges;
+  }
+
+  .phile-decoration :global(.algorithm-ink) {
+    fill: var(--fg);
+    opacity: 0.45;
+  }
+
+  .phile-decoration[data-algorithm-art="sort"] :global(.algorithm-ink) {
+    opacity: 0.55;
+  }
+
+  .algorithm-trail {
+    fill: var(--link);
+    opacity: 0.4;
+  }
+
+  .phile-decoration :global(.algorithm-accent) {
+    fill: var(--link);
+  }
+
+  .algorithm-labels {
+    position: absolute;
+    top: 1lh;
+    left: 1ch;
+    width: 23ch;
+    height: 15lh;
+    white-space: pre;
+  }
+
+  .algorithm-labels :global(.algorithm-label) {
+    position: absolute;
+    color: var(--fg);
+    opacity: 0.7;
+  }
+
+  .algorithm-labels :global(.algorithm-label-muted) {
+    opacity: 0.3;
+  }
+
+  .algorithm-labels :global(.algorithm-label-accent) {
+    color: var(--link);
+    opacity: 1;
+  }
+</style>
