@@ -109,7 +109,14 @@ export default {
     // Inspect selected numbers and bytes. Defaults to true; false disables it.
     inspect: true,
     // Share and open links to selected article text. Defaults to true.
-    fragmentLinks: true
+    fragmentLinks: true,
+    // Each article keeps one algorithm, chosen from its URL. false hides all article artwork.
+    // Frontmatter decoration: maze (or life, sort, bits, asm, reorder, false) pins an article's effect.
+    decoration: {
+      effects: ["life", "maze", "sort", "bits", "asm", "reorder"],
+      animated: true, // New effects only: false keeps a still frame.
+      speed: 1 // New effects only: playback multiplier, 0.25..4. Life keeps its original behavior.
+    }
   },
 
   // 88x31 buttons. Each item has label, imageSrc, and exactly one action:

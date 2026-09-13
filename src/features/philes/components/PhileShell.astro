@@ -2,8 +2,8 @@
 import { phileConfig } from "@/config/server";
 import type { Phile } from "../model";
 import { renderPhile } from "../rendering";
+import PhileDecoration from "./PhileDecoration.astro";
 import SelectionTools from "./SelectionTools.astro";
-import "@/shared/textmode/styles/life.css";
 import "@/shared/textmode/styles/ansi.css";
 import "../styles.css";
 
@@ -16,7 +16,15 @@ const { header, body, footerHtml } = renderPhile(Astro.props.phile);
     class="phile-header relative z-2"
     style={`--phile-header-lines: ${header.lineCount}; --phile-meta-lines: ${header.metaLineCount}; --phile-title-lines: ${header.titleLineCount}`}
   >
-    <pre class="textmode-pre phile-pre phile-header-side life-art" data-life-root set:html={header.sideHtml} />
+    {
+      header.decoration && phileConfig.decoration && (
+        <PhileDecoration
+          kind={header.decoration}
+          articleKey={Astro.props.phile.route.href}
+          options={phileConfig.decoration}
+        />
+      )
+    }
     <pre class="textmode-pre phile-pre phile-header-meta" set:html={header.metaHtml} />
   </header>
   {

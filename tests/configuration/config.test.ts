@@ -4,6 +4,7 @@ import { defaultAppearance, defaultEffects } from "../../src/config/defaults";
 import { resolveConfig, resolveVolumeConfig } from "../../src/config/resolve";
 import type { CveCircuitConfig, EntropicConfig } from "../../src/config/types";
 import { sitemapEntries } from "../../src/features/seo/xml";
+import { defaultAlgorithmOptions } from "../../src/shared/textmode/algorithm-art/model";
 
 const site = { url: "https://example.org/", name: "My Philes", description: "A personal textmode site" };
 
@@ -175,16 +176,53 @@ test("WKD can be disabled without deleting its email or public key path", () => 
 });
 
 test("article tools default to enabled and can be disabled independently", () => {
-  assert.deepEqual(resolveConfig({ site }).philes, { inspect: true, fragmentLinks: true });
-  assert.deepEqual(resolveConfig({ site, philes: { inspect: false } }).philes, { inspect: false, fragmentLinks: true });
+  const decoration = defaultAlgorithmOptions;
+  assert.deepEqual(resolveConfig({ site }).philes, { inspect: true, fragmentLinks: true, decoration });
+  assert.deepEqual(resolveConfig({ site, philes: { inspect: false } }).philes, {
+    inspect: false,
+    fragmentLinks: true,
+    decoration
+  });
   assert.deepEqual(resolveConfig({ site, philes: { fragmentLinks: false } }).philes, {
     inspect: true,
-    fragmentLinks: false
+    fragmentLinks: false,
+    decoration
   });
   // @ts-expect-error Check the runtime boundary for JavaScript configuration too.
   assert.throws(() => resolveConfig({ site, philes: { inspect: "false" } }), /philes.inspect/);
   // @ts-expect-error Check the runtime boundary for JavaScript configuration too.
   assert.throws(() => resolveConfig({ site, philes: { fragmentLinks: "false" } }), /philes.fragmentLinks/);
+});
+
+test("article artwork supports pool selection, static playback, speed, and a global off switch", () => {
+  const resolve = (decoration?: NonNullable<EntropicConfig["philes"]>["decoration"]) =>
+    resolveConfig({ site, philes: { decoration } }).philes.decoration;
+  assert.deepEqual(resolve(), defaultAlgorithmOptions);
+  assert.deepEqual(resolve({ effects: undefined, animated: undefined, speed: undefined }), defaultAlgorithmOptions);
+  assert.deepEqual(resolve({ effects: ["maze"], animated: false, speed: 0.5 }), {
+    effects: ["maze"],
+    animated: false,
+    speed: 0.5
+  });
+  assert.equal(resolve(false), false);
+  for (const invalid of [
+    null,
+    true,
+    "maze",
+    [],
+    { effects: [] },
+    { effects: ["maze", "maze"] },
+    { effects: ["unknown"] },
+    { effects: "life" },
+    { animated: "false" },
+    { speed: "1" },
+    { speed: 0 },
+    { speed: 4.1 },
+    { speed: Number.NaN }
+  ]) {
+    // @ts-expect-error Exercise JavaScript configuration values at the runtime boundary.
+    assert.throws(() => resolve(invalid), /philes.decoration/);
+  }
 });
 
 test("a minimal configuration creates a new site without inheriting the theme author's links or records", () => {

@@ -9,7 +9,7 @@
 
   .phile-header {
     width: calc(var(--text-cell) * 85);
-    height: calc(var(--text-size) * max(18, 17 + var(--phile-meta-lines)));
+    height: calc(var(--text-size) * (max(0, var(--phile-header-lines) - 1) + var(--phile-meta-lines) + 1));
   }
 
   .phile-header-side {
@@ -20,7 +20,7 @@
 
   .phile-header-meta {
     position: absolute;
-    top: calc(var(--text-size) * 16);
+    top: calc(var(--text-size) * max(0, var(--phile-header-lines) - 1));
     left: 0;
     padding-left: calc(var(--text-cell) * 4);
   }

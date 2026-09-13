@@ -1,10 +1,12 @@
 import { cvePagePath } from "../features/cves/index.ts";
+import { defaultAlgorithmOptions } from "../shared/textmode/algorithm-art/model.ts";
 import { defaultAppearance, defaultEffects, defaultHomeAsciiArt, defaultTextmode } from "./defaults.ts";
 import type { EntropicConfig, HomeSection, ResolvedVolumeConfig, VolumeConfig } from "./types.ts";
-import { validateConfig } from "./validate.ts";
+import { validateArticleDecoration, validateConfig } from "./validate.ts";
 
 /** Resolve nested groups explicitly; undefined inherits and arrays replace whole lists. */
 export function resolveConfig(input: EntropicConfig) {
+  validateArticleDecoration(input.philes?.decoration);
   const appearance = input.theme?.appearance;
   const particles = input.theme?.effects?.particles;
   const glitch = input.theme?.effects?.homeAsciiGlitch;
@@ -20,7 +22,9 @@ export function resolveConfig(input: EntropicConfig) {
     },
     philes: {
       inspect: input.philes?.inspect ?? true,
-      fragmentLinks: input.philes?.fragmentLinks ?? true
+      fragmentLinks: input.philes?.fragmentLinks ?? true,
+      decoration:
+        input.philes?.decoration === false ? false : mergeDefined(defaultAlgorithmOptions, input.philes?.decoration)
     },
     volumes: input.volumes ?? {},
     cves: {

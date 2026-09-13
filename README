@@ -94,6 +94,7 @@ Optional fields:
     slug
     redacted
     lang
+    decoration
 
 Credits come from each file's Git history, including renames and
 Co-authored-by trailers.  The original author appears first, followed by
@@ -114,6 +115,43 @@ supports the custom ink block syntax.
 Ink style reference:
 
     https://www.cubeyond.net/volume/3/ansi-ink-phile/
+
+Article header artwork is chosen from the article's public URL. It stays the
+same across reloads, rebuilds, and adding/removing other articles. Renaming its
+slug or moving it to another volume can choose a different effect. The default
+pool is `life`, `maze` (depth-first maze carving), `sort` (insertion sort),
+`bits` (four byte registers), `asm` (a small assembly loop), and `reorder`
+(out-of-order execution with in-order retirement). No extra controls interrupt
+the reading layout.
+
+Configure the pool and playback in `entropic.config.ts`:
+
+    philes: {
+      decoration: {
+        effects: ["life", "maze", "sort", "bits", "asm", "reorder"],
+        animated: true,
+        speed: 1
+      }
+    }
+
+Omitted options inherit these defaults. `effects` must contain at least one
+unique algorithm; use a single item to show the same effect everywhere.
+Reordering the pool does not reshuffle articles. For the new effects, `speed`
+ranges from 0.25 to 4 and `animated: false` keeps a still frame. The new artwork
+also stays visible without JavaScript. Life uses its original renderer, grid,
+color, and timing; these playback options do not change it. All effects
+pause offscreen, in hidden tabs, and for reduced motion.
+
+Set `decoration: maze` (or any other effect name) in an article's frontmatter
+to pin its effect, including one outside the global pool. `decoration: false`
+removes that article's artwork and closes the unused header space.
+`philes.decoration: false` disables all article artwork, including overrides.
+
+The processor illustrations use native Gohu text at the article's font size.
+`bits` highlights the bits changed by XOR, rotate, and shift operations. `asm`
+shows an executed instruction with its resulting registers and flags. `reorder`
+shows dependency waits and two execution slots; completed instructions remain
+in the queue until all earlier instructions can retire.
 
 Example:
 
@@ -184,7 +222,7 @@ an 8-bit value, including 00 and FF; consecutive random values may repeat.
 
 The new illustrations remain visible without JavaScript. Their motion pauses
 offscreen, in hidden tabs, and when reduced motion is requested. Article
-headers keep their own Game of Life artwork.
+headers use the separate `philes.decoration` settings described above.
 
 
 Redactions
