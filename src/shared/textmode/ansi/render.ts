@@ -14,6 +14,11 @@ export function renderAnsiText(input: string, width: number): string {
   return renderBlocks(trimBlankLines(normalizeText(input)), width).join("\n");
 }
 
+/** Preserve whitespace when the browser lays out text around inline elements. */
+export function renderAnsiInline(input: string): string {
+  return renderChunks(parseInlineAnsi(input));
+}
+
 function renderBlocks(input: string, width: number): string[] {
   const lines = input.split("\n");
   const rendered: string[] = [];

@@ -95,6 +95,7 @@ Optional fields:
     redacted
     lang
     decoration
+    math
 
 Credits come from each file's Git history, including renames and
 Co-authored-by trailers.  The original author appears first, followed by
@@ -111,6 +112,30 @@ profiles provide a fallback when GitHub is unavailable.
 The body is rendered as textmode content.  It preserves layout, wraps to the
 configured article width, renders images, accepts ANSI escape sequences, and
 supports the custom ink block syntax.
+
+Set `math: true` in an article's frontmatter to render LaTeX formulas with
+Temml. Use `$...$` or `\(...\)` inline, and `$$...$$` or `\[...\]` for display
+equations. Standalone tall expressions also receive display space. Math is
+converted to native MathML at build time; unsupported
+commands fail the build. Code spans and fenced code keep their TeX literal.
+The bundled Entropic Math font derives from STIX Two Math's CFF font:
+https://github.com/stipub/stixfonts/releases/latest
+Its license is included in `fonts/STIXTwoMath.LICENSE`.
+Radical size variants have their short horizontal caps trimmed so
+MathML's overbar joins directly to the diagonal without a pixel step. Other
+glyph outlines are unchanged. Fraction, radical, overbar and underbar rule
+thicknesses use 0.05em to avoid two-pixel bars at the article's 16/17px sizes.
+Run `pnpm fonts:math` to regenerate from the latest upstream release (requires
+`uv`). The script checks the radical geometry before replacing the font and
+records the resolved source URL and SHA-256 in the font's metadata. Normal
+builds and page visits use the bundled font without fetching upstream.
+Temml requires a browser with native MathML support. Equation references
+(`\ref` and `\eqref`) are not wired into the site's rendering pipeline yet.
+
+Math articles retain the textmode font and colors, with unframed equations
+aligned to the body. Prose wraps to the viewport; long equations scroll within
+their own region instead of shrinking the entire article. Articles without
+`math: true` retain the original text rendering, including literal dollar signs.
 
 Ink style reference:
 

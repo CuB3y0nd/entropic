@@ -1,0 +1,124 @@
+@import "../../styles/layers.css";
+@import "temml/dist/Temml-Local.css" layer(components.textmode);
+
+@font-face {
+  font-family: "Entropic Math";
+  src: url("../../../fonts/EntropicMath-Regular.woff2") format("woff2");
+  font-display: block;
+}
+
+@layer components.features {
+  .phile-wrap.phile-math {
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  .phile-body-flow {
+    position: relative;
+    z-index: 2;
+    margin: 0 var(--text-cell) 0 calc(var(--text-cell) * 4);
+    color: var(--fg);
+    font:
+      var(--text-size) / 2 var(--text-font),
+      monospace;
+  }
+
+  .phile-paragraph {
+    margin: 0 0 var(--text-size);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .phile-heading {
+    margin-top: calc(var(--text-size) * 2);
+    color: var(--link);
+  }
+
+  .phile-math-inline {
+    display: inline-block;
+    max-width: 100%;
+    padding: 4px 0;
+    margin: -4px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: middle;
+    white-space: nowrap;
+    scrollbar-width: thin;
+  }
+
+  .phile-body-flow math {
+    font-family: "Entropic Math", math;
+    font-size: calc(var(--text-size) + 2px);
+    text-rendering: auto;
+    -webkit-font-smoothing: auto;
+    text-align: left;
+  }
+
+  .phile-body-flow .mathcal {
+    font-feature-settings: "dtls" off;
+  }
+
+  .phile-body-flow .mathscr {
+    font-family: inherit;
+    font-feature-settings: "ss01";
+  }
+
+  .phile-equation {
+    margin: calc(var(--text-size) * 1.5) 0;
+    padding: calc(var(--text-size) / 2) 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--link) 35%, transparent) transparent;
+  }
+
+  .phile-equation:focus-visible {
+    outline: 1px dotted var(--link);
+    outline-offset: 4px;
+  }
+
+  .phile-equation math {
+    width: max-content;
+    font-size: calc(var(--text-size) + 3px);
+  }
+
+  .phile-code {
+    overflow-x: auto;
+    font:
+      var(--text-size) / 1 var(--text-font),
+      monospace;
+    white-space: pre;
+  }
+
+  .phile-body-flow code {
+    font: inherit;
+  }
+}
+
+@layer responsive {
+  @media (max-width: 760px) {
+    .phile-wrap.phile-math {
+      width: 100%;
+      max-width: 100vw;
+      zoom: 1;
+    }
+
+    .phile-math .phile-header {
+      width: 100%;
+    }
+
+    .phile-math .phile-header-side {
+      left: auto;
+      right: calc(var(--text-cell) * 2);
+    }
+
+    .phile-math .phile-header-meta,
+    .phile-math .phile-footer-pre,
+    .phile-math .phile-media {
+      padding-left: calc(var(--text-cell) * 2);
+    }
+
+    .phile-body-flow {
+      margin: 0 calc(var(--text-cell) * 2);
+    }
+  }
+}

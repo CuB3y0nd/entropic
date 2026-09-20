@@ -21,6 +21,7 @@
     "test:wkd": "node --import tsx --test tests/wkd/*.test.mjs",
     "assets:fonts": "pnpm fonts:subset && pnpm fonts:atlas",
     "fonts:atlas": "node scripts/fonts/build-cjk-atlas.mjs",
+    "fonts:math": "uv run scripts/fonts/build-math-font.py",
     "fonts:subset": "node scripts/fonts/subset-fonts.mjs",
     "check:astro": "prettier --check \"src/**/*.astro\"",
     "check:boundaries": "node scripts/checks/boundaries.mjs",
@@ -34,6 +35,7 @@
     "astro": "^7.3.1",
     "entities": "^8.0.0",
     "openpgp": "^6.3.1",
+    "temml": "0.13.5",
     "yaml": "^2.9.0"
   },
   "devDependencies": {

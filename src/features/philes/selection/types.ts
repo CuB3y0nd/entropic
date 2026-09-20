@@ -1,4 +1,4 @@
-export const ARTICLE_TEXT = ".phile-body-pre:not(.phile-redacted-pre)";
+export const ARTICLE_TEXT = ".phile-body-pre:not(.phile-redacted-pre), .phile-body-flow";
 export type ArticleSelection = { range: Range; text: string };
 export type PreparedTool = { show: (signal: AbortSignal) => void | Promise<void> };
 
