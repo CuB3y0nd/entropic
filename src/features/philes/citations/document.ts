@@ -14,7 +14,13 @@ export function createCitationDocument(article: HTMLElement) {
       parts.push("\n");
       length++;
     }
-    const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, {
+      // TeX annotations are metadata, not part of the rendered formula.
+      acceptNode: (node) =>
+        node.parentElement?.closest("math annotation, math annotation-xml")
+          ? NodeFilter.FILTER_REJECT
+          : NodeFilter.FILTER_ACCEPT
+    });
     for (let current = walker.nextNode(); current; current = walker.nextNode()) {
       const node = current as Text;
       offsets.set(node, length);

@@ -52,3 +52,27 @@ test("HTML images decode attribute entities once and do not treat data-src as sr
   assert.doesNotMatch(image.html, /wrong\.png|amp;amp/);
   assert.throws(() => renderPhile(phile('<img src="jav&#x61;script:alert(1)">')));
 });
+
+test("math is opt-in and shares the existing publishing and media boundaries", () => {
+  const article = phile("$HOME/$PATH\n\n$x$\n\n![caption](/image.png)");
+  const original = renderPhile(article);
+  assert.doesNotMatch(JSON.stringify(original), /<math\b|phile-equation/);
+
+  const enabled = { ...article, body: "$x$\n\n![caption](/image.png)", data: { ...article.data, math: true } };
+  const rendered = renderPhile(enabled);
+  if (rendered.body.kind !== "content") throw new Error("Expected published body");
+  assert.deepEqual(
+    rendered.body.blocks.map((block) => block.kind),
+    ["math", "image"]
+  );
+  assert.match(rendered.body.blocks[0]?.html ?? "", /<math\b/);
+  assert.match(rendered.body.blocks[1]?.html ?? "", /data-lightbox-image/);
+
+  const withheld = renderPhile({
+    ...enabled,
+    body: String.raw`$\invalidCanary$`,
+    data: { ...enabled.data, redacted: true }
+  });
+  assert.equal(withheld.body.kind, "redacted");
+  assert.doesNotMatch(JSON.stringify(withheld), /invalidCanary|<math\b/);
+});

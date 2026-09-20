@@ -6,12 +6,14 @@ import PhileDecoration from "./PhileDecoration.astro";
 import SelectionTools from "./SelectionTools.astro";
 import "@/shared/textmode/styles/ansi.css";
 import "../styles.css";
+import "../math.css";
 
 type Props = { phile: Phile };
 const { header, body, footerHtml } = renderPhile(Astro.props.phile);
+const math = body.kind === "content" && Astro.props.phile.data.math;
 ---
 
-<article class="textmode-wrap phile-wrap mt-line">
+<article class:list={["textmode-wrap phile-wrap mt-line", { "phile-math": math }]}>
   <header
     class="phile-header relative z-2"
     style={`--phile-header-lines: ${header.lineCount}; --phile-meta-lines: ${header.metaLineCount}; --phile-title-lines: ${header.titleLineCount}`}
@@ -34,6 +36,8 @@ const { header, body, footerHtml } = renderPhile(Astro.props.phile);
       body.blocks.map((block) =>
         block.kind === "image" ? (
           <div class="phile-media" set:html={block.html} />
+        ) : block.kind === "math" ? (
+          <div class="phile-body-flow" set:html={block.html} />
         ) : (
           <pre class="textmode-pre phile-pre phile-body-pre" set:html={block.html} />
         )

@@ -10,5 +10,6 @@ export const phileSchema = z.object({
   slug: z.string().optional(),
   order: z.number().int().nonnegative().optional(),
   redacted: z.boolean().default(false),
+  math: z.boolean().optional(),
   decoration: z.union([z.enum(algorithmKinds), z.literal(false)]).optional()
 });
