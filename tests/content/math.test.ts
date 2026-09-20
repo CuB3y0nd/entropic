@@ -66,7 +66,7 @@ test("math prose retains ANSI formatting and escapes raw HTML", () => {
   const html = renderMathText("#[R;bold|red] $x$ <script>alert(1)</script>");
   assert.match(html, /ansi-bright-red ansi-bold/);
   assert.match(html, /&lt;script&gt;/);
-  assert.doesNotMatch(html, /<script>/);
+  assert.doesNotMatch(html, /<script>/i);
   assert.deepEqual(formulas(html), ["x"]);
   assert.throws(() => renderMathText(String.raw`$\notARealCommand$`));
 });
