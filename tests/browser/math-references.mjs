@@ -67,7 +67,7 @@ try {
         const bounds = await page.locator(`[id="${target}"]`).boundingBox();
         assert.ok(bounds.y >= 0 && bounds.y < 1000, `Reference target must be visible: ${target}`);
         if (javaScriptEnabled) {
-          const strokes = page.locator(".target-marker > span");
+          const strokes = page.locator(`.phile-equation:has(#${target}) > .target-marker > span`);
           await strokes.first().waitFor();
           const marker = await strokes.evaluateAll((nodes) => ({
             target: nodes[0].closest(".phile-equation").querySelector(".phile-equation-row").id,
@@ -96,6 +96,16 @@ try {
         await inline.press("Enter");
         await marker.waitFor({ state: "attached" });
         assert.equal(new URL(page.url()).hash, "#equation-energy", "The same target can be highlighted again");
+
+        await page.locator('a[href="#equation-pythagoras"]').click();
+        await page.evaluate(() => scrollTo(0, 0));
+        await page.reload({ waitUntil: "networkidle" });
+        await settleTextLayout(page);
+        const reloaded = await page.locator("#equation-pythagoras").boundingBox();
+        assert.ok(
+          reloaded.y >= 0 && reloaded.y < 1000,
+          "Reloading an equation URL restores its target after browser scroll restoration"
+        );
       }
 
       const long = page.locator(".phile-equation:has(#equation-binomial)");
