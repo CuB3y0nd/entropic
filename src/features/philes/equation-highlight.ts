@@ -21,8 +21,21 @@ export function installEquationHighlight(): void {
     const equation = row?.closest<HTMLElement>(".phile-equation");
     if (!row?.matches(".phile-equation-row") || !equation) return;
 
+    // Chromium restores the old scroll position during the load event. Wait
+    // for that restoration before applying the fragment position ourselves.
+    if (document.readyState !== "complete") {
+      await new Promise<void>((resolve) => window.addEventListener("load", () => resolve(), { once: true }));
+    }
     await document.fonts.ready;
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     if (revision !== navigation) return;
+
+    // Reload restores the reader's previous scroll position after native
+    // fragment navigation. Reapply the vertical target once math layout is
+    // stable, without changing a long equation's horizontal scroll position.
+    const margin = Number.parseFloat(getComputedStyle(row).scrollMarginBlockStart) || 0;
+    const delta = row.getBoundingClientRect().top - margin;
+    if (Math.abs(delta) > 1) window.scrollBy(0, delta);
 
     const cells = [...row.children];
     // Measure cell contents, excluding the flexible space before the number.
