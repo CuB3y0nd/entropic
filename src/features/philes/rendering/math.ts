@@ -1,14 +1,27 @@
 import temml from "temml";
 import { escapeHtml } from "@/shared/textmode";
-import { renderAnsiInline, renderAnsiText } from "@/shared/textmode/ansi";
+import { renderAnsiInline } from "@/shared/textmode/ansi";
+import { type MathTree, resolveEquationReferences } from "./math-references";
 
 type Part =
   | { kind: "text"; source: string }
   | { kind: "code"; source: string; block: boolean }
-  | { kind: "math"; source: string; display: boolean };
+  | { kind: "math"; display: boolean; tree: MathTree };
 
 /** Tokenize TeX before text layout can wrap its commands or unescape line breaks. */
 export function renderMathText(source: string): string {
+  return renderMathBlocks([source])[0] ?? "";
+}
+
+export function renderMathBlocks(sources: string[]): string[] {
+  const blocks = sources.map((source) => splitMath(source.replace(/\r\n?/g, "\n")));
+  resolveEquationReferences(
+    blocks.flatMap((parts) => parts.flatMap((part) => (part.kind === "math" ? [part.tree] : [])))
+  );
+  return blocks.map(renderParts);
+}
+
+function renderParts(parts: Part[]): string {
   const blocks: string[] = [];
   let paragraph = "";
   let heading = false;
@@ -20,11 +33,11 @@ export function renderMathText(source: string): string {
     heading = false;
   };
 
-  for (const part of splitMath(source.replace(/\r\n?/g, "\n"))) {
+  for (const part of parts) {
     if (part.kind === "code") {
       if (part.block) {
         flush();
-        blocks.push(`<pre class="phile-code">${renderAnsiText(part.source, Number.POSITIVE_INFINITY)}</pre>`);
+        blocks.push(`<pre class="phile-code">${escapeHtml(part.source)}</pre>`);
       } else {
         paragraph += `<code>${escapeHtml(part.source)}</code>`;
       }
@@ -37,13 +50,7 @@ export function renderMathText(source: string): string {
         }
       }
     } else {
-      const html = temml.renderToString(part.source, {
-        displayMode: part.display,
-        annotate: true,
-        xml: true,
-        throwOnError: true,
-        trust: false
-      });
+      const html = part.tree.toMarkup();
       if (part.display) {
         flush();
         blocks.push(
@@ -61,7 +68,7 @@ export function renderMathText(source: string): string {
 function splitMath(source: string): Part[] {
   const parts: Part[] = [];
   let start = 0;
-  const markers = /^[\t ]{0,3}(`{3,}|~{3,})[^\n]*(?:\n|$)|(`+)|(\$\$?|\\[[(])/gm;
+  const markers = /^[\t ]{0,3}(`{3,}|~{3,})[^\n]*(?:\n|$)|(`+)|(\$\$?|\\[[(])|(\\(?:eqref|ref)\s*\{[^{}\n]*\})/gm;
   const append = (part: Part, cursor: number, end: number) => {
     if (cursor > start) parts.push({ kind: "text", source: source.slice(start, cursor) });
     parts.push(part);
@@ -71,7 +78,7 @@ function splitMath(source: string): Part[] {
 
   for (let match = markers.exec(source); match; match = markers.exec(source)) {
     const cursor = match.index;
-    const [, fence, code, delimiter] = match;
+    const [, fence, code, delimiter, reference] = match;
     if (fence) {
       const closing = new RegExp(`^[ \\t]{0,3}${fence[0]}{${fence.length},}[ \\t]*(?:\\n|$)`, "gm");
       closing.lastIndex = markers.lastIndex;
@@ -97,6 +104,10 @@ function splitMath(source: string): Part[] {
       continue;
     }
 
+    if (reference) {
+      append(mathPart(reference, false), cursor, markers.lastIndex);
+      continue;
+    }
     if (!delimiter) continue;
     const inline = delimiter === "$" || delimiter === "\\(";
     if (delimiter === "$" && /[\t ]/.test(source[cursor + 1] ?? "")) continue;
@@ -117,10 +128,24 @@ function splitMath(source: string): Part[] {
     const afterLine = source.slice(after, nextLine === -1 ? source.length : nextLine);
     const standalone = !beforeLine.trim() && !afterLine.trim();
     const needsRoom = /\\(?:displaystyle|begin|frac|dfrac|int|sum|lim|sqrt)\b/.test(value);
-    append({ kind: "math", source: value.trim(), display: !inline || (standalone && needsRoom) }, cursor, after);
+    append(mathPart(value.trim(), !inline || (standalone && needsRoom)), cursor, after);
   }
   if (start < source.length) parts.push({ kind: "text", source: source.slice(start) });
   return parts;
+}
+
+function mathPart(source: string, display: boolean): Part {
+  return {
+    kind: "math",
+    display,
+    tree: temml.__renderToMathMLTree(source, {
+      displayMode: display,
+      annotate: true,
+      xml: true,
+      throwOnError: true,
+      trust: false
+    })
+  };
 }
 
 function escaped(source: string, offset: number): boolean {

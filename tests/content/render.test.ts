@@ -76,3 +76,24 @@ test("math is opt-in and shares the existing publishing and media boundaries", (
   assert.equal(withheld.body.kind, "redacted");
   assert.doesNotMatch(JSON.stringify(withheld), /invalidCanary|<math\b/);
 });
+
+test("equation numbers and references share one scope across article images", () => {
+  const article = phile(String.raw`See \eqref{after}.
+
+$$\begin{equation}a=b\label{before}\end{equation}$$
+
+![caption](/image.png)
+
+$$\begin{equation}c=d\label{after}\end{equation}$$
+
+Back to \ref{before}.`);
+  const rendered = renderPhile({ ...article, data: { ...article.data, math: true } });
+  if (rendered.body.kind !== "content") throw new Error("Expected published body");
+  assert.deepEqual(
+    rendered.body.blocks.map((block) => block.kind),
+    ["math", "image", "math"]
+  );
+  assert.match(rendered.body.blocks[0]?.html ?? "", /href="#equation-after">\(2\)<\/a>/);
+  assert.match(rendered.body.blocks[1]?.html ?? "", /data-lightbox-image/);
+  assert.match(rendered.body.blocks[2]?.html ?? "", /href="#equation-before">1<\/a>/);
+});
