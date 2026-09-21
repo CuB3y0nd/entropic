@@ -6,7 +6,7 @@ import { renderAnsiText } from "@/shared/textmode/ansi";
 import { lifeFrameHeight } from "@/shared/textmode/life";
 import { safeUrl } from "@/shared/urls";
 import type { Phile } from "../model";
-import { renderMathText } from "./math";
+import { renderMathBlocks } from "./math";
 import { renderRedactedBody } from "./redacted";
 
 const titleWidth = textmodeConfig.articleArtIndent - textmodeConfig.textIndent;
@@ -61,7 +61,11 @@ function renderPhileHeader(phile: Phile): PhileHeader {
 }
 
 function renderPhileBodyBlocks(phile: Phile): PhileBodyBlock[] {
-  return splitBodyBlocks(phile.body ?? "").map((block) => {
+  const blocks = splitBodyBlocks(phile.body ?? "");
+  const math = phile.data.math
+    ? renderMathBlocks(blocks.map((block) => (block.kind === "text" ? block.text : "")))
+    : [];
+  return blocks.map((block, index) => {
     if (block.kind === "image") {
       return {
         kind: "image",
@@ -71,7 +75,7 @@ function renderPhileBodyBlocks(phile: Phile): PhileBodyBlock[] {
 
     return {
       kind: phile.data.math ? "math" : "text",
-      html: phile.data.math ? renderMathText(block.text) : `${renderAnsiText(block.text, textmodeConfig.bodyWidth)}\n`
+      html: phile.data.math ? (math[index] ?? "") : `${renderAnsiText(block.text, textmodeConfig.bodyWidth)}\n`
     };
   });
 }

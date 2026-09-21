@@ -19,7 +19,7 @@
     margin: 0 var(--text-cell) 0 calc(var(--text-cell) * 4);
     color: var(--fg);
     font:
-      var(--text-size) / 2 var(--text-font),
+      var(--text-size) / 1 var(--text-font),
       monospace;
   }
 
@@ -64,6 +64,7 @@
   }
 
   .phile-equation {
+    position: relative;
     margin: calc(var(--text-size) * 1.5) 0;
     padding: calc(var(--text-size) / 2) 0;
     overflow-x: auto;
@@ -79,6 +80,18 @@
   .phile-equation math {
     width: max-content;
     font-size: calc(var(--text-size) + 3px);
+  }
+
+  .phile-equation:has(.phile-equation-table) {
+    container-type: inline-size;
+  }
+
+  .phile-equation-row {
+    scroll-margin-block: calc(var(--text-size) * 2);
+  }
+
+  .phile-equation > .target-marker {
+    z-index: -1;
   }
 
   .phile-code {

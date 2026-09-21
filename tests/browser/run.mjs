@@ -10,6 +10,7 @@ await import("./artwork-rotation.mjs");
 await import("./byte-inspector.mjs");
 await import("./fragment-citations.mjs");
 await import("./math.mjs");
+await import("./math-references.mjs");
 await import("./selection-placement.mjs");
 await import("./credits.mjs");
 await import("./cve-typography.mjs");

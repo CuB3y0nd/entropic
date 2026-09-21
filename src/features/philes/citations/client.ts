@@ -25,13 +25,11 @@ export function createCitationTool(root: HTMLElement): SelectionTool | null {
     return index;
   };
   let navigation = 0;
-  let fadeTimer = 0;
   let clearTimer = 0;
   let observer: ResizeObserver | null = null;
   let marker: CitationMarker | null = null;
   let navigationEvents: AbortController | null = null;
   const clear = (): void => {
-    clearTimeout(fadeTimer);
     clearTimeout(clearTimer);
     navigationEvents?.abort();
     navigationEvents = null;
@@ -40,7 +38,6 @@ export function createCitationTool(root: HTMLElement): SelectionTool | null {
     marker?.remove();
     marker = null;
     CSS.highlights?.delete("entropic-fragment");
-    article.classList.remove("fragment-target");
     status.hidden = true;
   };
   const interrupt = (): void => {
@@ -76,7 +73,7 @@ export function createCitationTool(root: HTMLElement): SelectionTool | null {
       await document.fonts.ready;
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
       if (revision !== navigation) return;
-      marker = createCitationMarker(article, target.range);
+      marker = createCitationMarker(article, target.range, clear);
       const position = (): void => {
         if (revision !== navigation) return;
         const rect = target.range.getBoundingClientRect();
@@ -85,10 +82,10 @@ export function createCitationTool(root: HTMLElement): SelectionTool | null {
         marker?.update();
       };
       position();
+      if (!marker) return;
       if (typeof Highlight === "function" && CSS.highlights) {
         CSS.highlights.set("entropic-fragment", new Highlight(target.range));
       }
-      article.classList.add("fragment-target");
       status.className = "sr-only";
       status.textContent = `Linked passage: ${target.range.toString().replace(/\s+/gu, " ").trim().slice(0, 160)}`;
       status.hidden = false;
@@ -96,12 +93,6 @@ export function createCitationTool(root: HTMLElement): SelectionTool | null {
       // reader input cancels this, so late layout never drags them back.
       observer = new ResizeObserver(position);
       observer.observe(article);
-      fadeTimer = window.setTimeout(() => {
-        observer?.disconnect();
-        observer = null;
-        article.classList.remove("fragment-target");
-        clearTimer = window.setTimeout(clear, 600);
-      }, 2600);
     } catch {
       if (revision !== navigation) return;
       clear();

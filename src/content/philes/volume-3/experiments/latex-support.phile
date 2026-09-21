@@ -1,0 +1,249 @@
+---
+title: "LaTeX in Philes"
+date: 2026-09-21
+lang: en
+math: true
+---
+
+Add TeX formulas to a phile with one frontmatter flag. The examples below
+show the source first, followed by its rendered result.
+
+## 1. Enable math
+
+```yaml
+---
+title: "Math notes"
+date: 2026-09-21
+math: true
+---
+```
+
+The flag applies to one article. Without it, dollar signs and TeX delimiters
+remain ordinary text.
+
+## 2. Inline and display formulas
+
+Use `$...$` or `\(...\)` inside a sentence:
+
+```tex
+For $x > 0$, let \(f(x) = \sqrt{x}\).
+```
+
+For $x > 0$, let \(f(x) = \sqrt{x}\).
+
+Use `$$...$$` or `\[...\]` for an equation on its own line:
+
+```tex
+$$
+\lim_{x \to 0} \frac{\sin x}{x} = 1
+$$
+```
+
+$$
+\lim_{x \to 0} \frac{\sin x}{x} = 1
+$$
+
+Keep blank lines outside inline formulas. For tall expressions, prefer
+display form. Long equations scroll horizontally on narrow screens.
+
+## 3. A small vocabulary
+
+Subscripts use `_`, superscripts use `^`, and braces group their contents.
+Fractions, roots, Greek letters and number sets use the usual math commands:
+
+```tex
+$$
+a_{n+1} = \frac{\alpha^n}{\sqrt{1+x^2}}, \qquad x \in \mathbb{R}
+$$
+```
+
+$$
+a_{n+1} = \frac{\alpha^n}{\sqrt{1+x^2}}, \qquad x \in \mathbb{R}
+$$
+
+Sums and integrals accept lower and upper limits. Use `\sin`, `\log` and
+similar commands for upright function names; `\mathrm{d}` makes an upright
+differential. Here is the alternative display delimiter in use:
+
+```tex
+\[
+\sum_{k=1}^{n} k = \frac{n(n+1)}{2}
+\qquad
+\int_0^1 x^2\,\mathrm{d}x = \frac{1}{3}
+\]
+```
+
+\[
+\sum_{k=1}^{n} k = \frac{n(n+1)}{2}
+\qquad
+\int_0^1 x^2\,\mathrm{d}x = \frac{1}{3}
+\]
+
+## 4. Matrices, cases and aligned steps
+
+Inside these environments, `&` separates columns or marks alignment, and
+`\\` starts a new row. `pmatrix` supplies parentheses around a matrix:
+
+```tex
+$$
+A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}
+$$
+```
+
+$$
+A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}
+$$
+
+Use `\text{...}` for words inside a formula:
+
+```tex
+$$
+|x| = \begin{cases}
+x & \text{if } x \ge 0 \\
+-x & \text{if } x < 0
+\end{cases}
+$$
+```
+
+$$
+|x| = \begin{cases}
+x & \text{if } x \ge 0 \\
+-x & \text{if } x < 0
+\end{cases}
+$$
+
+Use `aligned` to keep equals signs together through a derivation:
+
+```tex
+$$
+\begin{aligned}
+f(x) &= (x+1)^2 \\
+     &= x^2 + 2x + 1
+\end{aligned}
+$$
+```
+
+$$
+\begin{aligned}
+f(x) &= (x+1)^2 \\
+     &= x^2 + 2x + 1
+\end{aligned}
+$$
+
+## 5. Long equations
+
+This binomial expansion is wider than the article. Scroll inside the formula
+to read the terms on the right. On a touch screen, swipe horizontally. With
+a keyboard, focus the equation and use the left and right arrow keys.
+
+The source is split across lines for editing; these newlines do not break
+the rendered equation. Use `aligned` when you want separate rows instead.
+
+```tex
+$$
+(x+y)^{16}
+= x^{16} + 16x^{15}y + 120x^{14}y^{2}
++ 560x^{13}y^{3} + 1820x^{12}y^{4}
++ 4368x^{11}y^{5} + 8008x^{10}y^{6}
++ 11440x^{9}y^{7} + 12870x^{8}y^{8}
++ 11440x^{7}y^{9} + 8008x^{6}y^{10}
++ 4368x^{5}y^{11} + 1820x^{4}y^{12}
++ 560x^{3}y^{13} + 120x^{2}y^{14}
++ 16xy^{15} + y^{16}
+\tag{B}\label{binomial}
+$$
+```
+
+$$
+(x+y)^{16}
+= x^{16} + 16x^{15}y + 120x^{14}y^{2}
++ 560x^{13}y^{3} + 1820x^{12}y^{4}
++ 4368x^{11}y^{5} + 8008x^{10}y^{6}
++ 11440x^{9}y^{7} + 12870x^{8}y^{8}
++ 11440x^{7}y^{9} + 8008x^{6}y^{10}
++ 4368x^{5}y^{11} + 1820x^{4}y^{12}
++ 560x^{3}y^{13} + 120x^{2}y^{14}
++ 16xy^{15} + y^{16}
+\tag{B}\label{binomial}
+$$
+
+## 6. Equation references
+
+Use `equation` for an automatic number and `\label{...}` to name its target.
+Keep the environment inside display delimiters. Numbers start at 1 in each
+article; ordinary display formulas stay unnumbered.
+
+```tex
+$$
+\begin{equation}
+E = mc^2 \label{energy}
+\end{equation}
+$$
+
+See \eqref{energy}, or equation \ref{energy} without parentheses.
+```
+
+A reference can appear before its target: see \eqref{energy}.
+
+$$
+\begin{equation}
+E = mc^2 \label{energy}
+\end{equation}
+$$
+
+The same target is equation \ref{energy} without parentheses. Click either
+reference to jump to the equation. A brief, translucent amber highlight
+marks the formula and its number, then fades away. Links and numbers also
+work without JavaScript.
+
+References also work inside math: $E=mc^2\quad\text{from }\eqref{energy}$.
+
+Use `\tag{...}` for a custom number or name. A manual tag does not advance
+the automatic counter; `\tag*{...}` omits parentheses beside the formula.
+
+```tex
+$$
+a^2 + b^2 = c^2 \tag{P}\label{pythagoras}
+$$
+
+The identity is \eqref{pythagoras}.
+```
+
+$$
+a^2 + b^2 = c^2 \tag{P}\label{pythagoras}
+$$
+
+The identity is \eqref{pythagoras}; the long expansion above is
+\eqref{binomial}. Long formulas scroll together with their numbers.
+
+In a numbered `align` or `gather` environment, put a label on each row you
+want to reference. `\notag` or
+`\nonumber` skips that row's number; starred environments have no automatic
+numbers. `aligned` remains unnumbered.
+
+Labels are local to the article and must be unique. Use letters, digits,
+underscores and hyphens. Referencing a missing or unnumbered target, or
+reusing a label, fails the build. Both `\ref` and `\eqref` also work inside
+math delimiters; backticks and code fences keep examples literal.
+
+## 7. Keep source literal
+
+Backticks and fenced code protect their contents from math parsing.
+For example, `$HOME/$PATH` and `$\frac{a}{b}$` stay as source. Indentation
+alone does not protect dollar signs; use a code fence for shell snippets.
+An escaped dollar (`\$`) will not open a formula.
+
+## 8. Current limits
+
+Entropic uses Temml to turn TeX into native MathML at build time. The page
+uses the bundled Entropic Math font and needs a browser with native MathML
+support.
+
+Write math expressions, without a LaTeX document preamble. `\documentclass`
+and `\usepackage` are not supported. A parsed formula with invalid TeX or an
+unsupported command fails the build. If source appears as ordinary text,
+check that its delimiters are paired. Run `pnpm build` before publishing.
+
+Temml's function reference covers more notation than this short guide:
+
+https://temml.org/docs/en/supported

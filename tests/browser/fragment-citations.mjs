@@ -26,7 +26,7 @@ async function highlighted(page) {
   return page.evaluate(() => {
     const range = [...CSS.highlights.get("entropic-fragment")][0];
     const bounds = range.getBoundingClientRect();
-    const stroke = document.querySelector(".fragment-marker-line")?.getBoundingClientRect();
+    const stroke = document.querySelector(".target-marker > span")?.getBoundingClientRect();
     // Range endpoints measure the hidden fallback font; bitmap glyphs can be wider.
     const firstGlyph = range.startContainer.parentElement?.closest(".cjk-bitmap")?.getBoundingClientRect();
     const lastGlyph = range.endContainer.parentElement?.closest(".cjk-bitmap")?.getBoundingClientRect();
@@ -39,7 +39,7 @@ async function highlighted(page) {
     return {
       text: range.toString(),
       top: bounds.top,
-      strokes: document.querySelectorAll(".fragment-marker-line").length,
+      strokes: document.querySelectorAll(".target-marker > span").length,
       aligned: !!stroke && ["left", "right", "top", "bottom"].every((key) => Math.abs(stroke[key] - painted[key]) < 1)
     };
   });
@@ -118,12 +118,12 @@ try {
     await settleTextLayout(page);
     assert.ok((await highlighted(page)).aligned, "An active marker stays aligned after resizing");
     await page.waitForFunction(() => !CSS.highlights.has("entropic-fragment"));
-    assert.equal(await page.locator(".fragment-marker").count(), 0, "The temporary marker is removed after fading");
+    assert.equal(await page.locator(".target-marker").count(), 0, "The temporary marker is removed after fading");
 
     await page.goto(repeatedUrl);
     assert.equal((await highlighted(page)).text, "-1", "A new fragment restores its own passage");
     await page.keyboard.press("ArrowDown");
-    assert.equal(await page.locator(".fragment-marker").count(), 0, "Reader input dismisses the marker");
+    assert.equal(await page.locator(".target-marker").count(), 0, "Reader input dismisses the marker");
 
     await page.goto(new URL(`${route}#cite=this-passage-was-removed`, baseUrl).href);
     const notice = page.locator("[data-fragment-status]");
