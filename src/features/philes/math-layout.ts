@@ -5,7 +5,12 @@ export function installMathLayout(): void {
   const align = () => {
     const ratio = window.devicePixelRatio;
     // Fractional math advances would blur the bitmap text that follows them.
-    const widths = formulas.map((formula) => Math.ceil(formula.getBoundingClientRect().width * ratio) / ratio);
+    const widths = formulas.map((formula) => {
+      const article = formula.closest(".phile-wrap");
+      const zoom = article ? Number.parseFloat(getComputedStyle(article).zoom) || 1 : 1;
+      // DOM bounds include article zoom; inline CSS widths use local pixels.
+      return Math.ceil(formula.getBoundingClientRect().width * ratio) / (ratio * zoom);
+    });
     formulas.forEach((formula, index) => {
       formula.closest<HTMLElement>(".phile-math-inline")?.style.setProperty("width", `${widths[index]}px`);
     });

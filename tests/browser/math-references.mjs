@@ -36,7 +36,9 @@ try {
           return {
             id: row.id,
             gap: tag.left - body.right,
-            minimum: Number.parseFloat(getComputedStyle(row).fontSize) / 2,
+            minimum:
+              (Number.parseFloat(getComputedStyle(row).fontSize) / 2) *
+              (Number.parseFloat(getComputedStyle(row.closest(".phile-wrap")).zoom) || 1),
             tagRight: tag.right,
             rowRight: row.getBoundingClientRect().right,
             regionRight: region.getBoundingClientRect().right,

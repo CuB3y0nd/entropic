@@ -149,9 +149,13 @@ try {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(route, { waitUntil: "networkidle" });
     await settleTextLayout(page);
-    await assertSharpProse(page);
-    await assertThinMathRules(page, deviceScaleFactor);
-    if (deviceScaleFactor === 1) await assertRadicalJoins(page);
+    // Pixel-font checks require native article scale. Mobile shares the
+    // theme's fractional zoom, covered by math-scale.mjs.
+    if (width >= 761) {
+      await assertSharpProse(page);
+      await assertThinMathRules(page, deviceScaleFactor);
+      if (deviceScaleFactor === 1) await assertRadicalJoins(page);
+    }
 
     const state = await page.evaluate(() => ({
       formulas: document.querySelectorAll(".phile-math-inline, .phile-equation").length,
@@ -160,6 +164,7 @@ try {
       controls: document.querySelectorAll(".phile-equation button, .phile-equation figcaption").length,
       overflow: document.documentElement.scrollWidth > innerWidth,
       zoom: getComputedStyle(document.querySelector(".phile-math")).zoom,
+      mobileScale: getComputedStyle(document.documentElement).getPropertyValue("--mobile-scale").trim(),
       borders: [...document.querySelectorAll(".phile-equation")].some((element) =>
         ["borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth"].some(
           (key) => Number.parseFloat(getComputedStyle(element)[key]) > 0
@@ -172,7 +177,8 @@ try {
       equations: 71,
       controls: 0,
       overflow: false,
-      zoom: "1",
+      zoom: width < 761 ? state.mobileScale : "1",
+      mobileScale: state.mobileScale,
       borders: false
     });
     assert.equal(await page.locator(".temml-error, merror").count(), 0);
@@ -205,20 +211,25 @@ try {
     assert.ok(Math.max(...alignment.equals) - Math.min(...alignment.equals) < 1, "Proof equals signs must align");
 
     if (width < 400) {
+      // Exercise overflow even when the default theme zoom fits every formula.
+      const scrollingStyle = await page.addStyleTag({ content: ".phile-equation { max-width: 160px; }" });
       const index = await page
         .locator(".phile-equation")
         .evaluateAll((elements) => elements.findIndex((element) => element.scrollWidth > element.clientWidth + 10));
-      assert.ok(index >= 0);
-      const equation = page.locator(".phile-equation").nth(index);
-      await equation.focus();
-      await equation.evaluate((element) => {
-        window.equationScrollEnd = new Promise((resolve) =>
-          element.addEventListener("scrollend", resolve, { once: true })
-        );
-      });
-      await page.keyboard.press("ArrowRight");
-      await page.evaluate(() => window.equationScrollEnd);
-      assert.ok(await equation.evaluate((element) => element.scrollLeft > 0));
+      assert.ok(index >= 0, "The narrow equation fixture must overflow");
+      {
+        const equation = page.locator(".phile-equation").nth(index);
+        await equation.focus();
+        await equation.evaluate((element) => {
+          window.equationScrollEnd = new Promise((resolve) =>
+            element.addEventListener("scrollend", resolve, { once: true })
+          );
+        });
+        await page.keyboard.press("ArrowRight");
+        await page.evaluate(() => window.equationScrollEnd);
+        assert.ok(await equation.evaluate((element) => element.scrollLeft > 0));
+      }
+      await scrollingStyle.evaluate((element) => element.remove());
     }
 
     const quote = "怎么会有这么简单的定理…";
@@ -249,9 +260,10 @@ try {
     await field.waitFor({ state: "visible" });
     const mathQuote = new URLSearchParams(new URL(await field.inputValue()).hash.slice(1)).get("cite");
     assert.equal(mathQuote.replace(/\s/g, ""), "假设对于函数f有：");
-    await page.setViewportSize({ width: width < 400 ? 1281 : 390, height: 1000 });
+    const restoredWidth = width < 400 ? 1281 : 390;
+    await page.setViewportSize({ width: restoredWidth, height: 1000 });
     await settleTextLayout(page);
-    await assertSharpProse(page);
+    if (restoredWidth >= 761) await assertSharpProse(page);
     await context.close();
     console.log(
       `PASS ${browserName} ${width}px / DPR ${deviceScaleFactor}: sharp prose, 220 formulas, layout, scrolling and citations`
