@@ -110,9 +110,12 @@
 @layer responsive {
   @media (max-width: 760px) {
     .phile-wrap.phile-math {
-      width: 100%;
-      max-width: 100vw;
-      zoom: 1;
+      /* Keep math articles on the same text scale as every other article.
+         The width is expressed in pre-zoom pixels so the scaled article still
+         spans the viewport instead of shrinking to a fraction of it. */
+      width: calc(100vw / min(var(--mobile-scale), var(--fit-scale)));
+      max-width: none;
+      zoom: min(var(--mobile-scale), var(--fit-scale));
     }
 
     .phile-math .phile-header {
