@@ -526,6 +526,10 @@ export default {
       {
         id: "CVE-2023-39536",
         title: "IEI PUZZLE BIOS - AMI Ofbd SWSMI span validation"
+      },
+      {
+        id: "CVE-2026-103971",
+        title: "libgit2 workdir apply symlink escape to hook execution"
       }
     ]
   }
